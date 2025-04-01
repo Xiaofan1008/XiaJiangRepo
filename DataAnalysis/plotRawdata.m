@@ -4,6 +4,18 @@ function spikes = plotRawdata(chsp,tID,DataType,plotspktime)
 %chsp is unsorted channel
 %tID= trial ID
 %spike is the spike time
+
+global DATA_FOLDER;
+
+% Extract the folder name
+[~, name] = fileparts(DATA_FOLDER);
+
+% Remove last 14 characters from folder name (if applicable)
+if length(name) > 14
+    name = name(1:end-14); % assumes folder ends with _yyyymm_ddHHMM
+end
+sp_file = fullfile(DATA_FOLDER, [name '.sp.mat']);
+
 nChn=64;
 FS=30000;
 timebefore=0.09;%in seconds 0.09
@@ -18,24 +30,56 @@ trigtID = trig(TrialParamstID);
 trigtID(trigtID==-500)=[];
 spikes = cell(size(length(trigtID),2));
 
-filepath = pwd;
-[filepathm,name,ext] = fileparts(filepath);
-name = name(1:end-14); % delect last 14 bits (date of data)
+% filepath = pwd;
+% [filepathm,name,ext] = fileparts(filepath);
+% name = name(1:end-14); % delect last 14 bits (date of data)
 if plotspktime==1
-    sp=load([name '.sp.mat'],'sp');
-    sp=sp.sp{chsp};
-    thresh=load([name '.sp.mat'],'thresh');
-    thresh=thresh.thresh{chsp};
+    if exist(sp_file, 'file')
+    sp = load(sp_file, 'sp');
+    sp = sp.sp{chsp};
+    thresh = load(sp_file, 'thresh');
+    thresh = thresh.thresh{chsp};
+    else
+    error('Spike data file not found: %s', sp_file);
+    end
+        
+    % sp=load([name '.sp.mat'],'sp');
+    % sp=sp.sp{chsp};
+    % thresh=load([name '.sp.mat'],'thresh');
+    % thresh=thresh.thresh{chsp};
 end
-if strcmp(DataType,'amplifier') % Raw voltage recording
-    fileID=fopen('amplifier.dat','r');
+
+% if strcmp(DataType,'amplifier') % Raw voltage recording
+%     fileID=fopen('amplifier.dat','r');
+% elseif strcmp(DataType,'dn')
+%     fileID=fopen('amplifier_dn_sab.dat','r'); % Downsampled data
+% elseif strcmp(DataType,'mu')
+%     fileID=fopen([name '.mu_sab.dat'],'r'); % Multi-Unit Activity data
+% elseif strcmp(DataType,'DT')
+%     fileID=fopen([name '_DT.mu.dat'],'r'); % Sorted spikes (Single-unit activity)
+% end
+
+if strcmp(DataType,'amplifier')
+    filename = 'amplifier.dat';
 elseif strcmp(DataType,'dn')
-    fileID=fopen('amplifier_dn_sab.dat','r'); % Downsampled data
+    filename = 'amplifier_dn_sab.dat';
 elseif strcmp(DataType,'mu')
-    fileID=fopen([name '.mu_sab.dat'],'r'); % Multi-Unit Activity data
+    filename = [name '.mu_sab.dat'];
 elseif strcmp(DataType,'DT')
-    fileID=fopen([name '_DT.mu.dat'],'r'); % Sorted spikes (Single-unit activity)
+    filename = [name '_DT.mu.dat'];
+else
+    error('Unrecognized DataType: %s', DataType);
 end
+
+% Construct full path and open file
+filepath = fullfile(DATA_FOLDER, filename);
+fileID = fopen(filepath, 'r');
+
+if fileID < 0
+    error('Could not open file: %s', filepath);
+end
+
+
 
 try
     ftell(fileID);
@@ -65,13 +109,13 @@ for indT=1:length(trigtID)
     %         xlabel('Time (ms)')
     %         ylabel('Voltage (uV)')
 
-    % ------- plot the MUA activity (filtered raw voltage) ------% 
-    % figure(1)
-    % hold on
-    % plot (-timebefore*1000:1000/FS:timeafter*1000-1000/FS,vblankmu(chsp,:)) % *1000 convert second to millisecond 
-    % title(['Channel ' num2str(chsp) ', Trig ' num2str(indT)])
-    % xlabel('Time (ms)')
-    % ylabel('Voltage (uV)')
+    %------- plot the MUA activity (filtered raw voltage) ------% 
+    figure(1)
+    hold on
+    plot (-timebefore*1000:1000/FS:timeafter*1000-1000/FS,vblankmu(chsp,:)) % *1000 convert second to millisecond 
+    title(['Channel ' num2str(chsp) ', Trig ' num2str(indT)])
+    xlabel('Time (ms)')
+    ylabel('Voltage (uV)')
 
 
     if plotspktime==1
@@ -88,12 +132,12 @@ for indT=1:length(trigtID)
         % plot spike waveform
         if ~isempty(spktimes)
             savespktimes=[savespktimes; (spktimes(:,1)-offsetspk)];
-            % figure(100)
-            % hold on
-            % plot(1*1000/FS:1000/FS:49*1000/FS,spktimes(:,2:end)')
-            % title(['Channel ' num2str(chsp) ', Trig ' num2str(indT)])
-            % xlabel('Time (ms)')
-            % ylabel('Spike amplitude (uV)')
+            figure(100)
+            hold on
+            plot(1*1000/FS:1000/FS:49*1000/FS,spktimes(:,2:end)')
+            title(['Channel ' num2str(chsp) ', Trig ' num2str(indT)])
+            xlabel('Time (ms)')
+            ylabel('Spike amplitude (uV)')
         else
             close
         end

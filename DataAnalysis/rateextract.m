@@ -1,6 +1,9 @@
 clear all;
 close all;
 
+global DATA_FOLDER
+DATA_FOLDER = fullfile('/Users','xiaofan','Desktop','PhD Study','Data','Sabrina','S3E2_9elect_001_210511_104603')
+
 % ------------------ Parameters ----------------- %
 loaddata = true;
 collect =true;

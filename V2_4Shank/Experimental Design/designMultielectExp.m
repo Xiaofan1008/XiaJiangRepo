@@ -92,12 +92,7 @@ while (HAPPY)
             if E_Mapnumber==0
                 CHN = input('Please enter channels like so: [x,y,z]\n');
             else
-                %%
-
-
-
-
-                
+                            
                 CHN = input('Please enter channels like so: PAS1E5,PBS2E10,...,PDS3E13 \nWhere P is port letter, S is #shank, E is #electrode\n','s'); % channels on port B are +32 shanks are 16 electrodes each
                 port_shank_electrode=split(CHN,["P","S","E",","]);
                 shank_electrode=(cellfun(@(x) str2double(x),port_shank_electrode,'UniformOutput',false));

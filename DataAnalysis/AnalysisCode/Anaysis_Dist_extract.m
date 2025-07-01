@@ -47,7 +47,7 @@ v_fid = fopen([dName '.dat'], 'r');
 lv_fid = fopen([dName '.dat'],'r');
 ntimes = ceil(fileinfo.bytes / 2 / nChn / FS / T);
 
-Trial_to_extract = 340;
+Trial_to_extract = 117;
 
 % shift to the first trigger 
 T = 20; % s
@@ -61,10 +61,10 @@ total_sample = samples_before + samples_after;
 data = fread(v_fid, [nChn, total_sample], 'int16') * 0.195;
 
 % plot Trigger data
-export_chn = 37;
+export_chn = 57;
 figure;
 start_time = -1; % in ms
-end_time = 5; % in ms
+end_time = 10; % in ms
 
 start_offset = round(start_time * FS/1000);
 end_offset = round(end_time * FS/1000);
@@ -79,19 +79,19 @@ ylabel("Amplitude (µA)")
 %% Electrode seperation plots
 % setting
 DIST = [50,100,150,200,300,400];    % differnet distances
-% Chn_50 =    [40,39; 56,55; 38,37];    % 50µm  channels
-% Chn_100 =   [41,39; 55,53; 58,56];    % 100µm channels
-% Chn_150 =   [40,37; 56,53; 44,41];    % 150µm channels
-% Chn_200 =   [43,39; 57,53; 42,58];    % 200µm channels
-% Chn_300 =   [43,37; 59,53; 57,51];    % 300µm channels
-% Chn_400 =   [44,36; 60,52; 9,57];     % 400µm channels
+Chn_50 =    [40,39; 56,55; 38,37];    % 50µm  channels
+Chn_100 =   [41,39; 55,53; 58,56];    % 100µm channels
+Chn_150 =   [40,37; 56,53; 44,41];    % 150µm channels
+Chn_200 =   [43,39; 57,53; 42,58];    % 200µm channels
+Chn_300 =   [43,37; 59,53; 57,51];    % 300µm channels
+Chn_400 =   [44,36; 60,52; 9,57];     % 400µm channels
 
-Chn_50 =    [40,39];    % 50µm  channels
-Chn_100 =   [41,39];    % 100µm channels
-Chn_150 =   [40,37];    % 150µm channels
-Chn_200 =   [43,39];    % 200µm channels
-Chn_300 =   [43,37];    % 300µm channels
-Chn_400 =   [44,36];     % 400µm channels
+% Chn_50 =    [38,37];    % 50µm  channels
+% Chn_100 =   [58,56];    % 100µm channels
+% Chn_150 =   [44,41];    % 150µm channels
+% Chn_200 =   [42,58];    % 200µm channels
+% Chn_300 =   [57,51];    % 300µm channels
+% Chn_400 =   [9,57];     % 400µm channels
 Chn_map = {Chn_50,Chn_100,Chn_150,Chn_200,Chn_300,Chn_400};
 
 samples_before = 2 * FS; % seconds before trigger
@@ -148,7 +148,7 @@ end
 %% Plot Average artifact of different distance
 figure;
 start_time = -1; % in ms
-end_time = 3; % in ms
+end_time = 8; % in ms
 start_offset = round(start_time * FS/1000);
 end_offset = round(end_time * FS/1000);
 trigger_sample = samples_before;
@@ -180,3 +180,11 @@ legend_strings = arrayfun(@(x) sprintf('%d mm', x), DIST, 'UniformOutput', false
 legend(legend_strings,'Location','northeast');
 hold off
 box off
+
+%% Plot trigger time difference
+trig_diff = diff(trig)/FS; % time difference between adjacent triggers
+figure;
+plot(trig_diff);
+xlabel('Triger time difference index')
+ylabel('Time(s)')
+title("Trigger Time Differences")

@@ -1,6 +1,6 @@
 %% Analysis Code
 clear all
-% close all
+close all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
 % Parameters to alter
 Startpoint_analyse=0; %set to 0 for no input
@@ -48,7 +48,7 @@ lv_fid = fopen([dName '.dat'],'r');
 ntimes = ceil(fileinfo.bytes / 2 / nChn / FS / T);
 
 
-Trial_to_extract = 741;
+Trial_to_extract = 40;
 if MissingTrig == 1
     amp = StimParams{Trial_to_extract,16};
 else 
@@ -66,10 +66,10 @@ total_sample = samples_before + samples_after;
 data = fread(v_fid, [nChn, total_sample], 'int16') * 0.195;
 
 % plot 
-export_chn = 3;
+export_chn = 53;
 figure;
 start_time = -2; % in ms
-end_time = 500; % in ms
+end_time = 1000; % in ms
 
 start_offset = round(start_time * FS/1000);
 end_offset = round(end_time * FS/1000);
@@ -158,7 +158,7 @@ end
 %% Plot Average Artifacts
 figure;
 start_time = -2; % in ms
-end_time = 8; % in ms
+end_time = 300; % in ms
 start_offset = round(start_time * FS/1000);
 end_offset = round(end_time * FS/1000);
 trigger_sample = samples_before;
@@ -167,7 +167,7 @@ time_axis = (start_offset : end_offset)/FS*1000;
 hold on 
 colors = lines(length(AMP));
 for i = 1:length(AMP)
-    plot(time_axis,amp_ave_all(i,window_range),'Color',colors(i,:), 'LineWidth', 1.5);
+    plot(time_axis,amp_ave_all(i,window_range),'Color',colors(i,:), 'LineWidth', 2.0);
 end
 xlabel('Time (ms)');
 ylabel('Amplitude (µV)')
@@ -176,3 +176,27 @@ legend_strings = arrayfun(@(x) sprintf('%d µA', x), AMP_ref, 'UniformOutput', f
 legend(legend_strings,'Location','northeast');
 hold off
 box off
+
+%% Plot average artifact across all trials 
+amp_all = mean(amp_ave_all,1);
+figure;
+start_time = -2; % in ms
+end_time = 300; % in ms
+start_offset = round(start_time * FS/1000);
+end_offset = round(end_time * FS/1000);
+trigger_sample = samples_before;
+window_range = (trigger_sample + start_offset) : (trigger_sample + end_offset);
+time_axis = (start_offset : end_offset)/FS*1000;
+plot(time_axis,amp_all(window_range), 'LineWidth', 2.0);
+xlabel('Time (ms)');
+ylabel('Amplitude (µV)')
+title('Average Artifacts (All Trials)')
+box off
+
+%% Plot trigger time difference
+trig_diff = diff(trig)/FS; % time difference between adjacent triggers
+figure;
+plot(trig_diff);
+xlabel('Triger time difference index')
+ylabel('Time(s)')
+title("Trigger Time Differences")

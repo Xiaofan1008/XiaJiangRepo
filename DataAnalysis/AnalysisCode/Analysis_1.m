@@ -124,7 +124,7 @@ endtrial=maxid;
 [IDstruct, baslinespikestruct]=sortTrials_SM(startpointseconds,secondstoanalyse,trig,printspiking,starttrial,trialjump,endtrial,Overall_time_to_analyse);
 save('IDstruct.mat', 'IDstruct','baslinespikestruct')
 
-% find max and min values
+% Load spike file 
 files = dir('*.sp.mat'); 
 if ~isempty(files)
     load(files(1).name);  % Load the first matching file
@@ -134,6 +134,11 @@ end
 d = Depth;
 nSamples = size(sp{find(~cellfun(@isempty,sp),1)},2)-1;
 time_axis = (0:nSamples-1)*(1000/FS); % time axis in ms
+
+% find stimulation channels
+stim_chns = cell2mat(TrialParams(:,3));
+unique_stim_chns = unique(stim_chns);
+unique_stim_chns(unique_stim_chns == 0) = [];
 
 nRows = 4; nCols = 16;
 left_margin = 0.02; right_margin = 0.01; top_margin = 0.04; bottom_margin = 0.04;
@@ -169,7 +174,12 @@ for ch = 1:nChn
     
     thisChn = d(ch);
      if ~isempty(sp{thisChn})
-       plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
+         if ismember(ch,unique_stim_chns)
+             plot(time_axis,ave_spike(thisChn,:),'r','LineWidth',2);
+         else 
+             plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
+         end
+       % plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
        xlim([time_axis(1),time_axis(end)]);
        xlim([0 1.5]);
        ylim([global_min,global_max]);
@@ -190,6 +200,15 @@ for ch = 1:nChn
     set(gca,'FontSize',6,'Box','off');
 end
 
+% ---- Add Global Title ----
+han = axes('Position', [0 0 1 1], 'Visible', 'off'); % invisible full-figure axes
+han.Title.Visible = 'on';
+title(han, 'Average Spike Waveforms Across All Channels', ...
+      'FontSize', 12, ...
+      'FontWeight', 'bold', ...
+      'Units', 'normalized', ...
+      'Position', [0.5, 0.97, 0]);
+
 %% Spike look through all channels (Vertical version)
 starttrial=1;
 trialjump=1;
@@ -199,7 +218,7 @@ endtrial=maxid;
 [IDstruct, baslinespikestruct]=sortTrials_SM(startpointseconds,secondstoanalyse,trig,printspiking,starttrial,trialjump,endtrial,Overall_time_to_analyse);
 save('IDstruct.mat', 'IDstruct','baslinespikestruct')
 
-% find max and min values
+% Load spike file
 files = dir('*.sp.mat'); 
 if ~isempty(files)
     load(files(1).name);  % Load the first matching file
@@ -209,6 +228,11 @@ end
 d = Depth;
 nSamples = size(sp{find(~cellfun(@isempty,sp),1)},2)-1;
 time_axis = (0:nSamples-1)*(1000/FS); % time axis in ms
+
+% find stimulation channels
+stim_chns = cell2mat(TrialParams(:,3));
+unique_stim_chns = unique(stim_chns);
+unique_stim_chns(unique_stim_chns == 0) = [];
 
 nRows = 16;
 nCols = 4;
@@ -250,7 +274,12 @@ for ch = 1:nChn
     
     thisChn = d(ch);
      if ~isempty(sp{thisChn})
-       plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
+         if ismember(ch,unique_stim_chns)
+             plot(time_axis,ave_spike(thisChn,:),'r','LineWidth',2);
+         else 
+             plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
+         end
+       % plot(time_axis,ave_spike(thisChn,:),'k','LineWidth',2);
        xlim([time_axis(1),time_axis(end)]);
        xlim([0 1.5]);
        ylim([global_min,global_max]);
@@ -271,6 +300,15 @@ for ch = 1:nChn
     text(time_axis(2), ymin, num2str(ch), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 12);
     set(gca,'FontSize',6,'Box','off');
 end
+
+% ---- Add Global Title ----
+han = axes('Position', [0 0 1 1], 'Visible', 'off'); % invisible full-figure axes
+han.Title.Visible = 'on';
+title(han, 'Average Spike Waveforms', ...
+      'FontSize', 12, ...
+      'FontWeight', 'bold', ...
+      'Units', 'normalized', ...
+      'Position', [0.5, 0.97, 0]);
 
 %% Raster Plot 
 TrialParams = loadTrialParams; d = Depth; AMP = loadAMP;
@@ -383,6 +421,12 @@ raster_x = [];
 raster_y = [];
 % MUA_trials = zeros(nTrials,nSamples);
 
+% find stimulation channels
+stim_chns = cell2mat(TrialParams(:,3));
+unique_stim_chns = unique(stim_chns);
+unique_stim_chns(unique_stim_chns == 0) = [];
+
+
 % Plot setting
 col_order = [1 4 2 3];
 row = 16:-1:1;
@@ -435,7 +479,9 @@ for i= 1:nChn
     rate = rate(3*smoothing:end-3*smoothing-1);
     yyaxis left
     % plot((-pre_ms:post_ms),rate, 'k', 'LineWidth',2)
-    if (max(rate)<= 40)
+    if ismember(i, unique_stim_chns)
+        plot((-pre_ms:post_ms), rate, 'b', 'LineWidth', 2)
+    elseif (max(rate)<= 40)
         ylim([0 50]);
         plot((-pre_ms:post_ms),rate, 'k', 'LineWidth',2)
     else
@@ -450,13 +496,20 @@ end
 han = axes('Position',[0 0 1 1],'Visible','off','Units','normalized');
 han.XLabel.Visible = 'on';
 han.YLabel.Visible = 'on';
+han.Title.Visible = 'on';
 xlabel(han, 'Time from Stimulation (ms)', ...
     'FontSize', 12, 'Units','normalized', ...
     'Position',[0.5, 0.02, 0]);
 ylabel(han, 'Firing Rate (spikes/s)', ...
     'FontSize', 12, 'Units','normalized', ...
     'Position',[0.02, 0.5, 0]);  % Left middle
+title(han, 'Raster Plot over All trials', ...
+      'FontSize',12, ...
+      'FontWeight','bold', ...
+      'Units','normalized', ...
+      'Position',[0.5, 0.97, 0]); 
 uistack(han, 'top');
+
 
 % Loop over tials
 for t = 1:nTrials
@@ -465,51 +518,7 @@ for t = 1:nTrials
     sp_in_trial = sp_times_ms(sp_idx) - (t0);
     raster_x = [raster_x; sp_in_trial];
     raster_y = [raster_y; t*ones(size(sp_in_trial))];
-
-    % % Compute average waveform per trial
-    % if ~isempty(sp_idx)
-    %     MUA_trials(t,:) = mean(waveforms(sp_idx,:),1);
-    % end
 end
-
-% compute avergae MUA across trials
-% avg_MUA = mean(MUA_trials,1);
-
-% Plotting
-% figure('Color','w');
-
-% % Raster plot
-% subplot(2,1,1); hold on;
-% for i = 1:length(raster_x)
-%     line([raster_x(i) raster_x(i)], [raster_y(i)-0.4 raster_y(i)+0.4], 'Color', 'k');
-% end
-% xlim([-pre_ms post_ms]);
-% ylim([0 nTrials+1]);
-% ylabel('Trial');
-% title(['Raster Plot - Channel ' num2str(thischn)]);
-% 
-% % MUA plot (average spike shape)
-% subplot(2,1,2); hold on;
-% plot(time_axis, avg_MUA, 'k', 'LineWidth', 1.5);
-% xlabel('Time relative to spike (ms)');
-% ylabel('Average µV');
-% title('Average MUA Waveform');
-
-% Raster plot
-% hold on;
-% 
-% % yyaxis left
-% % plot(time_axis, avg_MUA, 'k', 'LineWidth', 1.5);
-% yyaxis right
-% 
-% 
-% for i = 1:length(raster_x)
-%     line([raster_x(i) raster_x(i)], [raster_y(i)-0.4 raster_y(i)+0.4], 'Color', 'k');
-% end
-% % plot(time_axis, avg_MUA, 'k', 'LineWidth', 1.5);
-% xlabel('Time relative to spike (ms)');
-% ylabel('Average µV');
-% title('Average MUA Waveform');
 
 figure;
 yyaxis right
@@ -520,8 +529,6 @@ xvals = [raster_x(:)'; raster_x(:)'];
 yvals = [raster_y(:)'-0.4; raster_y(:)'+0.4];
 plot(xvals, yvals, 'k', 'LineStyle', '-', 'Marker', 'none')  % <-- enforce no markers
 
-% plot(time_axis, avg_MUA, 'k', 'LineWidth', 1.5);
-
 smoothing = 1;
 Z = hist(raster_x, (-pre_ms): post_ms);
 window = normpdf((-3*smoothing:3*smoothing),0,smoothing);
@@ -531,3 +538,96 @@ rate = rate(3*smoothing:end-3*smoothing-1);
 yyaxis left
 plot((-pre_ms:post_ms),rate, 'k', 'LineWidth',2)
 xlabel('Time relative to stimulation (ms)');
+
+%% raster plot (amplitude)
+FS = 30000;
+pre_ms = 50;
+post_ms = 150;
+TrialParams = loadTrialParams;
+StimParams = loadStimParams;
+trig = loadTrig(0);
+files = dir('*.sp.mat'); 
+if ~isempty(files)
+    load(files(1).name);  % Load the first matching file
+else
+    error('No .sp.mat files found in the current folder.');
+end 
+d = Depth;
+
+stim_amp = cell2mat(StimParams(2:end,16));
+TrialParams(:,4) = num2cell(stim_amp);
+unique_amp = unique(stim_amp);
+
+chn = 7;
+thisChn = d(chn); % channel file map 
+sp_chn = sp{thisChn};
+sp_times_ms = sp_chn(:,1); % spike time in ms
+
+trig_ms = trig / (FS/1000);
+nTrials = length(trig);
+numAmp = length(unique_amp);
+
+figure('Color','w');
+
+% Loop through each amp 
+for ii = 1:numAmp
+    amp = unique_amp(ii);
+    % find trials with this amplitude
+    trial_idx = find(stim_amp == amp);
+    trial_idx = ceil(trial_idx/2);
+    trial_idx = unique(trial_idx);
+
+    raster_x = [];
+    raster_y = [];
+
+    % loop over trials
+    for t = 1:length(trial_idx)
+        t0 = trig_ms(trial_idx(t));
+        sp_idx = find(sp_times_ms >= (t0 - pre_ms) & sp_times_ms <= (t0 + post_ms));
+        sp_in_trial = sp_times_ms(sp_idx) - t0;
+        raster_x = [raster_x; sp_in_trial];
+        raster_y = [raster_y; t * ones(size(sp_in_trial))];
+    end
+
+    % Plot raster for this amplitude
+    subplot(numAmp, 1, ii); hold on; yyaxis right;
+    set(gca, 'YColor', 'none');
+    xvals = [raster_x(:)'; raster_x(:)'];
+    yvals = [raster_y(:)'-0.6; raster_y(:)'+0.6];
+    plot(xvals, yvals, 'k', 'LineStyle', '-', 'Marker', 'none') 
+    ylim([0 length(trial_idx)+1]);
+
+    smoothing = 5;
+    Z = hist(raster_x, (-pre_ms): post_ms);
+    window = normpdf((-3*smoothing:3*smoothing),0,smoothing);
+    % rate = (1000/n_REP_true)*conv(Z,window);
+    rate = (1000/length(trial_idx))*conv(Z,window);
+    rate = rate(3*smoothing:end-3*smoothing-1);
+    yyaxis left
+
+    xlim([-pre_ms post_ms]);
+    plot((-pre_ms:post_ms),rate, 'k', 'LineWidth',2)
+    ylim([0 150])
+    title(sprintf('Amplitude = %.1f', amp));
+    hold off
+
+end
+
+han = axes('Position',[0 0 1 1],'Visible','off','Units','normalized');
+han.XLabel.Visible = 'on';
+han.YLabel.Visible = 'on';
+han.Title.Visible = 'on';
+xlabel(han, 'Time from Stimulation (ms)', ...
+    'FontSize', 12, 'Units','normalized', ...
+    'Position',[0.5, 0.02, 0]);
+ylabel(han, 'Firing Rate (spikes/s)', ...
+    'FontSize', 12, 'Units','normalized', ...
+    'Position',[0.02, 0.5, 0]);  % Left middle
+title(han, sprintf('Raster Plot over Amplitudes - Channel %d', chn), ...
+      'FontSize',12, ...
+      'FontWeight','bold', ...
+      'Units','normalized', ...
+      'Position',[0.5, 0.97, 0]); 
+uistack(han, 'top');
+
+

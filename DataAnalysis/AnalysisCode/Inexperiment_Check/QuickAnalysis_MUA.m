@@ -19,7 +19,7 @@ dName='amplifier';
 % nL = (ceil(info / (nChn*FS*double(T)))+1);
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
 %% Quick Analysis parameters
-nTrials = 400; % number of trials used for analysis
+nTrials = 10; % number of trials used for analysis
 window_ms = [-100,100]; % time window for data extract
 window_samps = round(window_ms/1000 * FS);
 total_sample = diff(window_samps) + 1;
@@ -113,7 +113,7 @@ for tr = 1:nTrials
         cross_idx = find(signal(2:end) < thr & signal(1:end-1) >= thr) + 1;
         cross_idx = cross_idx(:); 
         % Refractory (e.g., 0.6 ms)
-        refrac_samp = max(1, round(0.6e-3 * FS));
+        refrac_samp = max(1, round(1e-3 * FS));
         if numel(cross_idx) > 1
             keep = [true; diff(cross_idx) > refrac_samp];   % (n x 1) logical
         else
@@ -169,23 +169,23 @@ end
 fclose(vFID);
 
 
-%% plot all trials 
-for ch = 1:nChn
-    subplot(4, 8, ch);
-    MUA_ch = MUA_all(ch,:,:);
-    hold on;
-    ymax = max(abs(MUA_ch),[],"all");
-    for tr = 1:nTrials
-        plot(t_axis, MUA_all(ch, :,tr),'k');
-    end
-    hold off;
-    title(sprintf('Ch %d', ch));
-    xlabel('Time (ms)');
-    ylabel('µV');
-    ylim([-ymax,ymax]);
-    xlim([-2,10])
-end
-sgtitle('Spike waveform across trials');
+% %% plot all trials 
+% for ch = 1:nChn
+%     subplot(4, 8, ch);
+%     MUA_ch = MUA_all(ch,:,:);
+%     hold on;
+%     ymax = max(abs(MUA_ch),[],"all");
+%     for tr = 1:nTrials
+%         plot(t_axis, MUA_all(ch, :,tr),'k');
+%     end
+%     hold off;
+%     title(sprintf('Ch %d', ch));
+%     xlabel('Time (ms)');
+%     ylabel('µV');
+%     ylim([-ymax,ymax]);
+%     xlim([-2,10])
+% end
+% sgtitle('Spike waveform across trials');
 
 
 wf_t  = (-preS:postS) / FS * 1000;   % ms
@@ -225,4 +225,4 @@ for ch = 1:nChn
     xlim([wf_t(1), wf_t(end)]);
     hold off;
 end
-sgtitle('Spike waveforms across all trials');
+sgtitle('Spike waveforms across 10 trials');

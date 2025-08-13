@@ -6,7 +6,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
 
 
 
-%% Load Intan parameters
+%% ------------------ Parameters ------------------ %%
+% Intan parameters
 filepath = pwd;
 fileinfo = dir([filepath filesep 'info.rhs']);
 [amplifier_channels,frequency_parameters]=read_Intan_RHS2000_file;
@@ -14,12 +15,8 @@ nChn=size(amplifier_channels,2);
 FS=frequency_parameters.amplifier_sample_rate;
 
 dName='amplifier';
-% info = dir([filepath filesep dName '.dat']);
-% info = info.bytes/2;
-% nL = (ceil(info / (nChn*FS*double(T)))+1);
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
-%% Quick Analysis parameters
-nTrials = 10; % number of trials used for analysis
+% Quick Analysis parameters 
 window_ms = [-100,100]; % time window for data extract
 window_samps = round(window_ms/1000 * FS);
 total_sample = diff(window_samps) + 1;
@@ -27,28 +24,21 @@ trialLength = diff(window_samps)+1;
 blank_ms = 2;%[-1,1]; % artifact blanking window ±1 ms
 blank_samps = round(blank_ms/1000 * FS);
 
-%% Load trigger and parameters
+% Trigger and parameters
+nTrials = 300; % number of trials used for analysis
+Trial_start = 201;
 if isempty(dir('*.trig.dat'))
     cleanTrig_sabquick;
 end
 trig = loadTrig(0);
-trig = trig(1:nTrials);
+if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials); end
+% trig = trig(1:nTrials);
 nTrig = length(trig); % length of trigger
-d = Depth;
+d = Depth_s(0);
 % load trial parameters
 TrialParams = loadTrialParams;
 trialIDs = cell2mat(TrialParams(:,2));
 trialIDs = trialIDs(1:nTrials);
-%% Bandpass filter design for MUA (300-3000 Hz)
-centerFreq = 4000;   % Hz
-halfBandwidth = 3700; % Hz
-f1 = centerFreq - halfBandwidth;  % lower cutoff
-f2 = centerFreq + halfBandwidth;  % upper cutoff
-bpFilt = designfilt('bandpassiir', ...
-    'FilterOrder', 8, ...
-    'HalfPowerFrequency1', f1, ...
-    'HalfPowerFrequency2', f2, ...
-    'SampleRate', FS);
 
 % Time vector for plotting
 t_axis = (window_samps(1):window_samps(2)) / FS * 1000;
@@ -62,12 +52,59 @@ bl_ms   = [-60, -5]; % baseline firing rate time
 bl_samp = round(bl_ms/1000 * FS);
 
 % Spike waveform window ~3 ms (e.g., 1 ms pre, 2 ms post)
-
 preS  = round(1.0e-3 * FS);
 postS = round(2.0e-3 * FS);
 
 % For better alignment, local negative peak within ±0.5 ms of crossing
-alignRad = max(1, round(0.5e-3 * FS));
+alignRad = max(1, round(3e-3 * FS));
+
+% Spike detection parameters
+pp_min_uV   = 30;           % min peak-to-peak 
+pp_max_uV   = 300;          % max peak-to-peak
+tp_min_ms   = 0.30;         % trough-to-peak min width
+tp_max_ms   = 1.20;         % trough-to-peak max width
+tp_min_samp = round(tp_min_ms/1000 * FS);
+tp_max_samp = round(tp_max_ms/1000 * FS);
+
+%% ------------------ Filter design ------------------ %% 
+centerFreq = 4000;   % Hz
+halfBandwidth = 3700; % Hz
+f1 = centerFreq - halfBandwidth;  % lower cutoff
+f2 = centerFreq + halfBandwidth;  % upper cutoff
+bpFilt = designfilt('bandpassiir', ...
+    'FilterOrder', 8, ...
+    'HalfPowerFrequency1', 300, ...
+    'HalfPowerFrequency2', 3000, ...
+    'SampleRate', FS);
+
+%% ------------------ Threshold calculation ------------------ %% 
+thr = zeros(nChn, 1);
+thres_duration_sec   = 20;   % Length of data to use for threshold calc
+num_samples_threshold = min( ...
+    floor(thres_duration_sec * FS), ...
+    floor(dir([filepath filesep dName '.dat']).bytes / (nChn * 2)) ...
+); % number of threshold samples
+assert(num_samples_threshold > 10*FS, ...
+    'Recording shorter than ~10 s; not enough for thresholds.'); % warrning
+% read data 
+fseek(vFID, 0, 'bof');
+data_thres_uV = fread(vFID, [nChn, num_samples_threshold], 'int16') * 0.195;
+% Loop over channels
+for ch_idx = 1:nChn
+    thisChn = d(ch_idx);   % Depth-mapped channel index
+    
+    % Extract the first 20 s for this channel
+    signal = data_thres_uV(thisChn, :);
+    
+    % Apply band-pass filter
+    signal_filt = filtfilt(bpFilt, double(signal));
+    
+    sigma = median(abs(signal_filt)) / 0.6745;
+    % Compute threshold as -4.5 × standard deviation
+    thr(ch_idx) = -5.5 * sigma;
+end
+
+%% ------------------ Data Processing ------------------ %%
 
 for tr = 1:nTrials
     fprintf('Reading trial %d/%d\n', tr, nTrials);
@@ -85,34 +122,26 @@ for tr = 1:nTrials
         thisChn = d(ch);
         raw = data(thisChn, :);
         %% ---- Artifact Blank ---- %%
-        % Interpolate blank
+        % Interpolate artifact
         raw_interp = raw;
         raw_interp(blank_range) = interp1(keep_range, raw(keep_range), blank_range, 'linear', 'extrap');
         % raw(blank_range(1):blank_range(end)) = interpolate(raw(blank_range(1):blank_range(end)), 1);
         % Filter & rectify
         filtered = filtfilt(bpFilt, raw_interp);
-        % mua = abs(filtered);
-        % smoothed = movmean(mua, 15);
         smoothed = movmean(filtered, 15);
         % Store
         MUA_all(ch, :, tr) = smoothed;
-        MUA_unsmooth(ch, :, tr) = filtered;
 
-        %% ---- baseline firing rate ---- %%
+        %% ---- Baseline firing rate ---- %%
         bl_start = stim_idx + bl_samp(1);
         bl_end   = stim_idx + bl_samp(2) - 1; 
 
         signal = filtered;     % data extract
-        seg = signal(bl_start:bl_end);  % data extract
 
-        % noise estimate and negative threshold
-        sigma = median(abs(seg)) / 0.6745;        % MAD -> sigma
-        thr   = -4.5 * sigma;                     % threshold
-
-        %% ---- Spike detection ----
-        cross_idx = find(signal(2:end) < thr & signal(1:end-1) >= thr) + 1;
+        %% ---- Spike detection ---- %%
+        cross_idx = find(signal(2:end) < thr(ch) & signal(1:end-1) >= thr(ch)) + 1;
         cross_idx = cross_idx(:); 
-        % Refractory (e.g., 0.6 ms)
+        % Refractory period
         refrac_samp = max(1, round(1e-3 * FS));
         if numel(cross_idx) > 1
             keep = [true; diff(cross_idx) > refrac_samp];   % (n x 1) logical
@@ -147,6 +176,22 @@ for tr = 1:nTrials
             if max(abs(wf)) > 500      % artifact rejection
                 continue
             end
+            [~, i_trough] = min(wf);                     % trough index
+            [~, i_peak] = max(wf);  
+            % 1) biphasic check 
+            is_biphasic = (min(wf) < 0) && (max(wf(i_trough:end)) > 0);
+            % 2) peak-to-peak amplitude constraint
+            pp_amp = max(wf) - min(wf);
+            pp_ok  = (pp_amp >= pp_min_uV) && (pp_amp <= pp_max_uV);
+            % 3) through -> peak width constraint
+            tp_width = i_peak - i_trough; % samples
+            tp_ok = tp_width >= tp_min_samp && tp_width <= tp_max_samp;
+
+            keep_this_spike = is_biphasic && pp_ok && tp_ok;
+            if ~keep_this_spike
+                continue;   % reject this waveform
+            end
+
             wf_list{end+1} = wf; 
             idx_list(end+1) = ip; 
         end
@@ -168,29 +213,12 @@ end
 
 fclose(vFID);
 
-
-% %% plot all trials 
-% for ch = 1:nChn
-%     subplot(4, 8, ch);
-%     MUA_ch = MUA_all(ch,:,:);
-%     hold on;
-%     ymax = max(abs(MUA_ch),[],"all");
-%     for tr = 1:nTrials
-%         plot(t_axis, MUA_all(ch, :,tr),'k');
-%     end
-%     hold off;
-%     title(sprintf('Ch %d', ch));
-%     xlabel('Time (ms)');
-%     ylabel('µV');
-%     ylim([-ymax,ymax]);
-%     xlim([-2,10])
-% end
-% sgtitle('Spike waveform across trials');
+%% ------------------ Plot ------------------ %% 
+wf_t  = (-preS:postS) / FS * 1000;   % waveform time ms
 
 
-wf_t  = (-preS:postS) / FS * 1000;   % ms
-
-% --- Find global y-limit ---
+% ---- (1) Spikes waveform plot ---- %
+% Find global y-limit
 ymax_global = 0;
 for ch = 1:nChn
     for tr = 1:nTrials
@@ -202,8 +230,11 @@ for ch = 1:nChn
         end
     end
 end
+cmap = lines(nTrials);   % nTrials distinct color
 
-% --- Plot ---
+cmap_seq = turbo(nTrials);                     % deterministic, perceptually uniform
+trialColor = @(tr) cmap_seq(tr,:); 
+% Plot
 figure;
 for ch = 1:nChn
     subplot(4, 8, ch);
@@ -213,7 +244,8 @@ for ch = 1:nChn
         if ~isempty(Spikes{ch,tr}) && isfield(Spikes{ch,tr},'wf')
             wfs = Spikes{ch,tr}.wf;
             if ~isempty(wfs)
-                plot(wf_t, wfs', 'k');   % plot each spike
+                % plot(wf_t, wfs', 'Color',cmap(tr,:),'LineWidth', 0.5);   % plot each spike
+                plot(wf_t, wfs', 'Color',trialColor(tr),'LineWidth', 0.5);   % plot each spike
             end
         end
     end
@@ -225,4 +257,97 @@ for ch = 1:nChn
     xlim([wf_t(1), wf_t(end)]);
     hold off;
 end
-sgtitle('Spike waveforms across 10 trials');
+sgtitle(sprintf('Spike waveforms across %d trials', nTrials),'FontWeight','bold');
+
+% ---- (2) Raster plot ---- %
+ch_raster = 24;     % channel for raster plot
+ras_win   = [-20 100];% ms window for raster display
+bin_ms    = 1;      % PSTH bin (ms)
+
+% Collect spike times
+spkTimesPerTrial = cell(nTrials,1);
+for tr = 1:nTrials
+    if ~isempty(Spikes{ch_raster,tr}) && isfield(Spikes{ch_raster,tr},'t_ms')
+        tt = Spikes{ch_raster,tr}.t_ms;
+        spkTimesPerTrial{tr} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+    else
+        spkTimesPerTrial{tr} = [];
+    end
+end
+
+% Figure with raster (top & larger) and PSTH (bottom & smaller)
+figure();
+if ~isempty(bin_ms) && bin_ms > 0
+    tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+    ax1 = nexttile([3 1]);
+else
+    tl = tiledlayout(1,1,'TileSpacing','compact','Padding','compact');
+    ax1 = nexttile;
+end
+title(tl, sprintf('Raster | Ch %d  (%d trials)', ch_raster, nTrials), 'FontWeight','bold');
+% ax1 = nexttile; 
+hold(ax1,'on');
+for tr = 1:nTrials
+    tt = spkTimesPerTrial{tr};
+    if ~isempty(tt)
+        % draw a vertical tick per spike
+        y0 = Trial_start + tr - 1;
+        for k = 1:numel(tt)
+            plot(ax1, [tt(k)+1 tt(k)+1], [y0-1 y0+1], ...
+                 'Color', 'k', 'LineWidth', 1.5);
+        end
+    end
+end
+xline(0, 'r', 'LineWidth', 1.5);
+xlim(ax1, ras_win);
+ylim(ax1, [Trial_start-0.5, Trial_start+nTrials-0.5]);
+yt = round(linspace(Trial_start, Trial_start + nTrials - 1, 5));
+xt = round(linspace(ras_win(1),ras_win(2),25));
+yticks(ax1, yt);
+xticks(ax1, xt);
+ylabel(ax1, 'Trial #');
+xlabel(ax1, 'Time (ms)');
+box(ax1,'off');
+
+% PSTH
+if ~isempty(bin_ms) && bin_ms > 0
+    ax2 = nexttile; hold(ax2,'on');
+
+    edges  = ras_win(1):bin_ms:ras_win(2);           % bin edges (ms)
+    counts = zeros(1, numel(edges)-1);               % init histogram
+    ctrs = edges(1:end-1) + diff(edges)/2;
+
+    % count spikes
+    for tr = 1:nTrials
+        tt = spkTimesPerTrial{tr};                   % spike times (ms) for this trial
+        if isempty(tt), continue; end
+        counts = counts + histcounts(tt, edges);
+    end
+
+    % convert to firing rate (spike/s)
+    bin_s = bin_ms/1000;
+    rate  = counts / (nTrials * bin_s);
+    % smooth data
+    % indices for pre/post 0 ms
+    idx_pre  = ctrs < 0;
+    idx_post = ~idx_pre;
+    smooth_ms = 5; 
+    smooth_bins = max(1, round(smooth_ms/bin_ms));
+    rate_s = rate; % preallocate
+
+    if any(idx_pre)
+        rate_s(idx_pre) = smoothdata(rate(idx_pre), 'gaussian', smooth_bins);
+    end
+    if any(idx_post)
+        rate_s(idx_post) = smoothdata(rate(idx_post), 'gaussian', smooth_bins);
+    end
+    % rate_s      = smoothdata(rate, 'gaussian', smooth_bins);
+    plot(ax2, ctrs, rate_s, 'k-', 'LineWidth', 1.8);
+    % bar(ax2, ctrs, rate, 1.0, 'FaceColor',[0.2 0.2 0.2], 'EdgeColor','none');
+
+    xline(ax2, 0, 'r', 'LineWidth', 1.5);
+    xlim(ax2, ras_win);
+    ylabel(ax2, 'Rate (sp/s)');
+    xlabel(ax2, 'Time (ms)');
+    box(ax2,'off');
+end

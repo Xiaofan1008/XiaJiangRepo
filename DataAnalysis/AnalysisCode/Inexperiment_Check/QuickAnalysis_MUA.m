@@ -5,7 +5,6 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
 addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
 
 
-
 %% ------------------ Parameters ------------------ %%
 % Intan parameters
 filepath = pwd;
@@ -16,6 +15,7 @@ FS=frequency_parameters.amplifier_sample_rate;
 
 dName='amplifier';
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
+
 % Quick Analysis parameters 
 window_ms = [-100,100]; % time window for data extract
 window_samps = round(window_ms/1000 * FS);
@@ -25,20 +25,43 @@ blank_ms = 2;%[-1,1]; % artifact blanking window ±1 ms
 blank_samps = round(blank_ms/1000 * FS);
 
 % Trigger and parameters
-nTrials = 300; % number of trials used for analysis
+nTrials = 400; % number of trials used for analysis
 Trial_start = 201;
 if isempty(dir('*.trig.dat'))
     cleanTrig_sabquick;
 end
 trig = loadTrig(0);
-if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials); end
-% trig = trig(1:nTrials);
+if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials-1); end
 nTrig = length(trig); % length of trigger
 d = Depth_s(0);
+
 % load trial parameters
 TrialParams = loadTrialParams;
 trialIDs = cell2mat(TrialParams(:,2));
 trialIDs = trialIDs(1:nTrials);
+
+% load StimParameters
+fileDIR = dir('*_exp_datafile_*.mat');
+assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat found.');
+fileDIR = fileDIR(1).name;
+S = load(fileDIR,'StimParams','simultaneous_stim','CHN');
+StimParams         = S.StimParams;
+simultaneous_stim  = S.simultaneous_stim;
+CHN = S.CHN;
+
+% extract amplitude
+trialAmps_all = cell2mat(StimParams(2:end,16));
+trialAmps_all = trialAmps_all(1:simultaneous_stim:end);
+
+trialAmps = trialAmps_all(Trial_start : Trial_start + nTrials - 1);
+
+% Group by amplitude
+[uniqAmps,~,ampIdx] = unique(trialAmps(:));
+Amps = uniqAmps;
+if any(Amps == -1)        % treat -1 as 0 µA, if present
+    Amps(Amps == -1) = 0;
+end
+n_AMP = numel(Amps);
 
 % Time vector for plotting
 t_axis = (window_samps(1):window_samps(2)) / FS * 1000;
@@ -47,7 +70,7 @@ t_axis = (window_samps(1):window_samps(2)) / FS * 1000;
 MUA_all = zeros(nChn, trialLength, nTrials);
 Spikes = cell(nChn, nTrials); 
 
-% baseline firing rate
+%% ------ Baseline firing rate ------ %% 
 bl_ms   = [-60, -5]; % baseline firing rate time 
 bl_samp = round(bl_ms/1000 * FS);
 
@@ -103,6 +126,8 @@ for ch_idx = 1:nChn
     % Compute threshold as -4.5 × standard deviation
     thr(ch_idx) = -5.5 * sigma;
 end
+
+
 
 %% ------------------ Data Processing ------------------ %%
 
@@ -213,11 +238,41 @@ end
 
 fclose(vFID);
 
+% ------- Average spike waveform per amplitude per channel ------ %
+AvgWF_amp = nan(nChn, wf_len, n_AMP);   % mean waveform per (ch, amp)
+Nspk_amp  = zeros(nChn, n_AMP);         % num of spikes in each mean
+
+for ch = 1:nChn
+    for k = 1:n_AMP
+        rows = [];
+        for tr = 1:nTrials
+            if ampIdx(tr) ~= k, continue; end
+            if isempty(Spikes{ch,tr}), continue; end
+            wfs = Spikes{ch,tr}.wf;   % [Nspk x wf_len]
+            if ~isempty(wfs)
+                rows = [rows; wfs];
+            end
+        end
+        if ~isempty(rows)
+            AvgWF_amp(ch,:,k) = mean(rows,1,'omitnan');
+            Nspk_amp(ch,k)    = size(rows,1);
+        end
+    end
+end
+
+% ------ Stimulation Channels ------ %
+stimCh = [];
+if exist('CHN','var') && ~isempty(CHN)
+    stimCh = unique(CHN(:));           % e.g., columns are pairs -> take union
+    stimCh = stimCh(:).';              % row vector for ismember
+end
+
 %% ------------------ Plot ------------------ %% 
+%% Spike Waveform Plot 
 wf_t  = (-preS:postS) / FS * 1000;   % waveform time ms
 
 
-% ---- (1) Spikes waveform plot ---- %
+% ---- (1) Spikes waveform plot all ---- %
 % Find global y-limit
 ymax_global = 0;
 for ch = 1:nChn
@@ -240,6 +295,14 @@ for ch = 1:nChn
     subplot(4, 8, ch);
     hold on;
 
+    % Soft red background if this is a stimulation channel
+    if ismember(ch, stimCh)
+        set(gca, 'Color', [1 0.95 0.95]);    % light pink
+        baseLW = 1.8;                       % slightly thicker for stim chans
+    else
+        baseLW = 1.2;
+    end
+
     for tr = 1:nTrials
         if ~isempty(Spikes{ch,tr}) && isfield(Spikes{ch,tr},'wf')
             wfs = Spikes{ch,tr}.wf;
@@ -259,8 +322,102 @@ for ch = 1:nChn
 end
 sgtitle(sprintf('Spike waveforms across %d trials', nTrials),'FontWeight','bold');
 
-% ---- (2) Raster plot ---- %
-ch_raster = 24;     % channel for raster plot
+
+% ---- (2) Avg Spike waveform per AMP per CHH ---- % 
+cmap = turbo(n_AMP);
+% y-axis
+abs_max = max(abs(AvgWF_amp), [], 'all', 'omitnan');
+y_lim = ceil(abs_max/100)*100;
+
+figure('Name','Spike avg waveform','NumberTitle','off','Color','w');
+hLines = gobjects(1,n_AMP);
+
+for ch = 1:nChn
+     subplot(4,8,ch); hold on
+        
+     % Soft red background if this is a stimulation channel
+    if ismember(ch, stimCh)
+        set(gca, 'Color', [1 0.95 0.95]);    % light pink
+        baseLW = 1.8;                       % slightly thicker for stim chans
+    else
+        baseLW = 1.2;
+    end
+
+     for k = 1:n_AMP
+        if ~all(isnan(AvgWF_amp(ch,:,k)))
+            hLines(k) = plot(wf_t, squeeze(AvgWF_amp(ch,:,k)), ...
+                'LineWidth', 1.5, 'Color', cmap(k,:));
+        end
+     end
+
+    xline(0,'r-');
+    title(sprintf('Ch %d', ch), 'FontSize', 8);
+    xlim([wf_t(1) wf_t(end)]);
+    ylim([-y_lim y_lim]);
+    xlabel('Time (ms)','FontSize',8);
+    ylabel('\muV','FontSize',8);
+    box off
+end
+
+% legend
+legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
+lgd = legend(hLines, legLabels, 'Orientation','horizontal', ...
+             'Box','off','FontSize',10);
+lgd.Position = [0.1, 0.01, 0.8, 0.05];   % center at bottom
+
+
+% ---- (3) Spike waveform per AMP one CHN ---- % 
+ch_view = 24;
+absmax = 0;
+for tr = 1:nTrials
+    S = Spikes{ch_view,tr};
+    if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
+        absmax = max(absmax, max(abs(S.wf),[],'all'));
+    end
+end
+
+nRows = ceil(sqrt(n_AMP));
+nCols = ceil(n_AMP / nRows);
+
+figure('Name',sprintf('Ch %d: spikes by amplitude', ch_view), ...
+       'NumberTitle','off','Color','w');
+
+for k = 1:n_AMP
+    subplot(nRows, nCols, k); hold on
+    rows = [];
+    for tr = 1:nTrials
+        if ampIdx(tr) ~= k, continue; end
+        S = Spikes{ch_view,tr};
+        if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
+            rows = [rows; S.wf]; % [Nspk x wf_len]
+        end
+    end
+    if ~isempty(rows)
+        nSpk = size(rows,1);
+        rowColors = lines(nSpk);
+        for r = 1: nSpk
+            plot(wf_t, rows(r,:), 'Color', rowColors(r,:), 'LineWidth', 0.5);
+        end
+        % plot all spikes (thin, faint)
+        % plot(wf_t, rows', 'Color', 'k', 'LineWidth', 0.5); % alpha supported R2022a+; if not, drop the 0.25
+        % mean waveform (bold)
+        plot(wf_t, mean(rows,1,'omitnan'), 'Color', 'b', 'LineWidth', 2.0);
+        nSpk = size(rows,1);
+    else
+        nSpk = 0;
+    end
+    xline(0,'r-');
+    title(sprintf('%g \\muA  (n=%d)', Amps(k), nSpk), 'FontSize', 10);
+    xlim([wf_t(1) wf_t(end)]);
+    ylim([-y_lim y_lim]);
+    xlabel('Time (ms)'); ylabel('\muV');
+    box off
+end
+sgtitle(sprintf('Channel %d: spikes grouped by amplitude', ch_view), 'FontWeight','bold');
+
+
+%% Raster Plot 
+ch_raster = 31;     % channel for raster plot
 ras_win   = [-20 100];% ms window for raster display
 bin_ms    = 1;      % PSTH bin (ms)
 
@@ -331,7 +488,7 @@ if ~isempty(bin_ms) && bin_ms > 0
     % indices for pre/post 0 ms
     idx_pre  = ctrs < 0;
     idx_post = ~idx_pre;
-    smooth_ms = 5; 
+    smooth_ms = 5; % smooth window
     smooth_bins = max(1, round(smooth_ms/bin_ms));
     rate_s = rate; % preallocate
 
@@ -347,7 +504,13 @@ if ~isempty(bin_ms) && bin_ms > 0
 
     xline(ax2, 0, 'r', 'LineWidth', 1.5);
     xlim(ax2, ras_win);
+    ylim(ax2, [0, 200]);
     ylabel(ax2, 'Rate (sp/s)');
     xlabel(ax2, 'Time (ms)');
     box(ax2,'off');
 end
+
+%% ------ Normalized Spike Analysis ------ %% 
+ 
+% Parameters
+resp_ms = [0 20]; % post stimulation window (ms)

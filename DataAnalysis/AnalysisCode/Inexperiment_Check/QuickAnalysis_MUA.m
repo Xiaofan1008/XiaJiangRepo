@@ -25,15 +25,17 @@ blank_ms = 2;%[-1,1]; % artifact blanking window ±1 ms
 blank_samps = round(blank_ms/1000 * FS);
 
 % Trigger and parameters
-nTrials = 400; % number of trials used for analysis
-Trial_start = 201;
 if isempty(dir('*.trig.dat'))
     cleanTrig_sabquick;
 end
 trig = loadTrig(0);
+trig_all = trig; 
+d = Depth_s(0);
+% Extract trigger
+nTrials = 400; % number of trials used for analysis
+Trial_start = 201;
 if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials-1); end
 nTrig = length(trig); % length of trigger
-d = Depth_s(0);
 
 % load trial parameters
 TrialParams = loadTrialParams;
@@ -44,10 +46,12 @@ trialIDs = trialIDs(1:nTrials);
 fileDIR = dir('*_exp_datafile_*.mat');
 assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat found.');
 fileDIR = fileDIR(1).name;
-S = load(fileDIR,'StimParams','simultaneous_stim','CHN');
+S = load(fileDIR,'StimParams','simultaneous_stim','CHN','E_MAP','n_Trials');
 StimParams         = S.StimParams;
 simultaneous_stim  = S.simultaneous_stim;
 CHN = S.CHN;
+E_MAP = S.E_MAP;
+n_Trials = S.n_Trials;
 
 % extract amplitude
 trialAmps_all = cell2mat(StimParams(2:end,16));
@@ -69,10 +73,6 @@ t_axis = (window_samps(1):window_samps(2)) / FS * 1000;
 % Preallocate
 MUA_all = zeros(nChn, trialLength, nTrials);
 Spikes = cell(nChn, nTrials); 
-
-%% ------ Baseline firing rate ------ %% 
-bl_ms   = [-60, -5]; % baseline firing rate time 
-bl_samp = round(bl_ms/1000 * FS);
 
 % Spike waveform window ~3 ms (e.g., 1 ms pre, 2 ms post)
 preS  = round(1.0e-3 * FS);
@@ -102,13 +102,13 @@ bpFilt = designfilt('bandpassiir', ...
 
 %% ------------------ Threshold calculation ------------------ %% 
 thr = zeros(nChn, 1);
-thres_duration_sec   = 20;   % Length of data to use for threshold calc
+thres_duration_sec   = 10;   % Length of data to use for threshold calc
 num_samples_threshold = min( ...
     floor(thres_duration_sec * FS), ...
     floor(dir([filepath filesep dName '.dat']).bytes / (nChn * 2)) ...
 ); % number of threshold samples
-assert(num_samples_threshold > 10*FS, ...
-    'Recording shorter than ~10 s; not enough for thresholds.'); % warrning
+assert(num_samples_threshold > 5*FS, ...
+    'Recording shorter than ~5 s; not enough for thresholds.'); % warrning
 % read data 
 fseek(vFID, 0, 'bof');
 data_thres_uV = fread(vFID, [nChn, num_samples_threshold], 'int16') * 0.195;
@@ -127,6 +127,30 @@ for ch_idx = 1:nChn
     thr(ch_idx) = -5.5 * sigma;
 end
 
+%% ------ Baseline firing rate ------ %% 
+maxBlankSamps = floor(10 * FS);  % up to 10s
+firstTrig = trig_all(1);
+blankSamps    = min(maxBlankSamps, max(0, firstTrig - 1)); % data for calculation
+
+if blankSamps < 1
+    warning('No pre-stim blank data available before the first trigger.');
+else 
+    fseek(vFID, 0, 'bof');
+    blankBlock_uV = fread(vFID, [nChn, blankSamps], 'int16') * 0.195;  % [chn x samp] µV
+
+    refrac_samp = round(1e-3*FS);
+    for ch = 1:nChn
+        thisChn = d(ch);
+        x = double(blankBlock_uV(thisChn,:));
+        x = filtfilt(bpFilt, x);                % filter for spike analysis
+        thr_ch = thr(ch_idx);
+
+
+    end
+
+
+
+end
 
 
 %% ------------------ Data Processing ------------------ %%
@@ -158,8 +182,8 @@ for tr = 1:nTrials
         MUA_all(ch, :, tr) = smoothed;
 
         %% ---- Baseline firing rate ---- %%
-        bl_start = stim_idx + bl_samp(1);
-        bl_end   = stim_idx + bl_samp(2) - 1; 
+        % bl_start = stim_idx + bl_samp(1);
+        % bl_end   = stim_idx + bl_samp(2) - 1; 
 
         signal = filtered;     % data extract
 
@@ -239,6 +263,7 @@ end
 fclose(vFID);
 
 % ------- Average spike waveform per amplitude per channel ------ %
+wf_len = preS + postS + 1;
 AvgWF_amp = nan(nChn, wf_len, n_AMP);   % mean waveform per (ch, amp)
 Nspk_amp  = zeros(nChn, n_AMP);         % num of spikes in each mean
 
@@ -261,18 +286,36 @@ for ch = 1:nChn
 end
 
 % ------ Stimulation Channels ------ %
-stimCh = [];
-if exist('CHN','var') && ~isempty(CHN)
-    stimCh = unique(CHN(:));           % e.g., columns are pairs -> take union
-    stimCh = stimCh(:).';              % row vector for ismember
+E_NAME = E_MAP(2:end); % Channel name e.g. "A-001"
+if exist('StimParams','var') && ~isempty(StimParams)
+    % Extract first column for channel 
+    stimNames = StimParams(2:end,1);
+    [tf, idx_all] = ismember(stimNames, E_NAME);
 end
+% group channels per trial
+stimChPerTrial_all = cell(n_Trials,1);
+for t = 1:n_Trials
+    rr = (t-1)*simultaneous_stim + (1:simultaneous_stim);
+    v  = unique(idx_all(rr));                                  % dedupe within trial
+    v  = v(v>=0).';                                             % drop zeros, row vector
+    stimChPerTrial_all{t} = v;
+end
+% find unique channels 
+uniqueCh = unique([stimChPerTrial_all{:}]); 
+% find unique channel set for each trial
+comb = zeros(n_Trials, simultaneous_stim);
+for i = 1:n_Trials
+    v = stimChPerTrial_all{i};  
+    comb(i,1:numel(v)) = v;
+end
+[uniqueComb, ~, combClass] = unique(comb, 'rows');
+combClass_win = combClass(Trial_start : Trial_start + nTrials - 1);
 
 %% ------------------ Plot ------------------ %% 
 %% Spike Waveform Plot 
 wf_t  = (-preS:postS) / FS * 1000;   % waveform time ms
 
-
-% ---- (1) Spikes waveform plot all ---- %
+% ------ (1) Spikes waveform plot all ------ %
 % Find global y-limit
 ymax_global = 0;
 for ch = 1:nChn
@@ -296,7 +339,7 @@ for ch = 1:nChn
     hold on;
 
     % Soft red background if this is a stimulation channel
-    if ismember(ch, stimCh)
+    if ismember(ch, uniqueCh)
         set(gca, 'Color', [1 0.95 0.95]);    % light pink
         baseLW = 1.8;                       % slightly thicker for stim chans
     else
@@ -323,11 +366,11 @@ end
 sgtitle(sprintf('Spike waveforms across %d trials', nTrials),'FontWeight','bold');
 
 
-% ---- (2) Avg Spike waveform per AMP per CHH ---- % 
+% ------ (2) Avg Spike waveform per AMP per CHH ------ % 
 cmap = turbo(n_AMP);
 % y-axis
 abs_max = max(abs(AvgWF_amp), [], 'all', 'omitnan');
-y_lim = ceil(abs_max/100)*100;
+y_lim = ceil(abs_max/5)*5;
 
 figure('Name','Spike avg waveform','NumberTitle','off','Color','w');
 hLines = gobjects(1,n_AMP);
@@ -336,7 +379,7 @@ for ch = 1:nChn
      subplot(4,8,ch); hold on
         
      % Soft red background if this is a stimulation channel
-    if ismember(ch, stimCh)
+    if ismember(ch, uniqueCh)
         set(gca, 'Color', [1 0.95 0.95]);    % light pink
         baseLW = 1.8;                       % slightly thicker for stim chans
     else
@@ -353,7 +396,7 @@ for ch = 1:nChn
     xline(0,'r-');
     title(sprintf('Ch %d', ch), 'FontSize', 8);
     xlim([wf_t(1) wf_t(end)]);
-    ylim([-y_lim y_lim]);
+    ylim([-y_lim y_lim]);    
     xlabel('Time (ms)','FontSize',8);
     ylabel('\muV','FontSize',8);
     box off
@@ -366,7 +409,7 @@ lgd = legend(hLines, legLabels, 'Orientation','horizontal', ...
 lgd.Position = [0.1, 0.01, 0.8, 0.05];   % center at bottom
 
 
-% ---- (3) Spike waveform per AMP one CHN ---- % 
+% ------ (3) Spike waveform per AMP one CHN ------ % 
 ch_view = 24;
 absmax = 0;
 for tr = 1:nTrials
@@ -414,6 +457,122 @@ for k = 1:n_AMP
     box off
 end
 sgtitle(sprintf('Channel %d: spikes grouped by amplitude', ch_view), 'FontWeight','bold');
+
+% ------- (4) Spike Waveforms by Stim Set ------ % 
+classes_here = unique(combClass_win(:)');   % combos appear in the window
+for cc = 1:length(classes_here)
+    tr_idx = find(combClass_win == cc); % trials belong to this combo
+    stimIdx = uniqueComb(cc, :);
+
+
+    % global y-limit
+    ymax_global = 0;
+    for ch = 1:nChn
+        for t = 1:length(tr_idx)
+            S = Spikes{ch,tr_idx(t)};
+            if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
+                ymax_global = max(ymax_global, max(abs(S.wf),[],'all'));
+            end
+        end
+    end
+    y_lim = ceil(ymax_global/50)*50;  % round up to nearest 50 µV
+    comboLabel = strjoin(E_NAME(stimIdx), ' + ');
+    cmap = jet(numel(tr_idx));
+
+    figure('Color','w','Name',sprintf('Spikes | %s', comboLabel),'NumberTitle','off');
+    
+    for ch = 1:nChn
+        subplot(4,8,ch); hold on;
+
+        % stimulation channels
+        if ismember(ch, stimIdx)
+            set(gca, 'Color', [1 0.95 0.95]);   % light pink
+        end
+
+        for t = 1:length(tr_idx)
+            S = Spikes{ch,tr_idx(t)};
+            if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
+                plot(wf_t, S.wf','Color', cmap(t,:), 'LineWidth', 0.5);
+            end
+        end
+
+        xline(0,'r-','LineWidth',1.2);
+        title(sprintf('Ch %d', ch), 'FontSize', 8);
+        xlim([wf_t(1) wf_t(end)]);
+        ylim([-y_lim y_lim]);   % same across all subplots
+        xlabel('Time (ms)','FontSize',8);
+        ylabel('\muV','FontSize',8);
+        box off;
+    end
+    sgtitle(sprintf('Spike waveforms | Stim combo: %s  | Trials: %d', comboLabel, numel(tr_idx)), ...
+            'FontWeight','bold');    
+end
+
+% ------ (5) Mean Spike waveforms per AMP per Stim Set ------ %
+classes_here = unique(combClass_win(:)'); % combos appear
+for cc = 1:length(classes_here)
+    tr_idx  = find(combClass_win == cc); % trials of this combo
+    stimIdx = uniqueComb(cc,:); 
+    
+    % Compute mean waveform per CHN per AMP
+    AvgWF_amp_combo = nan(nChn, wf_len, n_AMP);
+    for ch = 1:nChn
+        for k = 1:n_AMP
+            rows = [];
+            for tt = 1:length(tr_idx(:)')
+                if ampIdx(tt) ~= k, continue; end
+                S = Spikes{ch, tr_idx(tt)};
+                if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
+                    rows = [rows; S.wf];
+                end
+            end
+            if ~isempty(rows)
+                AvgWF_amp_combo(ch,:,k) = mean(rows, 1, 'omitnan');
+            end
+        end
+    end
+
+    % y-limit
+    abs_max = max(abs(AvgWF_amp_combo), [], 'all', 'omitnan');
+    y_lim   = 50 * ceil(abs_max/50);
+
+    cmap = turbo(n_AMP);
+    % plot 
+    comboLabel = strjoin(E_NAME(stimIdx), ' + ');
+    figure('Color','w','Name',sprintf('Mean spikes waveforms| %s', comboLabel),'NumberTitle','off');
+    for ch = 1:nChn
+        subplot(4,8,ch); hold on
+        if ismember(ch, stimIdx) % highlight stimulated channels
+            set(gca,'Color',[1 0.95 0.95]);
+        end
+
+        for k = 1:n_AMP
+            y = AvgWF_amp_combo(ch,:,k);
+            if ~all(isnan(y))
+                hL(k) = plot(wf_t, squeeze(y), 'LineWidth', 1.6, 'Color', cmap(k,:));
+            end
+        end
+
+        xline(0,'r-');
+        title(sprintf('Ch %d', ch), 'FontSize', 8);
+        xlim([wf_t(1) wf_t(end)]);
+        ylim([-y_lim y_lim]);
+        xlabel('Time (ms)','FontSize',8);
+        ylabel('\muV','FontSize',8);
+        box off
+    end
+
+    legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
+    valid = isgraphics(hL);   % some amplitudes may be empty for this combo
+    if any(valid)
+        lgd = legend(hL(valid), legLabels(valid), 'Orientation','horizontal', ...
+                     'Box','off','FontSize',10);
+        lgd.Position = [0.1, 0.01, 0.8, 0.05];
+    end
+    sgtitle(sprintf('Mean spike waveforms by amplitude | Stim combo: %s', comboLabel), ...
+            'FontWeight','bold');
+end
+
 
 
 %% Raster Plot 

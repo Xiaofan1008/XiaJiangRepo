@@ -5,6 +5,10 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
 addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
 
 
+%% ———————————————————————————————————————————————— %%
+%% --------------- Data Processing ---------------- %%
+%% ———————————————————————————————————————————————— %%
+
 %% ------------------ Parameters ------------------ %%
 % Intan parameters
 filepath = pwd;
@@ -32,8 +36,8 @@ trig = loadTrig(0);
 trig_all = trig; 
 d = Depth_s(0);
 % Extract trigger
-nTrials = 400; % number of trials used for analysis
-Trial_start = 201;
+nTrials = 1000; % number of trials used for analysis
+Trial_start = 1;
 if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials-1); end
 nTrig = length(trig); % length of trigger
 
@@ -83,7 +87,7 @@ alignRad = max(1, round(3e-3 * FS));
 
 % Spike detection parameters
 pp_min_uV   = 30;           % min peak-to-peak 
-pp_max_uV   = 300;          % max peak-to-peak
+pp_max_uV   = 500;          % max peak-to-peak
 tp_min_ms   = 0.30;         % trough-to-peak min width
 tp_max_ms   = 1.20;         % trough-to-peak max width
 tp_min_samp = round(tp_min_ms/1000 * FS);
@@ -124,7 +128,7 @@ for ch_idx = 1:nChn
     
     sigma = median(abs(signal_filt)) / 0.6745;
     % Compute threshold as -4.5 × standard deviation
-    thr(ch_idx) = -5.5 * sigma;
+    thr(ch_idx) = -4.5 * sigma;
 end
 
 %% ------ Baseline firing rate ------ %% 
@@ -225,21 +229,22 @@ for tr = 1:nTrials
             if max(abs(wf)) > 500      % artifact rejection
                 continue
             end
+
+            % ------ Addition Criteria ------ %
             [~, i_trough] = min(wf);                     % trough index
             [~, i_peak] = max(wf);  
             % 1) biphasic check 
             is_biphasic = (min(wf) < 0) && (max(wf(i_trough:end)) > 0);
-            % 2) peak-to-peak amplitude constraint
+            if ~is_biphasic, continue; end
+            % % 2) peak-to-peak amplitude constraint
             pp_amp = max(wf) - min(wf);
             pp_ok  = (pp_amp >= pp_min_uV) && (pp_amp <= pp_max_uV);
+            if ~pp_ok, continue; end
             % 3) through -> peak width constraint
             tp_width = i_peak - i_trough; % samples
             tp_ok = tp_width >= tp_min_samp && tp_width <= tp_max_samp;
-
-            keep_this_spike = is_biphasic && pp_ok && tp_ok;
-            if ~keep_this_spike
-                continue;   % reject this waveform
-            end
+            if ~tp_ok, continue; end
+          
 
             wf_list{end+1} = wf; 
             idx_list(end+1) = ip; 
@@ -311,7 +316,13 @@ end
 [uniqueComb, ~, combClass] = unique(comb, 'rows');
 combClass_win = combClass(Trial_start : Trial_start + nTrials - 1);
 
-%% ------------------ Plot ------------------ %% 
+
+
+
+
+%% —————————————————————————————————————————— %%
+%% ****************** Plot ****************** %% 
+%% —————————————————————————————————————————— %%
 %% Spike Waveform Plot 
 wf_t  = (-preS:postS) / FS * 1000;   % waveform time ms
 
@@ -401,7 +412,7 @@ for ch = 1:nChn
     ylabel('\muV','FontSize',8);
     box off
 end
-
+sgtitle(sprintf('Average Spike waveforms across Amplitudes (%d trials)', nTrials),'FontWeight','bold');
 % legend
 legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
 lgd = legend(hLines, legLabels, 'Orientation','horizontal', ...
@@ -410,7 +421,7 @@ lgd.Position = [0.1, 0.01, 0.8, 0.05];   % center at bottom
 
 
 % ------ (3) Spike waveform per AMP one CHN ------ % 
-ch_view = 24;
+ch_view = 8;
 absmax = 0;
 for tr = 1:nTrials
     S = Spikes{ch_view,tr};
@@ -418,6 +429,7 @@ for tr = 1:nTrials
         absmax = max(absmax, max(abs(S.wf),[],'all'));
     end
 end
+y_lim = ceil(absmax/5)*5;
 
 nRows = ceil(sqrt(n_AMP));
 nCols = ceil(n_AMP / nRows);
@@ -454,16 +466,55 @@ for k = 1:n_AMP
     xlim([wf_t(1) wf_t(end)]);
     ylim([-y_lim y_lim]);
     xlabel('Time (ms)'); ylabel('\muV');
+    axis square 
     box off
 end
 sgtitle(sprintf('Channel %d: spikes grouped by amplitude', ch_view), 'FontWeight','bold');
 
-% ------- (4) Spike Waveforms by Stim Set ------ % 
+% ------ (4) Ave Spike per Amp one Chn ------ % 
+ch_view = 23;   % <--- change this to whichever channel you want
+cmap = turbo(n_AMP);
+
+abs_max = max(abs(AvgWF_amp(ch_view,:,:)), [], 'all', 'omitnan');
+y_lim   = ceil(abs_max/5)*5;
+
+figure('Name',sprintf('Ch %d: Avg spikes by amplitude', ch_view), ...
+       'NumberTitle','off','Color','w'); 
+hold on
+
+hLines = gobjects(1,n_AMP);
+
+for k = 1:n_AMP
+    y = squeeze(AvgWF_amp(ch_view,:,k));  % [1 x wf_len]
+    if ~all(isnan(y))
+        hLines(k) = plot(wf_t, y, 'LineWidth', 1.8, 'Color', cmap(k,:));
+    end
+end
+
+% formatting
+xline(0,'r-','LineWidth',2);
+title(sprintf('Channel %d: Avg spike waveforms', ch_view), 'FontSize', 12);
+xlim([wf_t(1) wf_t(end)]);
+ylim([-y_lim y_lim]);
+xlabel('Time (ms)');
+ylabel('\muV');
+box off
+axis square
+
+% legend
+legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
+valid = isgraphics(hLines);
+
+lgd = legend(hLines(valid), legLabels(valid), ...
+       'Orientation','horizontal','Box','off','FontSize',10, ...
+       'NumColumns', ceil(numel(Amps)/2), ...
+       'Location','southoutside');
+
+% ------- (5) Spike Waveforms by Stim Set ------ % 
 classes_here = unique(combClass_win(:)');   % combos appear in the window
 for cc = 1:length(classes_here)
     tr_idx = find(combClass_win == cc); % trials belong to this combo
     stimIdx = uniqueComb(cc, :);
-
 
     % global y-limit
     ymax_global = 0;
@@ -489,15 +540,17 @@ for cc = 1:length(classes_here)
             set(gca, 'Color', [1 0.95 0.95]);   % light pink
         end
 
+        nSpk_ch = 0;
         for t = 1:length(tr_idx)
             S = Spikes{ch,tr_idx(t)};
             if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
                 plot(wf_t, S.wf','Color', cmap(t,:), 'LineWidth', 0.5);
+                nSpk_ch = nSpk_ch + size(S.wf, 1);
             end
         end
 
         xline(0,'r-','LineWidth',1.2);
-        title(sprintf('Ch %d', ch), 'FontSize', 8);
+        title(sprintf('Ch %d  (n=%d )', ch, nSpk_ch), 'FontSize', 10);
         xlim([wf_t(1) wf_t(end)]);
         ylim([-y_lim y_lim]);   % same across all subplots
         xlabel('Time (ms)','FontSize',8);
@@ -508,7 +561,7 @@ for cc = 1:length(classes_here)
             'FontWeight','bold');    
 end
 
-% ------ (5) Mean Spike waveforms per AMP per Stim Set ------ %
+% ------ (6) Mean Spike waveforms per AMP per Stim Set ------ %
 classes_here = unique(combClass_win(:)'); % combos appear
 for cc = 1:length(classes_here)
     tr_idx  = find(combClass_win == cc); % trials of this combo
@@ -576,7 +629,7 @@ end
 
 
 %% Raster Plot 
-ch_raster = 31;     % channel for raster plot
+ch_raster = 23;     % channel for raster plot
 ras_win   = [-20 100];% ms window for raster display
 bin_ms    = 1;      % PSTH bin (ms)
 
@@ -644,26 +697,27 @@ if ~isempty(bin_ms) && bin_ms > 0
     bin_s = bin_ms/1000;
     rate  = counts / (nTrials * bin_s);
     % smooth data
-    % indices for pre/post 0 ms
-    idx_pre  = ctrs < 0;
-    idx_post = ~idx_pre;
-    smooth_ms = 5; % smooth window
+    smooth_ms = 3; % smooth window
     smooth_bins = max(1, round(smooth_ms/bin_ms));
-    rate_s = rate; % preallocate
+    % rate_s = rate; % preallocate
+    sigma_bins  = max(1, round(smooth_bins/2));
 
-    if any(idx_pre)
-        rate_s(idx_pre) = smoothdata(rate(idx_pre), 'gaussian', smooth_bins);
-    end
-    if any(idx_post)
-        rate_s(idx_post) = smoothdata(rate(idx_post), 'gaussian', smooth_bins);
-    end
+    k   = 0:(smooth_bins-1);                               % ONLY past & current samples
+    g   = exp(-0.5*(k./sigma_bins).^2);                    % one-sided Gaussian
+    g   = g ./ sum(g);                                     % normalize to sum=1
+
+    % Causal smoothing (no leakage before 0): y[n] = sum g[k]*x[n-k]
+    rate_s = filter(g, 1, rate);                           % FIR, causal
+
+    % rate_s = smoothdata(rate, 'movmean', [smooth_bins-1 0]);
+
     % rate_s      = smoothdata(rate, 'gaussian', smooth_bins);
     plot(ax2, ctrs, rate_s, 'k-', 'LineWidth', 1.8);
     % bar(ax2, ctrs, rate, 1.0, 'FaceColor',[0.2 0.2 0.2], 'EdgeColor','none');
 
     xline(ax2, 0, 'r', 'LineWidth', 1.5);
     xlim(ax2, ras_win);
-    ylim(ax2, [0, 200]);
+    % ylim(ax2, [0, 300]);
     ylabel(ax2, 'Rate (sp/s)');
     xlabel(ax2, 'Time (ms)');
     box(ax2,'off');

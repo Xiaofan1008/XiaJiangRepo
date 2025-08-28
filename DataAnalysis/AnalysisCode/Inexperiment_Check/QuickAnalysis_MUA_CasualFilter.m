@@ -25,8 +25,27 @@ window_ms = [-100,100]; % time window for data extract
 window_samps = round(window_ms/1000 * FS);
 total_sample = diff(window_samps) + 1;
 trialLength = diff(window_samps)+1;
-blank_ms = 4;%[-1,1]; % artifact blanking window ±1 ms
-blank_samps = round(blank_ms/1000 * FS);
+
+% ---- Artifact blank parameters ---- %
+preBlank_ms   = 1;   % ms to blank BEFORE stim
+postBlank_ms  = 2;   % ms to blank AFTER  stim
+preBlank_samp  = round(preBlank_ms/1000 * FS);
+postBlank_samp = round(postBlank_ms/1000 * FS);
+
+% Cross-fade tapers at the edges of the filled region (can be asymmetric)
+taper_pre_ms  = 0.8;   % ms fade on the PRE side
+taper_post_ms = 0.8;   % ms fade on the POST side
+
+% Small detection guard around the filled segment (can be asymmetric)
+guard_pre_ms  = max(taper_pre_ms, 0.5);
+guard_post_ms = max(taper_post_ms, 0.5);
+guard_pre_samp  = max(1, round(guard_pre_ms/1000  * FS));
+guard_post_samp = max(1, round(guard_post_ms/1000 * FS));
+
+
+% --- old ---- %
+% blank_ms = 1.5;%[-1,1]; % artifact blanking window ±1 ms
+% blank_samps = round(blank_ms/1000 * FS);
 
 % Trigger and parameters
 if isempty(dir('*.trig.dat'))
@@ -130,16 +149,15 @@ data_thres_uV = fread(vFID, [nChn, num_samples_threshold], 'int16') * 0.195;
 % Loop over channels
 for ch_idx = 1:nChn
     thisChn = d(ch_idx);   % Depth-mapped channel index
+    x = double(data_thres_uV(thisChn, :));
     
-    % Extract the first 20 s for this channel
-    signal = data_thres_uV(thisChn, :);
-    
-    % Apply band-pass filter
-    signal_filt = filtfilt(bpFilt, double(signal));
-    
-    sigma = median(abs(signal_filt)) / 0.6745;
-    % Compute threshold as -4.5 × standard deviation
-    thr(ch_idx) = -4.5 * sigma;
+    x_fir = filter(bpFIR, 1, x); % filtering
+    if gd > 0 % compensate filter delay
+        x_fir = [x_fir(gd+1:end), zeros(1, gd)];
+    end
+
+    sigma = median(abs(x_fir)) / 0.6745;
+    thr(ch_idx) = -4.5 * sigma; % Compute threshold as -4.5 × standard deviation    
 end
 
 %% ------ Baseline firing rate ------ %% 
@@ -173,23 +191,65 @@ for tr = 1:nTrials
     data = fread(vFID, [nChn, total_sample], 'int16') * 0.195; % in uV
 
     stim_idx = -window_samps(1) + 1;
-    blank_range = max(1, stim_idx - blank_samps) : min(total_sample, stim_idx + blank_samps);
+    % blank_range = max(1, stim_idx - blank_samps) : min(total_sample, stim_idx + blank_samps);
+    % keep_range = setdiff(1:total_sample, blank_range);
+    blank_range = max(1, stim_idx - preBlank_samp) : min(total_sample, stim_idx + postBlank_samp);
     keep_range = setdiff(1:total_sample, blank_range);
-    
     for ch = 1:nChn
         
         thisChn = d(ch);
         raw = data(thisChn, :);
         %% ---- Artifact Blank ---- %%
+        stimSample  = -window_samps(1) + 1;  % stim index in the trial window
+        segStartIdx = max(1,           stimSample - preBlank_samp);
+        segEndIdx   = min(total_sample, stimSample + postBlank_samp);
+        % 
+        % traceFilled = raw;   
+        % 
+        % % Neighbor samples just outside the blanked segment
+        % leftIdx  = max(1,segStartIdx - 1);
+        % rightIdx = min(total_sample, segEndIdx+ 1);
+        % % PCHIP interpolate
+        % fillIdx = segStartIdx:segEndIdx;
+        % traceFilled(fillIdx) = pchip([leftIdx rightIdx],[raw(leftIdx) raw(rightIdx)], fillIdx);
+        % 
+        % % Raised-cosine cross-fades to remove slope/step at edges
+        % taper_pre_samp  = max(1, round(taper_pre_ms /1000 * FS));
+        % taper_post_samp = max(1, round(taper_post_ms/1000 * FS));
+        % 
+        % % Left cross-fade (raw -> filled)
+        % fadeL_start = max(1, segStartIdx - taper_pre_samp);
+        % if fadeL_start < segStartIdx
+        %     L  = segStartIdx - fadeL_start;
+        %     w  = 0.5 * (1 + cos(pi*(0:L-1)/max(1,L-1)));            % 1 -> 0
+        %     ii = fadeL_start:segStartIdx-1;
+        %     traceFilled(ii) = w .* raw(ii) + (1-w) .* traceFilled(segStartIdx);
+        % end
+        % 
+        % % Right cross-fade (filled -> raw)
+        % fadeR_end = min(total_sample, segEndIdx + taper_post_samp);
+        % if segEndIdx+1 <= fadeR_end
+        %     L  = fadeR_end - segEndIdx;
+        %     w  = 0.5 * (1 - cos(pi*(0:L-1)/max(1,L-1)));            % 0 -> 1
+        %     ii = segEndIdx+1:fadeR_end;
+        %     traceFilled(ii) = (1-w) .* traceFilled(segEndIdx) + w .* raw(ii);
+        % end
+        % 
+        % raw_interp = traceFilled;
+
         % Interpolate artifact
         raw_interp = raw;
         raw_interp(blank_range) = interp1(keep_range, raw(keep_range), blank_range, 'linear', 'extrap');
         % raw(blank_range(1):blank_range(end)) = interpolate(raw(blank_range(1):blank_range(end)), 1);
         % Filter & rectify
-        filtered = filtfilt(bpFilt, raw_interp);
-        smoothed = movmean(filtered, 15);
+ 
+        sig_filt_plot = filter(bpFIR, 1, raw_interp);
+        if gd > 0
+            sig_filt_plot = [sig_filt_plot(gd+1:end), zeros(1, gd)];
+        end
+        smoothed = movmean(sig_filt_plot, 15);   % if you still want this quick display
         % Store
-        MUA_all(ch, :, tr) = smoothed;
+        MUA_all(ch, :, tr) = sig_filt_plot;
 
         %% ---- Baseline firing rate ---- %%
         % bl_start = stim_idx + bl_samp(1);
@@ -203,92 +263,21 @@ for tr = 1:nTrials
             signal = sig_filt;
         end
 
-        % signal = filtered;     % data extract
-
-        %% ---- Spike detection ---- %%
-        
-        % cross_idx = find(signal(2:end) < thr(ch) & signal(1:end-1) >= thr(ch)) + 1;
-        % cross_idx = cross_idx(:); 
-        % % Refractory period
-        % refrac_samp = max(1, round(1e-3 * FS));
-        % if numel(cross_idx) > 1
-        %     keep = [true; diff(cross_idx) > refrac_samp];   % (n x 1) logical
-        % else
-        %     keep = true(size(cross_idx));                   % 0 or 1 crossing
-        % end        
-        % cross_idx = cross_idx(keep);
-        % 
-        % peaks = [];  % sample indices at peak
-        % 
-        % if ~isempty(cross_idx)
-        %     for k = 1:numel(cross_idx)
-        %         i0 = cross_idx(k);
-        %         a  = max(1, i0 - alignRad);
-        %         b  = min(total_sample, i0 + alignRad);
-        %         [~, rel] = min(signal(a:b));     % negative peak
-        %         ip = a + rel - 1;           % absolute index in this trial window
-        %         % Check waveform bounds
-        %         if ip - preS < 1 || ip + postS > total_sample
-        %             continue
-        %         end
-        %         peaks(end+1) = ip;
-        %     end
-        % end
-
-            % Extract waveforms; reject artifacts with |wf| > 500 µV
-%         wf_list = {}; % waveform 
-%         idx_list = [];
-%         for k = 1:numel(peaks)
-%             ip = peaks(k);
-%             wf = signal(ip - preS : ip + postS);
-% 
-%             % ------ Threshold Criteria ------ % 
-%             if max(abs(wf)) > 500      % artifact rejection
-%                 continue
-%             end
-%             % ------ Addition Criteria ------ %
-%             [~, i_trough] = min(wf);                     % trough index
-%             [~, i_peak] = max(wf);  
-%             % 1) biphasic check 
-%             is_biphasic = (min(wf) < 0) && (max(wf(i_trough:end)) > 0);
-%             if ~is_biphasic, continue; end
-%             % % 2) peak-to-peak amplitude constraint
-%             pp_amp = max(wf) - min(wf);
-%             pp_ok  = (pp_amp >= pp_min_uV) && (pp_amp <= pp_max_uV);
-%             if ~pp_ok, continue; end
-%             % 3) through -> peak width constraint
-%             tp_width = i_peak - i_trough; % samples
-%             tp_ok = tp_width >= tp_min_samp && tp_width <= tp_max_samp;
-%             if ~tp_ok, continue; end
-% 
-% 
-%             wf_list{end+1} = wf; 
-%             idx_list(end+1) = ip; 
-%         end
-%         % Save into Spikes{ch,tr}
-%         if ~isempty(idx_list)
-%             wf_mat = cat(1, wf_list{:});              % [Nspk x (preS+postS+1)]
-%         else
-%             wf_mat = zeros(0, preS+postS+1);
-%         end
-%         spk_times_ms = (idx_list - stim_idx) / FS * 1000;  % relative to stim (ms)
-% 
-%         Spikes{thisChn, tr} = struct( ...
-%             'idx', idx_list, ...
-%             't_ms', spk_times_ms, ...
-%             'wf',  wf_mat ...
-%         );           
-%     end
-% end
+        %% ---- Spike detection ---- %%       
 
         % Threshold crossings
         cross_idx = find(signal(2:end) < thr(ch) & signal(1:end-1) >= thr(ch)) + 1;
-        cross_idx = cross_idx(:);
+        % cross_idx = cross_idx(:); % old one 
+        guardStartIdx = max(1,segStartIdx - guard_pre_samp);
+        guardEndIdx   = min(total_sample, segEndIdx  + guard_post_samp);
+        mask_keep = ~(cross_idx >= guardStartIdx & cross_idx <= guardEndIdx);
+        cross_idx = cross_idx(mask_keep);
         % Refractory period 1ms
         refrac_samp = max(1, round(1e-3 * FS));   % 1 ms
         % Space crossings: drop any within refractory of the previous kept one
         if numel(cross_idx) > 1
-            keep = [true; diff(cross_idx) > refrac_samp];
+            % keep = [true; diff(cross_idx) > refrac_samp];
+            keep = [true, diff(cross_idx) > refrac_samp];
             cross_idx = cross_idx(keep);
         end
 
@@ -704,7 +693,7 @@ for cc = 1:length(classes_here)
             rows = [];
             for tt = 1:numel(tr_idx)
                 tr = tr_idx(tt);
-                if ampIdx(tt) ~= k, continue; end
+                if ampIdx(tr) ~= k, continue; end
                 S = Spikes{ch, tr};
                 if ~isempty(S) && isfield(S,'wf') && ~isempty(S.wf)
                     rows = [rows; S.wf];
@@ -932,9 +921,23 @@ for cc = 1:nChn
         % rate_s = smoothdata(rate, 'movmean', [smooth_bins-1 0]);
     
         % rate_s      = smoothdata(rate, 'gaussian', smooth_bins);
-        plot(ax2, ctrs, rate_s, 'k-', 'LineWidth', 1.8);
+        
+        % plot(ax2, ctrs, rate_s, 'k-', 'LineWidth', 1.8);
         % bar(ax2, ctrs, rate, 1.0, 'FaceColor',[0.2 0.2 0.2], 'EdgeColor','none');
-    
+           
+        % y-lim logic
+        maxVal = max(rate_s);
+        if maxVal > 100
+            plotColor = 'b';        % highlight in red
+            plot(ax2, ctrs, rate_s, plotColor, 'LineWidth', 1.8);
+            ylim(ax2,'auto');       % allow autoscale
+        else
+            plotColor = 'k';
+            plot(ax2, ctrs, rate_s, plotColor, 'LineWidth', 1.8);
+            ylim(ax2,[0 100]);      % fixed limit
+        end
+
+
         xline(ax2, 0, 'r', 'LineWidth', 1.5);
         xlim(ax2, ras_win);
         % ylim(ax2, [0, 300]);
@@ -943,35 +946,6 @@ for cc = 1:nChn
         box(ax2,'off');
     end
 end
-
-% check 
-% === Raw vs. Filtered overlay ===
-ch_check = 26;          % <-- channel of interest
-pre_win  = [-10 0];     % ms window
-
-nShow = min(50,nTrials);  % only overlay 50 trials for clarity
-t_axis_ms = (window_samps(1):window_samps(2))/FS*1000;
-
-figure('Color','w');
-for tr = 1:nShow
-    raw = MUA_all(ch_check,:,tr);   % already filtered/smoothed in your pipeline
-    fseek(vFID, (trig(tr)+window_samps(1))*nChn*2, 'bof');
-    block = fread(vFID, [nChn, total_sample], 'int16') * 0.195;
-    raw_trace = block(d(ch_check),:); % unfiltered raw
-    
-    % convert to ms window
-    idx = t_axis_ms >= pre_win(1) & t_axis_ms <= pre_win(2);
-    
-    subplot(2,1,1); hold on;
-    plot(t_axis_ms(idx), raw_trace(idx), 'Color', [0.5 0.5 0.5 0.2]); % raw
-    subplot(2,1,2); hold on;
-    plot(t_axis_ms(idx), raw(idx),  'Color', [0 0 1 0.2]); % filtered
-end
-
-subplot(2,1,1); title(sprintf('Ch %d raw traces (-10–0 ms)',ch_check));
-xlabel('Time (ms)'); ylabel('µV'); box off;
-subplot(2,1,2); title(sprintf('Ch %d filtered traces (-10–0 ms)',ch_check));
-xlabel('Time (ms)'); ylabel('µV'); box off;
 
 
 %% ------ Normalized Spike Analysis ------ %% 

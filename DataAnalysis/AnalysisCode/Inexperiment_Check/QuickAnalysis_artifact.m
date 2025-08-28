@@ -15,7 +15,7 @@ dName='amplifier';
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
 
 %% ------ Quick Analysis data parameters ------ %%
-nTrials = 400; % number of trials used for analysis
+nTrials = 1000; % number of trials used for analysis
 
 artifact_window_ms = [-1, 3];  % artifact window in ms
 artifact_window_samp = round(artifact_window_ms / 1000 * FS);
@@ -38,6 +38,17 @@ d = Depth;
 TrialParams = loadTrialParams;
 trialIDs = cell2mat(TrialParams(:,2));
 trialIDs = trialIDs(1:nTrials);
+
+% load StimParameters
+fileDIR = dir('*_exp_datafile_*.mat');
+assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat found.');
+fileDIR = fileDIR(1).name;
+S = load(fileDIR,'StimParams','simultaneous_stim','CHN','E_MAP','n_Trials');
+StimParams         = S.StimParams;
+simultaneous_stim  = S.simultaneous_stim;
+CHN = S.CHN;
+E_MAP = S.E_MAP;
+n_Trials = S.n_Trials;
 
 %% ------- Load data ------ %
 for tr = 1:nTrials
@@ -112,12 +123,32 @@ for k = 1: n_AMP
     end
 end
 
-% stimulation channels
-stimCh = [];
-if exist('CHN','var') && ~isempty(CHN)
-    stimCh = unique(CHN(:));           % e.g., columns are pairs -> take union
-    stimCh = stimCh(:).';              % row vector for ismember
+% ------ Stimulation Channels ------ %
+E_NAME = E_MAP(2:end); % Channel name e.g. "A-001"
+if exist('StimParams','var') && ~isempty(StimParams)
+    % Extract first column for channel 
+    stimNames = StimParams(2:end,1);
+    [tf, idx_all] = ismember(stimNames, E_NAME);
 end
+% group channels per trial
+stimChPerTrial_all = cell(n_Trials,1);
+for t = 1:n_Trials
+    rr = (t-1)*simultaneous_stim + (1:simultaneous_stim);
+    v  = unique(idx_all(rr));                                  % dedupe within trial
+    v  = v(v>=0).';                                             % drop zeros, row vector
+    stimChPerTrial_all{t} = v;
+end
+% find unique channels 
+uniqueCh = unique([stimChPerTrial_all{:}]); 
+% find unique channel set for each trial
+comb = zeros(n_Trials, simultaneous_stim);
+for i = 1:n_Trials
+    v = stimChPerTrial_all{i};  
+    comb(i,1:numel(v)) = v;
+end
+[uniqueComb, ~, combClass] = unique(comb, 'rows');
+combClass_win = combClass(1 : nTrials);
+
 
 
 % ------ plot ------ %
@@ -138,7 +169,7 @@ for ch = 1:nChn
         subplot(4,8,ch)
         hold on
         % Soft red background if this is a stimulation channel
-        if ismember(ch, stimCh)
+        if ismember(ch, uniqueCh)
             set(gca, 'Color', [1 0.95 0.95]);    % light pink
             baseLW = 1.8;                       % slightly thicker for stim chans
         else
@@ -187,7 +218,7 @@ for row = 1:8
         
         ax = nexttile(ch); hold(ax,'on');
         % Soft red background if this is a stimulation channel
-        if ismember(ch, stimCh)
+        if ismember(ch, uniqueCh)
             set(ax, 'Color', [1 0.95 0.95]);    % light pink
             baseLW = 1.8;                       % slightly thicker for stim chans
         else

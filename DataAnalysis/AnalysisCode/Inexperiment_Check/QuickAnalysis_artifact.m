@@ -149,10 +149,42 @@ end
 [uniqueComb, ~, combClass] = unique(comb, 'rows');
 combClass_win = combClass(1 : nTrials);
 
+sets_here = unique(combClass_win(:))';
+nSets     = numel(sets_here);
+% Label for each set and its stim channels
+setLabel   = strings(1,nSets);
+stimIdxSet = cell(1,nSets);
+for s = 1:nSets
+    cc = sets_here(s);
+    stimIdx = uniqueComb(cc,:); 
+    stimIdx = stimIdx(stimIdx>0);
+    stimIdxSet{s} = stimIdx;
+    % setLabel(s) = strjoin(E_NAME(stimIdx), ' + ');
+    setLabel(s) = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx,'UniformOutput', false), ' + ');
+end
+
+% ------ Average artifact per (Amplitude × Set) ------ %
+Artifact_avg_amp_set = zeros(nChn, artifact_samples, n_AMP, nSets);
+nPerAmpSet           = zeros(n_AMP, nSets);
+
+for s = 1:nSets
+    cc = sets_here(s);
+    tr_in_set = find(combClass_win == cc);    % trials belonging to this set
+
+    for k = 1:n_AMP
+        tr_sel = tr_in_set(ampIdx(tr_in_set) == k);  % trials in this set at this amp
+        nPerAmpSet(k,s) = numel(tr_sel);
+        if nPerAmpSet(k,s) > 0
+            Artifact_avg_amp_set(:,:,k,s) = mean(Artifact_all(:,:,tr_sel), 3);
+        end
+    end
+end
 
 
-% ------ plot ------ %
-% y-axis determination 
+%% -------- plot -------- %%
+
+% ------ (1): Average across amp ------ %
+% y-axis 
 abs_max = max(abs(Artifact_avg_amp), [], 'all');
 y_lim   = ceil(abs_max / 1000) * 1000;
 
@@ -249,3 +281,56 @@ end
 lg = legend(compose('%.0f µA', Amps), ...
             'NumColumns', min(n_AMP, 6),'Orientation', 'horizontal','Location','southoutside','FontSize',10);
 lg.Box = 'off';
+
+
+
+% ------ (2) Average across Amp, different Stim Set ------ %
+% Global y-limit across all sets & amps
+abs_max = max(abs(Artifact_avg_amp_set), [], 'all');
+y_lim   = max(100, 100 * ceil(abs_max/100));      % nice rounded
+
+cmap = turbo(n_AMP);
+legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
+
+for s = 1:nSets
+    figName = sprintf('Artifact | Set %d: %s', sets_here(s), setLabel(s));
+    figure('Name', figName, 'NumberTitle', 'off', 'Color', 'w');
+    tl = tiledlayout(8, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
+    title(tl, sprintf('Artifact (raw) | %s', setLabel(s)), 'FontWeight','bold');
+
+    hL = gobjects(1,n_AMP);  % for legend handles once
+
+    for ch = 1:nChn
+        ax = nexttile(tl); hold(ax,'on');
+
+        % Light background if this channel is a stim channel for this set
+        if ismember(ch, stimIdxSet{s})
+            set(ax, 'Color', [1 0.95 0.95]);
+        end
+
+        % Overlays by amplitude for THIS set
+        for k = 1:n_AMP
+            if nPerAmpSet(k,s) > 0
+                h = plot(ax, artifact_time, squeeze(Artifact_avg_amp_set(ch,:,k,s)), ...
+                         'Color', cmap(k,:), 'LineWidth', 1.8);
+                if ~isgraphics(hL(k)), hL(k) = h; end  % keep one handle per amp
+            end
+        end
+
+        xline(ax, 0, 'r-');
+        title(ax, sprintf('Ch %d', ch), 'FontSize', 8);
+        xlim(ax, [artifact_time(1), artifact_time(end)]);
+        ylim(ax, [-y_lim, y_lim]);
+        xticks(ax, linspace(artifact_time(1), artifact_time(end), 5));
+        yticks(ax, [-y_lim, 0, y_lim]);
+        xlabel(ax, 'Time (ms)', 'FontSize', 8);
+        ylabel(ax, '\muV', 'FontSize', 8);
+        box(ax,'off');
+    end
+
+    % One legend per figure (set)
+    lgd = legend(hL(isgraphics(hL)), legLabels(isgraphics(hL)), ...
+        'Orientation','horizontal','Box','off','FontSize',10, ...
+        'NumColumns', min(n_AMP, 6), 'Location','southoutside');
+    lgd.Layout.Tile = 'south';
+end

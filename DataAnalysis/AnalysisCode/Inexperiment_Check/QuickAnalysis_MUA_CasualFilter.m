@@ -1183,11 +1183,144 @@ sgtitle(sprintf('Channel %d — Raster + scaled PSTH by stimulation set', ch_ras
         'FontWeight','bold');
 
 
+% New version 
+ch_raster   = 32;          % channel to visualize
+ras_win     = [-20 100];   % ms
+bin_ms      = 1;           % PSTH bin (ms)
+psth_thresh = 200;         % threshold for red line
+
+classes_here = unique(combClass_win(:)');   % stim sets present
+nSets = numel(classes_here);
+
+nCols = ceil(sqrt(nSets));
+nRows = ceil(nSets / nCols);
+
+% === Pre-pass: find global trial count & PSTH max ===
+globalYmaxTrials = 0;
+globalYmaxRate   = 0;
+
+for ii = 1:nSets
+    tr_idx = find(combClass_win == classes_here(ii));
+    nThis  = numel(tr_idx);
+    if nThis == 0, continue; end
+    globalYmaxTrials = max(globalYmaxTrials, nThis);
+
+    % Collect spike times
+    spkTimesPerTrial = cell(nThis,1);
+    for k = 1:nThis
+        tr = tr_idx(k);
+        if ~isempty(Spikes{ch_raster,tr}) && isfield(Spikes{ch_raster,tr},'t_ms')
+            tt = Spikes{ch_raster,tr}.t_ms;
+            spkTimesPerTrial{k} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+        else
+            spkTimesPerTrial{k} = [];
+        end
+    end
+
+    % PSTH
+    edges = ras_win(1):bin_ms:ras_win(2);
+    counts = zeros(1, numel(edges)-1);
+    for k = 1:nThis
+        counts = counts + histcounts(spkTimesPerTrial{k}, edges);
+    end
+    bin_s = bin_ms/1000;
+    rate  = counts / (nThis * bin_s);
+
+    % smoothing
+    smooth_ms = 3; smooth_bins = max(1, round(smooth_ms/bin_ms));
+    sigma_bins = max(1, round(smooth_bins/2));
+    kk = 0:(smooth_bins-1);
+    g = exp(-0.5*(kk./sigma_bins).^2); g = g/sum(g);
+    rate_s = filter(g,1,rate);
+
+    globalYmaxRate = max(globalYmaxRate, max(rate_s));
+end
+
+%% === Plot ===
+fig = figure('Color','w','Name',sprintf('Ch %d | Raster+PSTH by stim set', ch_raster), ...
+             'NumberTitle','off');
+
+for ii = 1:nSets
+    cc     = classes_here(ii);
+    tr_idx = find(combClass_win == cc);
+    nThis  = numel(tr_idx);
+    if nThis == 0, continue; end
+
+    % Stim-set label
+    stimIdx = uniqueComb(cc,:); stimIdx = stimIdx(stimIdx>0);
+    setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx, 'UniformOutput', false), ' + ');
+
+    % Subplot
+    ax = subplot(nRows,nCols,ii); hold on;
+
+    % Background if stim channel
+    if ismember(ch_raster, stimIdx)
+        set(ax,'Color',[1 0.9 0.9]); % light pink
+    end
+
+    % Collect spike times
+    spkTimesPerTrial = cell(nThis,1);
+    for k = 1:nThis
+        tr = tr_idx(k);
+        if ~isempty(Spikes{ch_raster,tr}) && isfield(Spikes{ch_raster,tr},'t_ms')
+            tt = Spikes{ch_raster,tr}.t_ms;
+            spkTimesPerTrial{k} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+        else
+            spkTimesPerTrial{k} = [];
+        end
+    end
+
+    % Raster
+    for k = 1:nThis
+        tt = spkTimesPerTrial{k};
+        if isempty(tt), continue; end
+        y0 = nThis - k + 1;
+        for s = 1:numel(tt)
+            plot([tt(s) tt(s)], [y0-0.4 y0+0.4], 'k', 'LineWidth', 0.8);
+        end
+    end
+
+    % PSTH (no scaling, true spikes/s)
+    edges = ras_win(1):bin_ms:ras_win(2);
+    ctrs  = edges(1:end-1) + diff(edges)/2;
+    counts = zeros(1, numel(edges)-1);
+    for k = 1:nThis
+        counts = counts + histcounts(spkTimesPerTrial{k}, edges);
+    end
+    bin_s = bin_ms/1000;
+    rate  = counts / (nThis * bin_s);
+
+    % smoothing
+    smooth_ms = 3; smooth_bins = max(1, round(smooth_ms/bin_ms));
+    sigma_bins = max(1, round(smooth_bins/2));
+    kk = 0:(smooth_bins-1);
+    g = exp(-0.5*(kk./sigma_bins).^2); g = g/sum(g);
+    rate_s = filter(g,1,rate);
+
+    if max(rate_s) > psth_thresh
+        plot(ctrs, rate_s, 'r-', 'LineWidth', 1.5);
+    else
+        plot(ctrs, rate_s, 'b-', 'LineWidth', 1.5);
+    end
+
+    % Formatting
+    xline(0,'r','LineWidth',1.2);
+    xlim(ras_win);
+    ylim([0 globalYmaxRate*1.1]);   % unified PSTH scale
+    title(sprintf('Set %d: %s (Trials: %d)', ii, setLabel, nThis), ...
+          'Interpreter','none','FontSize',9);
+    xlabel('Time (ms)'); ylabel('Firing rate (sp/s)');
+end
+
+sgtitle(sprintf('Channel %d — Raster + PSTH by stimulation set', ch_raster), ...
+        'FontWeight','bold');
+
+
 
 % ------ (4) All 32 channels, Different Stim Set ------
 for ss = 1: length(classes_here)
     stim_set_to_plot = classes_here(ss);   % pick stim set
-    ras_win     = [-20 100];              % ms
+    ras_win     = [-20 50];              % ms
     bin_ms      = 1;                      % PSTH bin (ms)
     psth_thresh = 200;                    % sp/s threshold
     
@@ -1212,11 +1345,13 @@ for ss = 1: length(classes_here)
     
         % ---- Collect spike times ----
         spkTimesPerTrial = cell(nThis,1);
+        totalSpikesThisChannel = 0;
         for k = 1:nThis
             tr = tr_idx(k);
             if ~isempty(Spikes{ch,tr}) && isfield(Spikes{ch,tr},'t_ms')
                 tt = Spikes{ch,tr}.t_ms;
                 spkTimesPerTrial{k} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+                totalSpikesThisChannel = totalSpikesThisChannel + numel(spkTimesPerTrial{k}); 
             else
                 spkTimesPerTrial{k} = [];
             end
@@ -1268,9 +1403,9 @@ for ss = 1: length(classes_here)
     
         % mark stim channels with *
         if ismember(ch, stimIdx)
-            title(ax, sprintf('Ch %d*', ch), 'FontSize', 9);
+            title(ax, sprintf('Ch %d* | n=%d', ch, totalSpikesThisChannel), 'FontSize', 9);
         else
-            title(ax, sprintf('Ch %d', ch), 'FontSize', 9);
+            title(ax, sprintf('Ch %d | n=%d', ch, totalSpikesThisChannel), 'FontSize', 9);
         end
     
         if ch > 24
@@ -1286,8 +1421,8 @@ for ss = 1: length(classes_here)
 end
 
 % ------ (5) One channel, different amplitude ------ %
-ch_raster   = 32;         % channel to visualize
-ras_win     = [-20 100];  % ms window
+ch_raster   = 11;         % channel to visualize
+ras_win     = [-20 60];  % ms window
 bin_ms      = 1;          % PSTH bin size (ms)
 psth_thresh = 200;        % highlight PSTH red if max > threshold
 only_nonempty = true;     % if true, skip amplitudes with 0 trials
@@ -1419,8 +1554,8 @@ sgtitle(sprintf('Channel %d — Raster + PSTH by amplitude', ch_raster), 'FontWe
 
 
 % ------ (6) Different Stim Set & Different AMP
-ch_raster    = 32;         % channel to visualize
-ras_win      = [-20 100];  % ms window
+ch_raster    = 11;         % channel to visualize
+ras_win      = [-20 80];  % ms window
 bin_ms       = 1;          % PSTH bin size (ms)
 psth_thresh  = 300;        % highlight PSTH red if max > threshold
 
@@ -1553,7 +1688,7 @@ for ii = 1:nSets
         yLimUse = [0, max(10, 10*ceil(1.1*globalMaxRate/10))];
         if max(rate_s) > psth_thresh
             % yLimUse = [0, max(10, 10*ceil(1.1*globalMaxRate/10))];
-            plot(ax, ctrs, rate_s, 'r-', 'LineWidth', 2.5);
+            plot(ax, ctrs, rate_s, '-', 'Color', [0.6 0 0], 'LineWidth', 2.5);
         else
             % yLimUse = [0 psth_thresh];
             plot(ax, ctrs, rate_s, 'k-', 'LineWidth', 2.5);
@@ -1578,7 +1713,121 @@ for ii = 1:nSets
         if ii == nSets, xlabel(ax, 'Time (ms)'); end
         if jj == 1,     ylabel(ax, 'Rate (sp/s)'); end
         title(ax, sprintf('%s | %g µA (n=%d)', setLabel, amp_uA, nThis), ...
-              'Interpreter','none','FontSize',8);
+              'Interpreter','none','FontSize',11);
         box(ax,'off');
     end
 end
+
+
+%% ------ Tuning Curve ------ %%
+
+% -------- (1) Firing rate vs. AMP (All sets) -------- %
+ch_tune  = 22;                 % channel 
+resp_ms  = [0 20];            % response window (ms)
+resp_s   = diff(resp_ms)/1000;
+
+classes_here = unique(combClass_win(:)'); 
+n_AMP   = numel(Amps);
+
+meanFR_amp = nan(1, n_AMP);
+semFR_amp  = nan(1, n_AMP);
+
+for k = 1:n_AMP
+    trials_k = find(ampIdx == k);
+    % count spikes in window for each trial
+    counts   = zeros(numel(trials_k),1);
+    for ii = 1:numel(trials_k)
+        tr = trials_k(ii);
+        S  = Spikes{ch_tune, tr};
+        if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+            counts(ii) = sum(S.t_ms >= resp_ms(1) & S.t_ms <= resp_ms(2));
+        end
+    end
+    fr = counts / resp_s;             % spikes/s per trial
+    meanFR_amp(k) = mean(fr,'omitnan');
+    semFR_amp(k)  = std(fr,'omitnan') / sqrt(max(1,numel(fr)));
+end
+
+figure('Color','w','Name',sprintf('Ch %d | FR vs Amplitude', ch_tune),'NumberTitle','off');
+errorbar(Amps, meanFR_amp, semFR_amp, '-o','LineWidth',1.8);
+xlabel('Amplitude (\muA)'); ylabel('Firing rate (sp/s)');
+title(sprintf('Channel %d — %d–%d ms window', ch_tune, resp_ms(1), resp_ms(2)));
+box off;
+
+% -------- (2) Firing rate vs. AMP (DIfferent sets) -------- %
+ch_tune = 11;                 % channel
+resp_ms = [0 20];            % response window (ms, relative to stim)
+resp_s  = diff(resp_ms)/1000;
+
+classes_here = unique(combClass_win(:)');   % stim sets present
+nSets        = numel(classes_here);
+n_AMP        = numel(Amps);
+
+% Prepare legend labels for each stim set
+setLabels = strings(1, nSets);
+for ii = 1:nSets
+    set_id  = classes_here(ii);
+    stimIdx = uniqueComb(set_id, :); 
+    stimIdx = stimIdx(stimIdx > 0);
+    % setLabels(ii) = strjoin(E_NAME(stimIdx), ' + ');
+    setLabels(ii) = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx, 'UniformOutput', false), ' + ');
+end
+
+% Compute mean FR (and SEM) per amplitude within each stim set
+meanFR_set_amp = nan(nSets, n_AMP);
+semFR_set_amp  = nan(nSets, n_AMP);
+
+for ii = 1:nSets
+    set_id   = classes_here(ii);
+    trials_S = find(combClass_win == set_id);  % trials belonging to this stim set
+
+    for k = 1:n_AMP
+        trials_kS = intersect(trials_S, find(ampIdx == k));   % trials with this amp AND this set
+        if isempty(trials_kS), continue; end
+
+        % spike counts per trial in window
+        counts = zeros(numel(trials_kS),1);
+        for jj = 1:numel(trials_kS)
+            tr = trials_kS(jj);
+            S  = Spikes{ch_tune, tr};
+            if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                counts(jj) = sum(S.t_ms >= resp_ms(1) & S.t_ms <= resp_ms(2));
+            end
+        end
+        fr = counts / resp_s;  % sp/s for each trial
+        meanFR_set_amp(ii,k) = mean(fr, 'omitnan');
+        semFR_set_amp(ii,k)  = std(fr,  'omitnan') / sqrt(max(1, numel(fr)));
+    end
+end
+
+% Plot: overlay one line per stim set across amplitude
+figure('Color','w','Name',sprintf('Ch %d | FR vs Amplitude by Stim Set', ch_tune),'NumberTitle','off');
+hold on;
+cmap = lines(nSets);   % distinct colors per set
+
+for ii = 1:nSets
+    y = meanFR_set_amp(ii,:);
+    e = semFR_set_amp(ii,:);
+    % Only plot where we actually have data for this set
+    hasData = ~isnan(y);
+    if any(hasData)
+        % Keep Amps aligned with available data
+        plot(Amps(hasData), y(hasData), '-o', 'LineWidth', 2.5, 'MarkerSize', 5, 'Color', cmap(ii,:));
+        % errorbar(Amps(hasData), y(hasData), e(hasData), 'LineStyle', 'none', 'Color', cmap(ii,:), 'LineWidth', 1.0);
+    end
+end
+
+box off;
+xlabel('Amplitude (µA)');
+ylabel('Firing rate (sp/s)');
+title(sprintf('Channel %d — %d to %d ms', ch_tune, resp_ms(1), resp_ms(2)));
+
+% Legend
+% leg = legend(setLabels, 'Location', 'bestoutside');
+leg = legend(setLabels,'Location', 'SouthEast');
+
+leg.Box = 'off';
+
+% Optional: enforce same x-limits across all sets, and nice y-limits
+xlim([min(Amps) max(Amps)]);
+yl = ylim; ylim([0 max(yl(2), 1)]);

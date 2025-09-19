@@ -1,0 +1,9 @@
+function avgStruct=meanstruct(avgStruct, ID, IDstruct)
+check=['T', num2str(ID)];
+if isfield(IDstruct, check)
+    avgStruct=[avgStruct, mean(IDstruct.(check),2)];
+else
+    avgStruct=[avgStruct, ones(1,-500];%if the requested trial does not exist then input impossible result to prevent any mixup and decrease number of required inputs
+end
+
+end

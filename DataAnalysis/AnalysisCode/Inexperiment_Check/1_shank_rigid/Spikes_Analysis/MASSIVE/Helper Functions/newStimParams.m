@@ -1,0 +1,29 @@
+function tmp = newStimParams(n_Trials)
+%% Initialises a new cell array of Stimulus Parameters
+tmp = cell(n_Trials+1,24);
+tmp{1,1} = 'CHANNEL';
+tmp{1,2} = 'ENABLE STIMULATION';
+tmp{1,3} = 'TRIGGER SOURCE';
+tmp{1,4} = 'TRIGGER EDGE/LEVEL';
+tmp{1,5} = 'TRIGGER HIGH/LOW';
+tmp{1,6} = 'POST-TRIGGER DELAY';
+tmp{1,7} = 'PULSE OR TRAIN';
+tmp{1,8} = 'NUMBER OF PULSES IN TRAIN';
+tmp{1,9} = 'PULSE TRAIN PERIOD';
+tmp{1,10} = 'REFRACTORY PERIOD';
+tmp{1,11} = 'STIMULUS SHAPE';
+tmp{1,12} = 'FIRST PHASE POLARITY';
+tmp{1,13} = 'FIRST PHASE DURATION';
+tmp{1,14} = 'SECOND PHASE DURATION';
+tmp{1,15} = 'INTER-PHASE DELAY';
+tmp{1,16} = 'FIRST PHASE AMPLITUDE';
+tmp{1,17} = 'SECOND PHASE AMPLITUDE';
+tmp{1,18} = 'ENABLE AMP SETTLE';
+tmp{1,19} = 'PRE-STIM AMP SETTLE';
+tmp{1,20} = 'POST-STIM AMP SETTLE';
+tmp{1,21} = 'MAINTAIN AMP SETTLE DURING TRAIN';
+tmp{1,22} = 'ENABLE CHARGE RECOVERY';
+tmp{1,23} = 'POST STIM CHARGE RECOVERY ON';
+tmp{1,24} = 'POST STIM CHARGE RECOVERY OFF';
+
+end

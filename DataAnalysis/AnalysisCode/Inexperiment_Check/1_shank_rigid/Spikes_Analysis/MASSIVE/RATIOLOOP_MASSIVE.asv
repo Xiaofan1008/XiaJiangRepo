@@ -1,0 +1,46 @@
+function [electsig,electnonsig,electall]=RATIOLOOP_MASSIVE(SubDir_Path)
+%%for analysing data on massive and saving denoised files
+folder = fileparts(which('RATIOLOOP_MASSIVE')); % Determines filepath to folder containing your .m file.
+addpath(genpath(folder)); % Add that folder plus all subfolders to the path.
+%fileptochange=folder(1:end-8);%Path name minus '/MASSIVE'
+cd(SubDir_Path)%change working directory to where data is stored - currently manually input
+
+load('Significant.mat','ratiosingduals')
+sigratio=ratiosingduals;
+load('NonSignificant.mat','ratiosingdualn')
+nonsigratio=ratiosingdualn;
+nonsigratio(isnan(nonsigratio))=0;
+sigratio(isnan(sigratio))=0;
+nonsigratio(isinf(nonsigratio))=0;
+sigratio(isinf(sigratio))=0;
+electall=sum(sigratio+nonsigratio)./sum((sigratio+nonsigratio)~=0);
+electsig=mean(sigratio(sigratio~=0));
+electnonsig=mean(nonsigratio(nonsigratio~=0));
+
+load('Significant.mat','ratiosingduals75')
+sigratio=ratiosingduals75;
+load('NonSignificant.mat','ratiosingdualn75')
+nonsigratio=ratiosingdualn75;
+nonsigratio(isnan(nonsigratio))=0;
+sigratio(isnan(sigratio))=0;
+nonsigratio(isinf(nonsigratio))=0;
+sigratio(isinf(sigratio))=0;
+electall75=sum(sigratio+nonsigratio)./sum((sigratio+nonsigratio)~=0);
+electsig75=mean(sigratio(sigratio~=0));
+electnonsig75=mean(nonsigratio(nonsigratio~=0));
+
+load('Significant.mat','ratiosingduals25')
+sigratio=ratiosingduals25;
+load('NonSignificant.mat','ratiosingdualn25')
+nonsigratio=ratiosingdualn25;
+nonsigratio(isnan(nonsigratio))=0;
+sigratio(isnan(sigratio))=0;
+nonsigratio(isinf(nonsigratio))=0;
+sigratio(isinf(sigratio))=0;
+electall25=sum(sigratio+nonsigratio)./sum((sigratio+nonsigratio)~=0);
+electsig25=mean(sigratio(sigratio~=0));
+electnonsig25=mean(nonsigratio(nonsigratio~=0));
+
+
+
+end

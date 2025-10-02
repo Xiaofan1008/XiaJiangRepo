@@ -1629,6 +1629,130 @@ function raster_psth_all_chn_per_stimset(nChn, Spikes, combClass_win, uniqueComb
     end
 end
 
+function raster_psth_stacked_per_set_amp(nChn, Amps, ampIdx, ...
+    Spikes, combClass_win, uniqueComb)
+
+    ras_win   = [-20 100];   % ms
+    bin_ms    = 1;          % PSTH bin size (ms)
+    smooth_ms = 3;          % smoothing window (ms)
+
+    % Define time axis
+    edges = ras_win(1):bin_ms:ras_win(2);
+    ctrs  = edges(1:end-1) + diff(edges)/2;
+    bin_s = bin_ms / 1000;
+
+    % Build smoothing kernel
+    smooth_bins = max(1, round(smooth_ms / bin_ms));
+    sigma_bins  = max(1, round(smooth_bins / 2));
+    g = exp(-0.5 * ((0:smooth_bins-1) ./ sigma_bins).^2);
+    g = g / sum(g);
+
+    % Unique stimulation sets
+    classes_here = unique(combClass_win(:)');
+    nSets = numel(classes_here);
+
+    % Loop over stim sets
+    for si = 1:nSets
+        set_id = classes_here(si);
+        stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ' + ');
+
+        % Loop over channels
+        for ch = 1:nChn
+            figure('Color','w','Name',sprintf('Ch %d | Set %s', ch, setLabel), 'NumberTitle','off');
+            tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+            ax1 = nexttile([3 1]); hold(ax1,'on'); box(ax1,'off');
+            ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
+
+            cmap = lines(numel(Amps));
+            psth_curves = cell(1, numel(Amps));
+            maxRate = 0;
+            y_cursor = 0;
+            ytick_vals = [];
+            ytick_labels = [];
+
+            % Loop over amplitudes (always loop through all amplitudes)
+                        for ai = 1:numel(Amps)
+                amp_val = Amps(ai);
+                amp_trials = find(ampIdx == ai & combClass_win == set_id);
+                nTr = numel(amp_trials);
+                if nTr == 0
+                    continue;  % skip entirely if no trials for this amp
+                end
+
+                spkTimesPerTrial = cell(nTr,1);
+                counts = zeros(1, numel(edges)-1);
+
+                for t = 1:nTr
+                    tr = amp_trials(t);
+                    S = Spikes{ch, tr};
+                    if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                        tt = S.t_ms;
+                        spkTimesPerTrial{t} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+                        counts = counts + histcounts(spkTimesPerTrial{t}, edges);
+                    else
+                        spkTimesPerTrial{t} = [];
+                    end
+                end
+
+                % --- Raster plot ---
+                for t = 1:nTr
+                    tt = spkTimesPerTrial{t};
+                    y0 = y_cursor + t;
+                    for k = 1:numel(tt)
+                        plot(ax1, [tt(k) tt(k)], [y0-0.4 y0+0.4], ...
+                             'Color', cmap(ai,:), 'LineWidth', 1.2);
+                    end
+                end
+
+                % Tick label and divider
+                ytick_vals(end+1) = y_cursor + nTr/2;
+                ytick_labels{end+1} = sprintf('%.0f µA', amp_val);
+
+                % Draw divider below this block
+                plot(ax1, ras_win, [y_cursor+nTr y_cursor+nTr], ...
+                     'Color', [0.8 0.8 0.8], 'LineStyle','--');
+
+                % Update y_cursor
+                y_cursor = y_cursor + nTr;
+
+                % PSTH
+                rate = counts / (nTr * bin_s);
+                rate_s = filter(g, 1, rate);
+                psth_curves{ai} = rate_s;
+                maxRate = max(maxRate, max(rate_s));
+            end
+
+            % Finalize Raster Plot
+            xline(ax1, 0, 'r', 'LineWidth', 1.5);
+            xlim(ax1, ras_win);
+            ylim(ax1, [0, y_cursor]);
+            yticks(ax1, ytick_vals);
+            yticklabels(ax1, ytick_labels);
+            ylabel(ax1, 'Stimulation Amplitude');
+            title(ax1, sprintf('Raster Plot — Ch %d | Set: %s', ch, setLabel), 'Interpreter','none');
+
+            % Finalize PSTH Plot
+            for ai = 1:numel(Amps)
+                if ~isempty(psth_curves{ai})
+                    plot(ax2, ctrs, psth_curves{ai}, 'Color', cmap(ai,:), 'LineWidth', 1.5);
+                end
+            end
+            xline(ax2, 0, 'r', 'LineWidth', 1.5);
+            xlim(ax2, ras_win);
+            if ~isempty(maxRate) && isfinite(maxRate) && maxRate > 0
+                ylim(ax2, [0 ceil(maxRate*1.1/10)*10]);
+            else
+                ylim(ax2, [0 1]);  % fallback default if no spikes
+            end           
+            xlabel(ax2, 'Time (ms)');
+            ylabel(ax2, 'Rate (sp/s)');
+            legend(ax2, arrayfun(@(a) sprintf('%.0f µA', a), Amps, 'UniformOutput', false), ...
+                'Box','off','Location','northeast');
+        end
+    end
+end
+
 %% ==================== Tuning Curves ====================
 
 function tuning_fr_vs_amp_all_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win)

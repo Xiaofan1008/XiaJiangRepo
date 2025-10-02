@@ -1509,6 +1509,126 @@ function all_channels_psth_different_amp_stim_set(nChn, n_AMP, Amps, ampIdx, ...
     end
 end
 
+function raster_psth_all_chn_per_stimset(nChn, Spikes, combClass_win, uniqueComb)
+    % Plot raster + PSTH for each channel under each stimulation set
+    ras_win   = [-20 100];      % time window (ms)
+    bin_ms    = 1;              % bin size
+    bin_s     = bin_ms / 1000;  % bin size in seconds
+    stimSets  = unique(combClass_win(:)');
+    nSets     = numel(stimSets);
+
+    for ch = 1:nChn
+        % ---------- First pass: get max firing rate for this channel ----------
+        maxRateThisCh = 0;
+        for si = 1:nSets
+            set_id = stimSets(si);
+            trial_idx = find(combClass_win == set_id);
+            nTrials   = numel(trial_idx);
+            if nTrials == 0, continue; end
+
+            % Collect spike times
+            spkPerTrial = cell(nTrials,1);
+            for t = 1:nTrials
+                trial = trial_idx(t);
+                if ~isempty(Spikes{ch,trial}) && isfield(Spikes{ch,trial},'t_ms')
+                    tt = Spikes{ch,trial}.t_ms;
+                    spkPerTrial{t} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+                else
+                    spkPerTrial{t} = [];
+                end
+            end
+
+            % PSTH estimate
+            edges = ras_win(1):bin_ms:ras_win(2);
+            counts = zeros(1, numel(edges)-1);
+            for t = 1:nTrials
+                counts = counts + histcounts(spkPerTrial{t}, edges);
+            end
+            rate = counts / (nTrials * bin_s);
+
+            % Causal smoothing
+            smooth_ms   = 3;
+            smooth_bins = max(1, round(smooth_ms/bin_ms));
+            sigma_bins  = max(1, round(smooth_bins/2));
+            k = 0:(smooth_bins-1);
+            g = exp(-0.5*(k./sigma_bins).^2); g = g/sum(g);
+            rate_s = filter(g,1,rate);
+            maxRateThisCh = max(maxRateThisCh, max(rate_s));
+        end
+
+        % ---------- Second pass: actual plotting ----------
+        for si = 1:nSets
+            set_id = stimSets(si);
+            stimChn = uniqueComb(set_id, :);
+            stimChn = stimChn(stimChn > 0);
+            stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChn, 'UniformOutput', false), ' + ');
+
+            trial_idx = find(combClass_win == set_id);
+            nTrials   = numel(trial_idx);
+            if nTrials == 0, continue; end
+
+            % Collect spike times
+            spkPerTrial = cell(nTrials,1);
+            for t = 1:nTrials
+                trial = trial_idx(t);
+                if ~isempty(Spikes{ch,trial}) && isfield(Spikes{ch,trial},'t_ms')
+                    tt = Spikes{ch,trial}.t_ms;
+                    spkPerTrial{t} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+                else
+                    spkPerTrial{t} = [];
+                end
+            end
+
+            % --- Figure ---
+            figure('Color','w','Name',sprintf('Ch%d | Set %d', ch, set_id), 'NumberTitle','off');
+            tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+            title(tl, sprintf('Ch%d | Set %d (n=%d) | Stim: %s', ch, set_id, nTrials, stimLabel), ...
+                  'FontWeight','bold', 'Interpreter','none');
+
+            % --- Raster ---
+            ax1 = nexttile([3 1]); hold(ax1,'on');
+            for tr = 1:nTrials
+                tt = spkPerTrial{tr};
+                for s = 1:numel(tt)
+                    plot(ax1, [tt(s) tt(s)], [tr-0.4 tr+0.4], 'k', 'LineWidth', 1.2);
+                end
+            end
+            xline(ax1, 0, 'r', 'LineWidth', 1.2);
+            xlim(ax1, ras_win);
+            ylim(ax1, [0.5, nTrials+0.5]);
+            yticks(ax1, round(linspace(1, nTrials, 5)));
+            ylabel(ax1, 'Trial #');
+            xlabel(ax1, 'Time (ms)');
+            box(ax1,'off');
+
+            % --- PSTH ---
+            ax2 = nexttile; hold(ax2,'on');
+            edges = ras_win(1):bin_ms:ras_win(2);
+            ctrs = edges(1:end-1) + diff(edges)/2;
+            counts = zeros(1, numel(edges)-1);
+            for t = 1:nTrials
+                tt = spkPerTrial{t};
+                if isempty(tt), continue; end
+                counts = counts + histcounts(tt, edges);
+            end
+            rate = counts / (nTrials * bin_s);
+
+            % Smooth
+            k = 0:(smooth_bins-1);
+            g = exp(-0.5*(k./sigma_bins).^2); g = g/sum(g);
+            rate_s = filter(g, 1, rate);
+
+            plot(ax2, ctrs, rate_s, 'Color', [0 0 0.6], 'LineWidth', 2);
+            xline(ax2, 0, 'r', 'LineWidth', 1.2);
+            ylim(ax2, [0 maxRateThisCh * 1.1]);
+            xlim(ax2, ras_win);
+            ylabel(ax2, 'Rate (sp/s)');
+            xlabel(ax2, 'Time (ms)');
+            box(ax2,'off');
+        end
+    end
+end
+
 %% ==================== Tuning Curves ====================
 
 function tuning_fr_vs_amp_all_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win)
@@ -1596,8 +1716,8 @@ function tuning_fr_vs_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, 
     pltHandles = []; 
     for ii = 1:nSets
         y = meanFR_set_amp(ii,:);
-        % e = semFR_set_amp(ii,:);
-        e = stdFR_set_amp(ii,:);
+        e = semFR_set_amp(ii,:);
+        % e = stdFR_set_amp(ii,:);
         % Only plot where we actually have data for this set
         hasData = ~isnan(y);
         if any(hasData)
@@ -1620,6 +1740,87 @@ function tuning_fr_vs_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, 
 
     % Optional: enforce same x-limits across all sets, and nice y-limits
     xlim([min(Amps) max(Amps)]);
+    yl = ylim; ylim([0 max(yl(2), 1)]);
+end
+
+function tuning_fr_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win, uniqueComb)
+    % -------- (2) Firing rate vs. AMP (Different sets) -------- %
+    resp_s  = diff(resp_ms)/1000;
+
+    classes_here = unique(combClass_win(:)');   % stim sets present
+    nSets        = numel(classes_here);
+
+    % remove zero-amp index
+    nonzero_amp_idx = find(Amps > 0);  % only amplitudes > 0 µA
+    Amps_plot = Amps(nonzero_amp_idx);
+    n_AMP_plot = numel(Amps_plot);
+
+    % Prepare legend labels for each stim set
+    setLabels = strings(1, nSets);
+    for ii = 1:nSets
+        set_id  = classes_here(ii);
+        stimIdx = uniqueComb(set_id, :); 
+        stimIdx = stimIdx(stimIdx > 0);
+        setLabels(ii) = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx, 'UniformOutput', false), ' + ');
+    end
+
+    % Compute mean FR (and SEM) per amplitude within each stim set
+    meanFR_set_amp = nan(nSets, n_AMP_plot);
+    semFR_set_amp  = nan(nSets, n_AMP_plot);
+
+    for ii = 1:nSets
+        set_id   = classes_here(ii);
+        trials_S = find(combClass_win == set_id);  % trials belonging to this stim set
+
+        for kk = 1:n_AMP_plot
+            kAmpIndex = nonzero_amp_idx(kk);  % actual amp index
+            trials_kS = intersect(trials_S, find(ampIdx == kAmpIndex));   % trials with this amp AND this set
+            if isempty(trials_kS), continue; end
+
+            % spike counts per trial in window
+            counts = zeros(numel(trials_kS),1);
+            for jj = 1:numel(trials_kS)
+                tr = trials_kS(jj);
+                S  = Spikes{ch_tune, tr};
+                if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                    counts(jj) = sum(S.t_ms >= resp_ms(1) & S.t_ms <= resp_ms(2));
+                end
+            end
+            fr = counts / resp_s;  % sp/s for each trial
+            meanFR_set_amp(ii,kk) = mean(fr, 'omitnan');
+            semFR_set_amp(ii,kk)  = std(fr,  'omitnan') / sqrt(max(1, numel(fr)));
+        end
+    end
+
+    % Plot: overlay one line per stim set across amplitude (no 0uA)
+    figure('Color','w','Name',sprintf('Ch %d | FR vs Amplitude by Stim Set', ch_tune),'NumberTitle','off');
+    hold on;
+    cmap = lines(nSets);   % distinct colors per set
+    pltHandles = []; 
+    for ii = 1:nSets
+        y = meanFR_set_amp(ii,:);
+        e = semFR_set_amp(ii,:);
+        hasData = ~isnan(y);
+        if any(hasData)
+           h = plot(Amps_plot(hasData), y(hasData), '-o', 'LineWidth', 2.5, 'MarkerSize', 5, 'Color', cmap(ii,:));
+           hErr =  errorbar(Amps_plot(hasData), y(hasData), e(hasData), 'LineStyle', 'none', 'Color', cmap(ii,:), 'LineWidth', 1.5);
+           set(hErr, 'HandleVisibility', 'off'); 
+           pltHandles(end+1) = h;
+        end
+    end
+
+    box off;
+    xlabel('Amplitude (µA)');
+    ylabel('Firing rate (sp/s)');
+    title(sprintf('Channel %d — %d to %d ms', ch_tune, resp_ms(1), resp_ms(2)));
+
+    if ~isempty(pltHandles)
+        leg = legend(pltHandles,setLabels, 'Location', 'SouthEast', 'Interpreter','none');
+        leg.Box = 'off';
+    end
+
+    % Optional: enforce same x-limits across all sets, and nice y-limits
+    xlim([min(Amps_plot) max(Amps_plot)]);
     yl = ylim; ylim([0 max(yl(2), 1)]);
 end
 
@@ -1691,6 +1892,83 @@ function heatmap_fr_per_chn_per_amp_per_stimset(nChn, n_AMP, Amps, ampIdx, ...
         for sc = stimIdx
             % Draw a red rectangle spanning the row of that channel
             rectangle('Position',[0.5, sc-0.5, n_AMP, 1], ...
+                      'EdgeColor','r','LineWidth',1.5);
+        end
+        hold off;
+    end
+end
+
+function heatmap_per_chn_per_amp_per_stimset(nChn, n_AMP, Amps, ampIdx, ...
+    Spikes, combClass_win, uniqueComb, E_NAME)
+
+    % Only use amplitudes >0
+    nonzero_amp_idx = find(Amps > 0);
+    Amps_plot = Amps(nonzero_amp_idx);
+    n_AMP_plot = numel(Amps_plot);
+
+    % ------ Heat Map ------ %% 
+    resp_ms  = [0 20];                % response window (ms)
+    resp_s   = diff(resp_ms)/1000;
+    classes_here = unique(combClass_win(:)');   % stim sets present
+    nSets    = numel(classes_here);
+
+    % loop over stim sets
+    for si = 1:nSets
+        set_id   = classes_here(si);
+        stimIdx  = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx,'UniformOutput',false),' + ');
+        
+        % trials of this stim set
+        trials_S = find(combClass_win == set_id);
+        
+        % Preallocate [channels × amplitudes]
+        FR_mean = nan(nChn, n_AMP_plot);
+        maxFR   = 0;
+        
+        % compute FR for each channel × amplitude (no 0uA)
+        for ch = 1:nChn
+            for kk = 1:n_AMP_plot
+                kAmpIndex = nonzero_amp_idx(kk);
+                trials_kS = intersect(trials_S, find(ampIdx == kAmpIndex));
+                if isempty(trials_kS), continue; end
+                
+                counts = zeros(numel(trials_kS),1);
+                for jj = 1:numel(trials_kS)
+                    tr = trials_kS(jj);
+                    S  = Spikes{ch, tr};
+                    if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                        counts(jj) = sum(S.t_ms >= resp_ms(1) & S.t_ms <= resp_ms(2));
+                    end
+                end
+                fr_trials = counts / resp_s;  % sp/s
+                FR_mean(ch, kk) = mean(fr_trials, 'omitnan');
+                maxFR = max(maxFR, FR_mean(ch,kk));
+            end
+        end
+        
+        % ---- Plot heatmap for this stim set ----
+        figure('Color','w','Name',sprintf('Stim set %s | FR heatmap', setLabel), ...
+               'NumberTitle','off');
+        imagesc(FR_mean);
+        colormap(jet);
+        caxis([0, maxFR]);     % normalize to this set
+        cb = colorbar; ylabel(cb,'Firing rate (sp/s)');
+        set(gca,'YDir','normal');
+        
+        % axis labels
+        yticks(1:nChn);
+        yticklabels(arrayfun(@(c) sprintf('Ch%d',c), 1:nChn, 'UniformOutput',false));
+        xticks(1:n_AMP_plot);
+        xticklabels(arrayfun(@(a) sprintf('%g µA', a), Amps_plot, 'UniformOutput',false));
+        xlabel('Amplitude');
+        ylabel('Channel');
+        title(sprintf('Firing rate heatmap | Stim set: %s', setLabel), 'Interpreter','none');
+           
+         % ---- Highlight stimulation channels ----
+        hold on;
+        for sc = stimIdx
+            % Draw a red rectangle spanning the row of that channel
+            rectangle('Position',[0.5, sc-0.5, n_AMP_plot, 1], ...
                       'EdgeColor','r','LineWidth',1.5);
         end
         hold off;

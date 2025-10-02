@@ -1,9 +1,8 @@
 %% Quick Analysis for Artifact
 clear all
 close all
-% addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
-% addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
-addpath(genpath('./MASSIVE'));
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
+addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
 
 %% Load Intan parameters
 filepath = pwd;
@@ -16,9 +15,9 @@ dName='amplifier';
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
 
 %% ------ Quick Analysis data parameters ------ %%
-nTrials = 1000; % number of trials used for analysis
+nTrials = 220; % number of trials used for analysis
 
-artifact_window_ms = [-1, 3];  % artifact window in ms
+artifact_window_ms = [-1, 10];  % artifact window in ms
 artifact_window_samp = round(artifact_window_ms / 1000 * FS);
 artifact_samples = diff(artifact_window_samp) + 1;
 artifact_time = (artifact_window_samp(1):artifact_window_samp(2)) / FS * 1000;
@@ -33,8 +32,8 @@ end
 trig = loadTrig(0);
 trig = trig(1:nTrials);
 nTrig = length(trig); % length of trigger
-% d = Depth;
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth;
+
 % load trial parameters
 TrialParams = loadTrialParams;
 trialIDs = cell2mat(TrialParams(:,2));

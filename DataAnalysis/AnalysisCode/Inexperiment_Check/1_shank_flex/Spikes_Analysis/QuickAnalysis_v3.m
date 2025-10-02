@@ -1,8 +1,9 @@
 %% Quick Analysis Code
 clear all
 close all
-addpath(genpath('./MASSIVE'));
-% addpath(genpath('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
+% addpath(genpath
+% ('/Volumes/MACData/Data/Data_Sabrina/Experimental_Design'));
 
 
 %% ================================================ %%
@@ -48,9 +49,9 @@ if isempty(dir('*.trig.dat'))
 end
 trig = loadTrig(0);
 trig_all = trig; 
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(0); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 % Extract trigger
-nTrials = 1000; % number of trials used for analysis
+nTrials = 220; % number of trials used for analysis
 Trial_start = 1;
 if (nTrials<=length(trig)); trig = trig(Trial_start:Trial_start+nTrials-1); end
 nTrig = length(trig); % length of trigger
@@ -369,14 +370,15 @@ QuickAnalysis.plot_all_spike_waveforms(preS, postS, FS, nChn, nTrials, Spikes, u
 QuickAnalysis.plot_mean_spike_waveforms_per_amp_per_stim_set(preS, postS, FS, nChn, n_AMP, Amps, Spikes, ampIdx, combClass_win, uniqueComb);
 
 % ------ (2) Raster & PSTH plots  ------ %
-QuickAnalysis.raster_across_all_sets(nChn, nTrials, Spikes, Trial_start);
-QuickAnalysis.all_channels_psth_different_amp_stim_set(nChn, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb);
-ch = 11; 
-QuickAnalysis.raster_different_stimset_and_amp(ch, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb);
-
+% QuickAnalysis.raster_across_all_sets(nChn, nTrials, Spikes, Trial_start);
+% QuickAnalysis.all_channels_psth_different_amp_stim_set(nChn, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb);
+% ch = 11; 
+% QuickAnalysis.raster_different_stimset_and_amp(ch, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb);
+QuickAnalysis.raster_psth_all_chn_per_stimset(nChn, Spikes, combClass_win, uniqueComb);
 % ------ (3) Heatmap ------ %
 QuickAnalysis.heatmap_fr_per_chn_per_amp_per_stimset(nChn, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb, E_NAME);
-
+QuickAnalysis.heatmap_per_chn_per_amp_per_stimset(nChn, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb, E_NAME);
 % ------ (4) Tuning curve ------ %
-ch_tune = 11; resp_ms = [0 20];
+ch_tune = 4; resp_ms = [0 20];
 QuickAnalysis.tuning_fr_vs_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win, uniqueComb);
+QuickAnalysis.tuning_fr_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win, uniqueComb);

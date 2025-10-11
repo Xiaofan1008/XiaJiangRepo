@@ -28,10 +28,22 @@ total_sample = diff(window_samps) + 1;
 trialLength = diff(window_samps)+1;
 
 % ---- Artifact blank parameters ---- %
-preBlank_ms   = 1;   % ms to blank BEFORE stim
-postBlank_ms  = 2;   % ms to blank AFTER  stim
-preBlank_samp  = round(preBlank_ms/1000 * FS);
-postBlank_samp = round(postBlank_ms/1000 * FS);
+% Enable/disable second stimulation artifact blanking
+enable_second_artifact = 1;
+
+% 1st stimulation artifact (typically 0 ms)
+preBlank1_ms   = 1;    % ms to blank BEFORE 1st stim
+postBlank1_ms  = 2;    % ms to blank AFTER  1st stim
+preBlank1_samp  = round(preBlank1_ms/1000 * FS);
+postBlank1_samp = round(postBlank1_ms/1000 * FS);
+
+% 2nd stimulation artifact (e.g. 5.5 ms)
+secondStim_ms      = 5.5;  % onset time relative to stim trigger (ms)
+preBlank2_ms        = 0.5; % ms to blank BEFORE 2nd stim
+postBlank2_ms       = 2.0; % ms to blank AFTER  2nd stim
+preBlank2_samp      = round(preBlank2_ms/1000 * FS);
+postBlank2_samp     = round(postBlank2_ms/1000 * FS);
+secondStim_samp     = round(secondStim_ms/1000 * FS);
 
 % Cross-fade tapers at the edges of the filled region
 taper_pre_ms  = 0.8;   % ms, PRE side
@@ -164,29 +176,54 @@ for tr = 1:nTrials
     data = fread(vFID, [nChn, total_sample], 'int16') * 0.195; % in uV
 
     stim_idx = -window_samps(1) + 1;
-    blank_range = max(1, stim_idx - preBlank_samp) : min(total_sample, stim_idx + postBlank_samp);
-    keep_range = setdiff(1:total_sample, blank_range);
+    % First artifact blanking window
+    blank1 = max(1, stim_idx - preBlank1_samp) : ...
+             min(total_sample, stim_idx + postBlank1_samp);    
+    % Second artifact blanking window (optional)
+    if enable_second_artifact
+        stim2_idx = stim_idx + secondStim_samp;
+        blank2 = max(1, stim2_idx - preBlank2_samp) : ...
+                 min(total_sample, stim2_idx + postBlank2_samp);
+    else
+        blank2 = [];
+    end    
+    % Merge blanking ranges
+    blank_range = unique([blank1, blank2]);
+    keep_range  = setdiff(1:total_sample, blank_range);
     
     for ch = 1:nChn       
         thisChn = d(ch);
         raw = data(thisChn, :);
-        %% ---- Artifact Blank ---- %%
-        stimSample  = -window_samps(1) + 1;  % stim index in the trial window
-        segStartIdx = max(1,           stimSample - preBlank_samp);
-        segEndIdx   = min(total_sample, stimSample + postBlank_samp);
-
-        % Interpolate artifact
+        %% ---- Artifact Blank (Multi-window) ---- %%
+        stimSample = -window_samps(1) + 1;  % stim index (1st stim) in trial window
+        
+        % Define artifact blanking windows
+        blank1 = max(1, stimSample - preBlank1_samp) : ...
+                 min(total_sample, stimSample + postBlank1_samp);
+        
+        if enable_second_artifact
+            stim2_idx = stimSample + secondStim_samp;
+            blank2 = max(1, stim2_idx - preBlank2_samp) : ...
+                     min(total_sample, stim2_idx + postBlank2_samp);
+        else
+            blank2 = [];
+        end
+        
+        % Merge and interpolate over both blank regions
+        blank_range = unique([blank1, blank2]);
+        keep_range  = setdiff(1:total_sample, blank_range);
+        
         raw_interp = raw;
         raw_interp(blank_range) = interp1(keep_range, raw(keep_range), blank_range, 'linear', 'extrap');
+        
         % Filter & rectify
         sig_filt_plot = filter(bpFIR, 1, raw_interp);
         if gd > 0
             sig_filt_plot = [sig_filt_plot(gd+1:end), zeros(1, gd)];
         end
-        smoothed = movmean(sig_filt_plot, 15);   % if you still want this quick display
-        % Store
-        MUA_all(ch, :, tr) = sig_filt_plot;
-
+        
+        smoothed = movmean(sig_filt_plot, 15);   % Optional: smoothing for plot
+        MUA_all(ch, :, tr) = sig_filt_plot;      % Store filtered trace
         %% ---- Baseline firing rate ---- %%       
         sig_filt = filter(bpFIR, 1, raw_interp);
         % Compensate constant group delay
@@ -199,10 +236,33 @@ for tr = 1:nTrials
         %% ---- Spike detection ---- %%       
         % Threshold crossings
         cross_idx = find(signal(2:end) < thr(ch) & signal(1:end-1) >= thr(ch)) + 1;
-        guardStartIdx = max(1,segStartIdx - guard_pre_samp);
-        guardEndIdx   = min(total_sample, segEndIdx  + guard_post_samp);
-        mask_keep = ~(cross_idx >= guardStartIdx & cross_idx <= guardEndIdx);
+
+        % Guard region around 1st artifact
+        guard1_start = max(1, stim_idx - preBlank1_samp - guard_pre_samp);
+        guard1_end   = min(total_sample, stim_idx + postBlank1_samp + guard_post_samp);
+        
+        % Guard region around 2nd artifact (optional)
+        if enable_second_artifact
+            stim2_idx = stim_idx + secondStim_samp;
+            guard2_start = max(1, stim2_idx - preBlank2_samp - guard_pre_samp);
+            guard2_end   = min(total_sample, stim2_idx + postBlank2_samp + guard_post_samp);
+        else
+            guard2_start = [];
+            guard2_end   = [];
+        end
+        
+        % Combine both guard masks
+        mask_keep = true(size(cross_idx));
+        if ~isempty(guard2_start)
+            mask_keep = ~(...
+                (cross_idx >= guard1_start & cross_idx <= guard1_end) | ...
+                (cross_idx >= guard2_start & cross_idx <= guard2_end) );
+        else
+            mask_keep = ~(cross_idx >= guard1_start & cross_idx <= guard1_end);
+        end
         cross_idx = cross_idx(mask_keep);
+
+
         % Refractory period 1ms
         refrac_samp = max(1, round(1e-3 * FS));
         % Space crossings: drop any within refractory of the previous kept one
@@ -369,8 +429,8 @@ combClass_win = combClass(Trial_start : Trial_start + nTrials - 1);
 QuickAnalysis.plot_all_spike_waveforms(preS, postS, FS, nChn, nTrials, Spikes, uniqueCh);
 QuickAnalysis.plot_mean_spike_waveforms_per_amp_per_stim_set(preS, postS, FS, nChn, n_AMP, Amps, Spikes, ampIdx, combClass_win, uniqueComb);
 ch_spike = 22;
-Spike_window = 20; % time window for the spike subplot (ms)
-QuickAnalysis.plot_spikes_by_time_grid(ch_spike, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, Trial_start, Spike_window, 50);
+Spike_window = 5; % time window for the spike subplot (ms)
+QuickAnalysis.plot_spikes_by_time_grid(ch_spike, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, Spike_window, 20)
 
 ch_filter_plot = 22;  % change to your desired channel
 filtered_window = [-5,15];

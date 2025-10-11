@@ -1753,6 +1753,281 @@ function raster_psth_stacked_per_set_amp(nChn, Amps, ampIdx, ...
     end
 end
 
+function raster_psth_stacked_per_set_amp_same_color(nChn, Amps, ampIdx, ...
+    Spikes, combClass_win, uniqueComb)
+
+    ras_win   = [-20 100];   % ms
+    bin_ms    = 1;           % PSTH bin size (ms)
+    smooth_ms = 3;           % smoothing window (ms)
+
+    % Define time axis
+    edges = ras_win(1):bin_ms:ras_win(2);
+    ctrs  = edges(1:end-1) + diff(edges)/2;
+    bin_s = bin_ms / 1000;
+
+    % Build smoothing kernel
+    smooth_bins = max(1, round(smooth_ms / bin_ms));
+    sigma_bins  = max(1, round(smooth_bins / 2));
+    g = exp(-0.5 * ((0:smooth_bins-1) ./ sigma_bins).^2);
+    g = g / sum(g);
+
+    % ---- Define consistent colormap across all stim sets ----
+    unique_amps = unique(Amps);
+    nAmps = numel(unique_amps);
+    cmap = lines(nAmps);
+    amp_to_idx = containers.Map(num2cell(unique_amps), num2cell(1:nAmps));  % amplitude → color index
+
+    % Unique stimulation sets
+    classes_here = unique(combClass_win(:)');
+    nSets = numel(classes_here);
+
+    % Loop over stim sets
+    for si = 1:nSets
+        set_id = classes_here(si);
+        stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ' + ');
+
+        % Loop over channels
+        for ch = 1:nChn
+            figure('Color','w','Name',sprintf('Ch %d | Set %s', ch, setLabel), 'NumberTitle','off');
+            tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+            ax1 = nexttile([3 1]); hold(ax1,'on'); box(ax1,'off');
+            ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
+
+            psth_curves = cell(1, numel(Amps));
+            maxRate = 0;
+            y_cursor = 0;
+            ytick_vals = [];
+            ytick_labels = [];
+
+            % Loop over amplitudes (always loop through all amplitudes)
+            for ai = 1:numel(Amps)
+                amp_val = Amps(ai);
+                color_idx = amp_to_idx(amp_val);  % consistent color index
+                amp_trials = find(ampIdx == ai & combClass_win == set_id);
+                nTr = numel(amp_trials);
+
+                % Keep the row even if nTr == 0, but skip plotting
+                spkTimesPerTrial = cell(nTr,1);
+                counts = zeros(1, numel(edges)-1);
+
+                for t = 1:nTr
+                    tr = amp_trials(t);
+                    S = Spikes{ch, tr};
+                    if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                        tt = S.t_ms;
+                        spkTimesPerTrial{t} = tt(tt >= ras_win(1) & tt <= ras_win(2));
+                        counts = counts + histcounts(spkTimesPerTrial{t}, edges);
+                    else
+                        spkTimesPerTrial{t} = [];
+                    end
+                end
+
+                % --- Raster plot ---
+                for t = 1:nTr
+                    tt = spkTimesPerTrial{t};
+                    y0 = y_cursor + t;
+                    for k = 1:numel(tt)
+                        plot(ax1, [tt(k) tt(k)], [y0-0.4 y0+0.4], ...
+                             'Color', cmap(color_idx,:), 'LineWidth', 1.2);
+                    end
+                end
+
+                % Tick label and divider
+                ytick_vals(end+1) = y_cursor + max(nTr, 1)/2;
+                ytick_labels{end+1} = sprintf('%.0f µA', amp_val);
+
+                % Draw divider below this block (even if nTr==0)
+                if nTr > 0
+                    plot(ax1, ras_win, [y_cursor+nTr y_cursor+nTr], ...
+                         'Color', [0.8 0.8 0.8], 'LineStyle','--');
+                end
+
+                % Update y_cursor (still increment even if nTr==0)
+                y_cursor = y_cursor + max(nTr, 1);
+
+                % PSTH (skip only if nTr == 0)
+                if nTr > 0
+                    rate = counts / (nTr * bin_s);
+                    rate_s = filter(g, 1, rate);
+                    psth_curves{ai} = rate_s;
+                    maxRate = max(maxRate, max(rate_s));
+                else
+                    psth_curves{ai} = zeros(1, numel(ctrs));  % add blank curve
+                end
+            end
+
+            % Finalize Raster Plot
+            xline(ax1, 0, 'r', 'LineWidth', 1.5);
+            xlim(ax1, ras_win);
+            ylim(ax1, [0, y_cursor]);
+            yticks(ax1, ytick_vals);
+            yticklabels(ax1, ytick_labels);
+            ylabel(ax1, 'Stimulation Amplitude');
+            title(ax1, sprintf('Raster Plot — Ch %d | Set: %s', ch, setLabel), 'Interpreter','none');
+
+            % Finalize PSTH Plot
+            for ai = 1:numel(Amps)
+                amp_val = Amps(ai);
+                color_idx = amp_to_idx(amp_val);
+                plot(ax2, ctrs, psth_curves{ai}, ...
+                    'Color', cmap(color_idx,:), 'LineWidth', 1.5);
+            end
+            xline(ax2, 0, 'r', 'LineWidth', 1.5);
+            xlim(ax2, ras_win);
+            if ~isempty(maxRate) && isfinite(maxRate) && maxRate > 0
+                ylim(ax2, [0 ceil(maxRate*1.1/10)*10]);
+            else
+                ylim(ax2, [0 1]);  % fallback default if no spikes
+            end
+            xlabel(ax2, 'Time (ms)');
+            ylabel(ax2, 'Rate (sp/s)');
+            legend(ax2, arrayfun(@(a) sprintf('%.0f µA', a), unique_amps, 'UniformOutput', false), ...
+                'Box','off','Location','northeast');
+        end
+    end
+end
+
+function plot_spikes_by_time_grid(ch, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, tWin_ms, totalTrialWindow_ms)
+% Plot spike waveforms from a selected channel, grouped by spike time
+% windows, and aligned by trough. Each spike is colored by amplitude.
+
+    wf_len = preS + postS + 1;
+    nWin = ceil(totalTrialWindow_ms / tWin_ms);
+    n_AMP = numel(Amps);
+    cmap = lines(n_AMP);  % color map for amplitudes
+
+    t_axis_ms = ((1:wf_len) - preS - 1) / FS * 1000;  % waveform time axis (centered at trough)
+
+    % Collect all waveforms for global y-axis limit
+    wf_all = [];
+    for tr = 1:nTrials
+        if ~isempty(Spikes{ch, tr}) && isfield(Spikes{ch, tr}, 'wf')
+            wf_all = [wf_all; Spikes{ch, tr}.wf];
+        end
+    end
+    yMax = ceil(max(abs(wf_all(:))) / 100) * 100;
+
+    % Plot layout
+    nCol = ceil(sqrt(nWin));
+    nRow = ceil(nWin / nCol);
+    figure('Name', sprintf('Spike Waveforms | Ch %d', ch), 'Color', 'w');
+    tl = tiledlayout(nRow, nCol, 'TileSpacing', 'compact', 'Padding', 'compact');
+    title(tl, sprintf('Spike Waveforms for Ch %d (Grouped by Spike Time)', ch));
+
+    % Initialize tracking for legend
+    legendHandles = gobjects(n_AMP,1);
+    legendLabels = cell(n_AMP,1);
+    firstAx = [];
+    ax_legend = nexttile(1); hold(ax_legend, 'on');
+    for a = 1:n_AMP
+        clr = cmap(a,:);
+        legendHandles(a) = plot(ax_legend, nan, nan, '-', 'Color', clr, 'LineWidth', 1.2); % dummy line
+        legendLabels{a} = sprintf('%g \\muA', Amps(a));
+    end
+
+    % Loop over time windows
+    for w = 1:nWin
+        t_start = (w-1) * tWin_ms;
+        t_end = min(t_start + tWin_ms, totalTrialWindow_ms);
+        ax = nexttile(w); hold(ax, 'on');
+        if isempty(firstAx), firstAx = ax; end  % save first axis for legend
+
+        title(ax, sprintf('%.1f–%.1f ms', t_start, t_end), 'FontSize', 9);
+        xlabel(ax, 'Time (ms)'); ylabel(ax, '\muV');
+
+        % Loop through trials and plot spikes
+        for tr = 1:nTrials
+            if isempty(Spikes{ch, tr}), continue; end
+            spk_t = Spikes{ch, tr}.t_ms;
+            wfs = Spikes{ch, tr}.wf;
+            if isempty(spk_t) || isempty(wfs), continue; end
+
+            amp_id = ampIdx(tr);
+            clr = cmap(amp_id, :);
+
+            in_win = (spk_t >= t_start) & (spk_t < t_end);
+            for i = find(in_win)
+                h = plot(ax, t_axis_ms, wfs(i,:), '-', 'Color', clr, 'LineWidth', 0.6);
+                % Store one handle per amp for legend
+                if isempty(legendHandles(amp_id))
+                    legendHandles(amp_id) = h;
+                    legendLabels{amp_id} = sprintf('%g \\muA', Amps(amp_id));
+                end
+            end
+        end
+
+        xlim(ax, [t_axis_ms(1), t_axis_ms(end)]);
+        ylim(ax, [-yMax, yMax]);
+        axis(ax, 'square');
+        box(ax, 'off');
+    end
+
+    % Add legend in first axes
+    validIdx = isgraphics(legendHandles);
+    legend(ax_legend, legendHandles(validIdx), legendLabels(validIdx), ...
+        'Location', 'southoutside', 'Orientation', 'horizontal');
+end
+
+function plot_filtered_signal_by_amplitude(MUA_all, ampIdx, Amps, t_axis, ch, time_window)
+% =============================================
+% Plot filtered MUA signals by amplitude (per row)
+% for a selected channel and time window
+%
+% Inputs:
+%   - MUA_all:      [nChn x time x trials] filtered signal (µV)
+%   - ampIdx:       [nTrials x 1] index for amplitude per trial
+%   - Amps:         [n_AMP x 1] list of unique amplitudes
+%   - t_axis:       [1 x time] time vector (ms)
+%   - ch:           channel number to plot (1-based)
+%   - time_window:  [start_ms end_ms] time range to show (ms)
+% =============================================
+
+% Find time indices within the requested window
+t_idx = find(t_axis >= time_window(1) & t_axis <= time_window(2));
+t_plot = t_axis(t_idx);  % cropped time vector
+
+figure('Color','w', 'Position', [100 100 600 250 + 50 * numel(Amps)]); hold on;
+colors = lines(numel(Amps));  % color per amplitude
+
+n_AMP = numel(Amps);
+y_spacing = 600;       % vertical shift per amplitude row
+stim_time = 0;         % stimulation at 0 ms
+
+for k = 1:n_AMP
+    amp = Amps(k);
+    trials_k = find(ampIdx == k);  % trials for this amplitude
+
+    for tr_idx = 1:numel(trials_k)
+        tr = trials_k(tr_idx);
+        sig = MUA_all(ch, t_idx, tr);
+
+        y_shift = (n_AMP - k) * y_spacing;
+        plot(t_plot, sig + y_shift, 'Color', colors(k,:), 'LineWidth', 0.6);
+    end
+
+    % Label each row
+    text(t_plot(1) - 2, y_shift, sprintf('%d µA', amp), ...
+         'Color', colors(k,:), 'FontWeight', 'bold', ...
+         'HorizontalAlignment', 'right');
+end
+
+% Draw stim onset line
+ylim_range = [-y_spacing, y_spacing * n_AMP];
+plot([stim_time stim_time], ylim_range, 'r--', 'LineWidth', 1.2);
+
+xlabel('Time (ms)');
+ylabel('Filtered µV (offset per amp)');
+title(sprintf('Filtered signals: Channel %d (%.1f–%.1f ms)', ch, time_window(1), time_window(2)));
+xlim([t_plot(1), t_plot(end)]);
+ylim(ylim_range);
+set(gca, 'YTick', []);
+box on;
+
+end
+
+
+
 %% ==================== Tuning Curves ====================
 
 function tuning_fr_vs_amp_all_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spikes, combClass_win)
@@ -1875,7 +2150,7 @@ function tuning_fr_amp_different_sets(ch_tune, resp_ms, Amps, n_AMP, ampIdx, Spi
     nSets        = numel(classes_here);
 
     % remove zero-amp index
-    nonzero_amp_idx = find(Amps > 0);  % only amplitudes > 0 µA
+    nonzero_amp_idx = find(Amps >= 0);  % only amplitudes > 0 µA
     Amps_plot = Amps(nonzero_amp_idx);
     n_AMP_plot = numel(Amps_plot);
 
@@ -2092,6 +2367,83 @@ function heatmap_per_chn_per_amp_per_stimset(nChn, n_AMP, Amps, ampIdx, ...
         hold on;
         for sc = stimIdx
             % Draw a red rectangle spanning the row of that channel
+            rectangle('Position',[0.5, sc-0.5, n_AMP_plot, 1], ...
+                      'EdgeColor','r','LineWidth',1.5);
+        end
+        hold off;
+    end
+end
+
+function heatmap_per_chn_per_amp_per_stimset_same_color(nChn, n_AMP, Amps, ampIdx, Spikes, combClass_win, uniqueComb, E_NAME)
+
+    % Only use amplitudes >0
+    nonzero_amp_idx = find(Amps >= 0);
+    Amps_plot = Amps(nonzero_amp_idx);
+    n_AMP_plot = numel(Amps_plot);
+
+    resp_ms  = [0 20];                % response window (ms)
+    resp_s   = diff(resp_ms)/1000;
+    classes_here = unique(combClass_win(:)');
+    nSets    = numel(classes_here);
+
+    % First pass: Find global max FR across all sets and channels
+    global_maxFR = 0;
+    FR_all = cell(nSets, 1);  % store FR matrix for reuse
+
+    for si = 1:nSets
+        set_id   = classes_here(si);
+        trials_S = find(combClass_win == set_id);
+        FR_mean = nan(nChn, n_AMP_plot);
+
+        for ch = 1:nChn
+            for kk = 1:n_AMP_plot
+                kAmpIndex = nonzero_amp_idx(kk);
+                trials_kS = intersect(trials_S, find(ampIdx == kAmpIndex));
+                if isempty(trials_kS), continue; end
+
+                counts = zeros(numel(trials_kS),1);
+                for jj = 1:numel(trials_kS)
+                    tr = trials_kS(jj);
+                    S  = Spikes{ch, tr};
+                    if ~isempty(S) && isfield(S,'t_ms') && ~isempty(S.t_ms)
+                        counts(jj) = sum(S.t_ms >= resp_ms(1) & S.t_ms <= resp_ms(2));
+                    end
+                end
+                fr_trials = counts / resp_s;
+                FR_mean(ch, kk) = mean(fr_trials, 'omitnan');
+                global_maxFR = max(global_maxFR, FR_mean(ch,kk));
+            end
+        end
+
+        FR_all{si} = FR_mean;  % store to reuse later
+    end
+
+    % Second pass: Plot with shared colorbar scale
+    for si = 1:nSets
+        set_id   = classes_here(si);
+        stimIdx  = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimIdx,'UniformOutput',false),' + ');
+        FR_mean = FR_all{si};
+
+        figure('Color','w','Name',sprintf('Stim set %s | FR heatmap', setLabel), ...
+               'NumberTitle','off');
+        imagesc(FR_mean);
+        colormap(jet);
+        caxis([0, ceil(global_maxFR/10)*10]);  % same for all plots
+        cb = colorbar; ylabel(cb,'Firing rate (sp/s)');
+        set(gca,'YDir','normal');
+
+        yticks(1:nChn);
+        yticklabels(arrayfun(@(c) sprintf('Ch%d',c), 1:nChn, 'UniformOutput',false));
+        xticks(1:n_AMP_plot);
+        xticklabels(arrayfun(@(a) sprintf('%g µA', a), Amps_plot, 'UniformOutput',false));
+        xlabel('Amplitude');
+        ylabel('Channel');
+        title(sprintf('Firing rate heatmap | Stim set: %s', setLabel), 'Interpreter','none');
+
+        % Highlight stimulation channels
+        hold on;
+        for sc = stimIdx
             rectangle('Position',[0.5, sc-0.5, n_AMP_plot, 1], ...
                       'EdgeColor','r','LineWidth',1.5);
         end

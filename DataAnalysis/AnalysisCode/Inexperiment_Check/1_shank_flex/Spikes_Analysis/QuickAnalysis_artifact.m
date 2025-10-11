@@ -15,7 +15,7 @@ dName='amplifier';
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
 
 %% ------ Quick Analysis data parameters ------ %%
-nTrials = 220; % number of trials used for analysis
+nTrials = 440; % number of trials used for analysis
 
 artifact_window_ms = [-1, 10];  % artifact window in ms
 artifact_window_samp = round(artifact_window_ms / 1000 * FS);
@@ -186,7 +186,7 @@ end
 % ------ (1): Average across amp ------ %
 % y-axis 
 abs_max = max(abs(Artifact_avg_amp), [], 'all');
-y_lim   = ceil(abs_max / 1000) * 1000;
+y_lim   = min(7000,ceil(abs_max / 1000) * 1000);
 
 cmap = turbo(n_AMP);
 
@@ -287,8 +287,8 @@ lg.Box = 'off';
 % ------ (2) Average across Amp, different Stim Set ------ %
 % Global y-limit across all sets & amps
 abs_max = max(abs(Artifact_avg_amp_set), [], 'all');
-y_lim   = max(100, 100 * ceil(abs_max/100));      % nice rounded
-
+y_lim   = max(7000, 100 * ceil(abs_max/100));      % nice rounded
+ 
 cmap = turbo(n_AMP);
 legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
 
@@ -329,6 +329,62 @@ for s = 1:nSets
     end
 
     % One legend per figure (set)
+    lgd = legend(hL(isgraphics(hL)), legLabels(isgraphics(hL)), ...
+        'Orientation','horizontal','Box','off','FontSize',10, ...
+        'NumColumns', min(n_AMP, 6), 'Location','southoutside');
+    lgd.Layout.Tile = 'south';
+end
+
+%% ------ Plot Raw Artifact Traces (Per Set, Colored by Amplitude) ------ %%
+abs_max = max(abs(Artifact_all), [], 'all');
+y_lim   = max(7000, 100 * ceil(abs_max / 100));  % Consistent with avg plot
+
+cmap = turbo(n_AMP);  % consistent colormap
+legLabels = arrayfun(@(a) sprintf('%g \\muA', a), Amps, 'UniformOutput', false);
+
+maxTrialsPerAmp = 10;  % limit number of traces per amp for visibility
+
+for s = 1:nSets
+    figName = sprintf('Raw Artifact | Set %d: %s', sets_here(s), setLabel(s));
+    figure('Name', figName, 'NumberTitle', 'off', 'Color', 'w');
+    tl = tiledlayout(8, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
+    title(tl, sprintf('Raw Artifact Traces | %s', setLabel(s)), 'FontWeight','bold');
+
+    hL = gobjects(1,n_AMP);  % for legend handles once
+
+    tr_in_set = find(combClass_win == sets_here(s));  % trials in this stim set
+
+    for ch = 1:nChn
+        ax = nexttile(tl); hold(ax, 'on');
+
+        if ismember(ch, stimIdxSet{s})
+            set(ax, 'Color', [1 0.95 0.95]);
+        end
+
+        for k = 1:n_AMP
+            tr_this_amp = tr_in_set(ampIdx(tr_in_set) == k);
+            sel_trials = tr_this_amp(randperm(length(tr_this_amp), ...
+                            min(maxTrialsPerAmp, length(tr_this_amp))));
+
+            for tr = sel_trials(:)'
+                h = plot(ax, artifact_time, squeeze(Artifact_all(ch,:,tr)), ...
+                    'Color', cmap(k,:), 'LineWidth', 0.6);
+                if ~isgraphics(hL(k)), hL(k) = h; end
+            end
+        end
+
+        xline(ax, 0, 'r-');
+        title(ax, sprintf('Ch %d', ch), 'FontSize', 8);
+        xlim(ax, [artifact_time(1), artifact_time(end)]);
+        ylim(ax, [-y_lim, y_lim]);
+        xticks(ax, linspace(artifact_time(1), artifact_time(end), 5));
+        yticks(ax, [-y_lim, 0, y_lim]);
+        xlabel(ax, 'Time (ms)', 'FontSize', 8);
+        ylabel(ax, '\muV', 'FontSize', 8);
+        box(ax,'off');
+    end
+
+    % One legend per set
     lgd = legend(hL(isgraphics(hL)), legLabels(isgraphics(hL)), ...
         'Orientation','horizontal','Box','off','FontSize',10, ...
         'NumColumns', min(n_AMP, 6), 'Location','southoutside');

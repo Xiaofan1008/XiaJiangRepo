@@ -1966,7 +1966,83 @@ function plot_spikes_by_time_grid(ch, Spikes, FS, preS, postS, Amps, ampIdx, nTr
     % Add legend in first axes
     validIdx = isgraphics(legendHandles);
     legend(ax_legend, legendHandles(validIdx), legendLabels(validIdx), ...
-        'Location', 'southoutside', 'Orientation', 'horizontal');
+        'Location', 'southwestoutside', 'Orientation', 'vertical');
+end
+
+function plot_spikes_by_time_grid_perSet(ch, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, tWin_ms, totalTrialWindow_ms, combClass_win, uniqueComb)
+% Plot spike waveforms from a selected channel, grouped by spike time windows.
+% One figure per stimulation set; colored by amplitude within each.
+
+    wf_len = preS + postS + 1;
+    nWin = ceil(totalTrialWindow_ms / tWin_ms);
+    n_AMP = numel(Amps);
+    cmap = lines(n_AMP);  % color map for amplitudes
+    t_axis_ms = ((1:wf_len) - preS - 1) / FS * 1000;
+
+    yMax = 500; % y-axis limit for waveforms
+
+    all_sets = unique(combClass_win(:)');
+    nSets = numel(all_sets);
+
+    for s = 1:nSets
+        set_id = all_sets(s);
+        trial_mask = (combClass_win == set_id);
+        trials_this_set = find(trial_mask);
+
+        % Extract channel indices for this stimulation set
+        stimIdx = uniqueComb(set_id, :);
+        stimIdx = stimIdx(stimIdx > 0);  % remove padding zeros
+
+        % channel names
+        stimNames = sprintf('Ch%d ', stimIdx);
+
+        figure('Name', sprintf('Ch %d | StimSet %d', ch, set_id), 'Color', 'w');
+        tl = tiledlayout(ceil(sqrt(nWin)), ceil(sqrt(nWin)), ...
+            'TileSpacing', 'compact', 'Padding', 'compact');
+        title(tl, sprintf('Spike Waveforms | Ch %d | Set #%d (%s)', ch, set_id, stimNames), ...
+            'Interpreter', 'none', 'FontSize', 11);
+
+        ax_legend = nexttile(1); hold(ax_legend, 'on');
+        legendHandles = gobjects(n_AMP,1);
+        legendLabels = cell(n_AMP,1);
+        for a = 1:n_AMP
+            clr = cmap(a,:);
+            legendHandles(a) = plot(ax_legend, nan, nan, '-', 'Color', clr, 'LineWidth', 1.2);
+            legendLabels{a} = sprintf('%g \\muA', Amps(a));
+        end
+
+        for w = 1:nWin
+            t_start = (w-1) * tWin_ms;
+            t_end = min(t_start + tWin_ms, totalTrialWindow_ms);
+            ax = nexttile(w); hold(ax, 'on');
+            title(ax, sprintf('%.1f–%.1f ms', t_start, t_end), 'FontSize', 9);
+            xlabel(ax, 'Time (ms)'); ylabel(ax, '\muV');
+
+            for tr = trials_this_set'
+                if isempty(Spikes{ch, tr}), continue; end
+                spk_t = Spikes{ch, tr}.t_ms;
+                wfs = Spikes{ch, tr}.wf;
+                if isempty(spk_t) || isempty(wfs), continue; end
+                amp_id = ampIdx(tr);
+                clr = cmap(amp_id, :);
+
+                in_win = (spk_t >= t_start) & (spk_t < t_end);
+                for i = find(in_win)
+                    plot(ax, t_axis_ms, wfs(i,:), '-', 'Color', clr, 'LineWidth', 0.6);
+                end
+            end
+
+            xlim(ax, [t_axis_ms(1), t_axis_ms(end)]);
+            ylim(ax, [-yMax, yMax]);
+            axis(ax, 'square');
+            box(ax, 'off');
+        end
+
+        % Legend
+        validIdx = isgraphics(legendHandles);
+        legend(ax_legend, legendHandles(validIdx), legendLabels(validIdx), ...
+            'Location', 'southwestoutside', 'Orientation', 'vertical');
+    end
 end
 
 function plot_filtered_signal_by_amplitude(MUA_all, ampIdx, Amps, t_axis, ch, time_window)

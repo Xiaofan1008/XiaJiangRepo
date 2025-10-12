@@ -428,14 +428,15 @@ combClass_win = combClass(Trial_start : Trial_start + nTrials - 1);
 % ------ (1) Waveform plots ----- %
 QuickAnalysis.plot_all_spike_waveforms(preS, postS, FS, nChn, nTrials, Spikes, uniqueCh);
 QuickAnalysis.plot_mean_spike_waveforms_per_amp_per_stim_set(preS, postS, FS, nChn, n_AMP, Amps, Spikes, ampIdx, combClass_win, uniqueComb);
-ch_spike = 22;
-Spike_window = 5; % time window for the spike subplot (ms)
-QuickAnalysis.plot_spikes_by_time_grid(ch_spike, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, Spike_window, 20)
 
-ch_filter_plot = 22;  % change to your desired channel
+ch_spike = 31;
+Spike_window = 5; % time window for the spike subplot (ms)
+% QuickAnalysis.plot_spikes_by_time_grid(ch_spike, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, Spike_window, 20)
+QuickAnalysis.plot_spikes_by_time_grid_perSet(ch_spike, Spikes, FS, preS, postS, Amps, ampIdx, nTrials, Spike_window, 20, combClass_win, uniqueComb);
+
+ch_filter_plot = 19;  % change to your desired channel
 filtered_window = [-5,15];
 QuickAnalysis.plot_filtered_signal_by_amplitude(MUA_all, ampIdx, Amps, t_axis, ch_filter_plot, filtered_window);
-
 
 % ------ (2) Raster & PSTH plots  ------ %
 % QuickAnalysis.raster_across_all_sets(nChn, nTrials, Spikes, Trial_start);

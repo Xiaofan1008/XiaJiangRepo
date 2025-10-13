@@ -2102,7 +2102,82 @@ box on;
 
 end
 
+function plot_filtered_signal_per_amp_StimSet(MUA_all, ampIdx, Amps, t_axis, ch, time_window, ...
+    combClass_win, uniqueComb)
+% =============================================
+% Plot filtered MUA signals grouped by amplitude & stim set
+% One figure per stim set
+%
+% Inputs:
+%   - MUA_all:      [nChn x time x trials] filtered signal (µV)
+%   - ampIdx:       [nTrials x 1] index for amplitude per trial
+%   - Amps:         [n_AMP x 1] list of unique amplitudes
+%   - t_axis:       [1 x time] time vector (ms)
+%   - ch:           channel number to plot (1-based)
+%   - time_window:  [start_ms end_ms] time range to show (ms)
+%   - combClass_win:[nTrials x 1] stimulation set class ID
+%   - uniqueComb:   [nSets x maxN] channel indices per stim set
+% =============================================
 
+% Time window trimming
+t_idx = find(t_axis >= time_window(1) & t_axis <= time_window(2));
+t_plot = t_axis(t_idx);
+stim_time = 0;  % stimulation at 0 ms
+
+% Color and layout settings
+n_AMP = numel(Amps);
+colors = lines(n_AMP);
+y_spacing = 600;
+ylim_range = [-y_spacing, y_spacing * n_AMP];
+
+% Unique stimulation sets
+sets_here = unique(combClass_win(:)');
+nSets = numel(sets_here);
+
+for s = 1:nSets
+    set_id = sets_here(s);
+    stim_trials = find(combClass_win == set_id);
+
+    % Extract stim channel names
+    stimIdx = uniqueComb(set_id, :);
+    stimIdx = stimIdx(stimIdx > 0);
+    stimNames = sprintf('Ch%d ', stimIdx);
+    
+
+    % Create figure
+    figure('Color','w', 'Position', [100 100 600 250 + 50 * n_AMP]); hold on;
+    title(sprintf('Ch %d | Stim Set %d (%s)', ch, set_id, stimNames), ...
+        'Interpreter', 'none');
+    xlabel('Time (ms)');
+    ylabel('Filtered µV (offset per amp)');
+    xlim([t_plot(1), t_plot(end)]);
+    ylim(ylim_range);
+    set(gca, 'YTick', []);
+    box on;
+
+    % Loop over amplitudes
+    for k = 1:n_AMP
+        amp = Amps(k);
+        trials_k = stim_trials(ampIdx(stim_trials) == k);
+
+        y_shift = (n_AMP - k) * y_spacing;
+
+        for tr = trials_k(:)'
+            sig = squeeze(MUA_all(ch, t_idx, tr));
+            plot(t_plot, sig + y_shift, 'Color', colors(k,:), 'LineWidth', 0.6);
+        end
+
+        % Label each amplitude row
+        text(t_plot(1) - 2, y_shift, sprintf('%d µA', amp), ...
+            'Color', colors(k,:), 'FontWeight', 'bold', ...
+            'HorizontalAlignment', 'right');
+    end
+
+    % Stim onset line
+    plot([stim_time stim_time], ylim_range, 'r--', 'LineWidth', 1.2);
+end
+
+end
 
 %% ==================== Tuning Curves ====================
 

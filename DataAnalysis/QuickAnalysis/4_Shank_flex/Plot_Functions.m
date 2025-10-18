@@ -1,18 +1,38 @@
-%% Plot Choice
+% clear all
+% close all
+% addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+
+%% Choose Folder
+% data_folder = uigetdir(pwd, 'Select the folder containing your data');
+% if isequal(data_folder, 0)
+%     error('No folder selected. Script aborted.');
+% end
+% cd(data_folder);  % Change to the selected folder
+
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
+if ~isfolder(data_folder)
+    error('The specified folder does not exist. Please check the path.');
+end
+cd(data_folder);
+fprintf('Changed directory to:\n%s\n', data_folder);
+
+%% Choice
+Spike_filtering = 1;
 spike_plot_per_amp_StimSet = 1;
 raster_psth_per_amp_StimSet = 1;
-
-
-
-
-
+firing_rate_curve_per_amp_StimSet = 0;
+Shank_to_plot = 4;
 %% Pre Set
-addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
-FS=30000;
+FS=30000; % Sampling frequency
 % Load .sp.mat file
-sp_files = dir('*.sp.mat');
+% sp_files = dir('*.sp.mat');
+sp_files = dir(fullfile(data_folder, '*.sp.mat'));
 assert(~isempty(sp_files), 'No .sp.mat file found in the current folder.');
-sp_filename = sp_files(1).name;
+% sp_filename = sp_files(1).name;
+sp_filename = fullfile(data_folder, sp_files(1).name);
 fprintf('Loading spike file: %s\n', sp_filename);
 S = load(sp_filename);
 if isfield(S, 'sp')
@@ -21,22 +41,63 @@ else
     error('Variable "sp" not found in %s.', sp_filename);
 end
 % Load Trigger
-if isempty(dir('*.trig.dat'))
-    cleanTrig_sabquick;
-end
-trig = loadTrig(0);
+% if isempty(dir('*.trig.dat'))
+%     cleanTrig_sabquick;
+% end
+% trig = loadTrig(0);
 
-%% Parameters
+if isempty(dir(fullfile(data_folder, '*.trig.dat')))
+    cur_dir = pwd; cd(data_folder);
+    cleanTrig_sabquick;
+    cd(cur_dir);
+end
+trig = loadTrig(0);  % if loadTrig handles current folder, no need to modify
+
+
+%% Spike Amplitude Filtering Parameters
+pos_limit = 80;    % upper bound (µV)
+neg_limit = -100;  % lower bound (µV)
+
+%% Spike Waveform Parameters
 win_ms = 300;         % total time window after each trigger (ms)
 bin_ms = 10;          % bin size (ms)
 nBins  = win_ms / bin_ms;
 nChn   = numel(sp);
-amp_threshold = 150;  % max allowed amplitude (µV)
+amp_threshold = 100;  % max allowed amplitude (µV)
+spike_chn_start = 33;
+spike_chn_end = 48; %nChn
+switch Shank_to_plot
+    case 1
+        spike_chn_start = 1;
+        spike_chn_end = 16;
+    case 2
+        spike_chn_start = 33;
+        spike_chn_end = 48;
+    case 3
+        spike_chn_start = 49;
+        spike_chn_end = 64;
+    case 4
+        spike_chn_start = 17;
+        spike_chn_end = 32;
+end
+
+%% Raster Plot Parameters
+ras_win         = [-20 300];   % ms
+bin_ms_raster   = 2;           % bin size
+smooth_ms       = 3;           % smoothing window
+raster_chn_start = spike_chn_start;
+raster_chn_end = spike_chn_end; %nChn
+
+%% Firing Rate Curve Plot Parameters
+channel_to_plot = 35;          % target channel
+time_window_ms  = [2,20];    % Firing rate window in ms
 
 %% Load StimParams and decode amplitudes & stimulation sets
-fileDIR = dir('*_exp_datafile_*.mat');
+% fileDIR = dir('*_exp_datafile_*.mat');
+fileDIR = dir(fullfile(data_folder, '*_exp_datafile_*.mat'));
 assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat found.');
-S = load(fileDIR(1).name,'StimParams','simultaneous_stim','CHN','E_MAP','n_Trials');
+% S = load(fileDIR(1).name,'StimParams','simultaneous_stim','CHN','E_MAP','n_Trials');
+S = load(fullfile(data_folder, fileDIR(1).name), 'StimParams', 'simultaneous_stim', 'CHN', 'E_MAP', 'n_Trials');
 StimParams         = S.StimParams;
 simultaneous_stim  = S.simultaneous_stim;
 CHN                = S.CHN;
@@ -73,16 +134,56 @@ nSets = size(uniqueComb,1);
 % Electrode Map
 d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
+%% Spike Amplitude Filtering (Before Plotting)
+sp_clipped = sp;   % copy original spike structure
+
+if Spike_filtering == 1
+
+    fprintf('\n===== Spike Amplitude Filtering =====\n');
+    fprintf('Criteria: max ≤ %.1f µV and min ≥ %.1f µV\n', pos_limit, neg_limit);
+    
+    for ch = 1:numel(sp)
+        if isempty(sp{ch}), continue; end
+    
+        waveforms = sp{ch}(:, 2:end);
+    
+        % Amplitude-based filtering
+        max_vals = max(waveforms, [], 2);
+        min_vals = min(waveforms, [], 2);
+        in_range = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+    
+        % Zero-crossing check (must include both positive and negative values)
+        has_positive = any(waveforms > 5, 2);
+        has_negative = any(waveforms < 0, 2);
+        crosses_zero = has_positive & has_negative;
+    
+        % Keep spikes within amplitude bounds
+        % valid_idx = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+        % Final combined condition
+        valid_idx = in_range & crosses_zero;
+        % Apply filter
+        sp_clipped{ch} = sp{ch}(valid_idx, :);
+    
+        % Print summary
+        n_total = size(sp{ch}, 1);
+        n_keep  = sum(valid_idx);
+        fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
+            ch, n_keep, n_total, 100*n_keep/n_total);
+    end
+    
+    fprintf('=====================================\n\n');
+end
+
 if spike_plot_per_amp_StimSet == 1
     %% Spike plotting loop
-    for ich = 1:nChn
+    for ich = spike_chn_start:spike_chn_end %1:nChn
         ch = d(ich); % channel map to Intan
-        if isempty(sp{ch}), continue; end
+        if isempty(sp_clipped{ch}), continue; end
         fprintf('Processing Channel %d...\n', ich);
     
         % Spike data
-        sp_times = sp{ch}(:,1);
-        sp_wave  = sp{ch}(:,2:end);
+        sp_times = sp_clipped{ch}(:,1);
+        sp_wave  = sp_clipped{ch}(:,2:end);
         valid_idx = all(abs(sp_wave) <= amp_threshold, 2);
         sp_times = sp_times(valid_idx);
         sp_wave  = sp_wave(valid_idx,:);
@@ -171,16 +272,11 @@ if spike_plot_per_amp_StimSet == 1
 end
 
 
- if raster_psth_per_amp_StimSet == 1
-    %% Parameters
-    ras_win   = [-20 300];   % ms
-    bin_ms    = 1;           % bin size
-    smooth_ms = 3;           % smoothing window
-    
+ if raster_psth_per_amp_StimSet == 1    
     % Time axis
-    edges = ras_win(1):bin_ms:ras_win(2);
+    edges = ras_win(1):bin_ms_raster:ras_win(2);
     ctrs  = edges(1:end-1) + diff(edges)/2;
-    bin_s = bin_ms / 1000;
+    bin_s = bin_ms_raster / 1000;
     
     % Smoothing kernel
     g = exp(-0.5 * ((0:smooth_ms-1) / (smooth_ms/2)).^2);
@@ -192,10 +288,9 @@ end
         stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
         setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ' + ');
     
-        for ch = 1:nChn
-            ich = ch;
+        for ich = raster_chn_start:raster_chn_end %1:nChn
             ch = d(ich);
-            if isempty(sp{ch}), continue; end
+            if isempty(sp_clipped{ch}), continue; end
     
             figure('Color','w','Name',sprintf('Ch %d | Set %s', ich, setLabel));
             tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
@@ -218,7 +313,7 @@ end
     
                 for t = 1:nTr
                     tr = amp_trials(t);
-                    S_ch = sp{ch};
+                    S_ch = sp_clipped{ch};
                     t0 = trig(tr)/FS*1000;
                     tt = S_ch(:,1);
                     tt = tt(tt >= t0 + ras_win(1) & tt <= t0 + ras_win(2)) - t0;
@@ -235,7 +330,7 @@ end
                 end
     
                 ytick_vals(end+1) = y_cursor + max(nTr, 1)/2;
-                ytick_labels{end+1} = sprintf('%.0f \x03bcA', amp_val);
+                ytick_labels{end+1} = sprintf('%.0f µA', amp_val);
                 if nTr > 0
                     plot(ax1, ras_win, [y_cursor+nTr y_cursor+nTr], 'Color', [0.8 0.8 0.8], 'LineStyle','--');
                 end
@@ -252,7 +347,8 @@ end
             end
     
             xline(ax1, 0, 'r', 'LineWidth', 1.5);
-            xlim(ax1, ras_win);
+            % xlim(ax1, ras_win);
+            xlim(ax1, [-20,100]);
             ylim(ax1, [0, y_cursor]);
             yticks(ax1, ytick_vals);
             yticklabels(ax1, ytick_labels);
@@ -263,7 +359,8 @@ end
                 plot(ax2, ctrs, psth_curves{ai}, 'Color', cmap(ai,:), 'LineWidth', 1.5);
             end
             xline(ax2, 0, 'r', 'LineWidth', 1.5);
-            xlim(ax2, ras_win);
+            % xlim(ax2, ras_win);
+            xlim(ax2, [-20,100]);
             if maxRate > 0
                 ylim(ax2, [0 ceil(maxRate*1.1/10)*10]);
             else
@@ -274,4 +371,99 @@ end
             legend(ax2, arrayfun(@(a) sprintf('%.0f µA', a), Amps, 'UniformOutput', false), 'Box','off','Location','northeast');
         end
     end
+ end
+
+
+ if firing_rate_curve_per_amp_StimSet == 1
+    fprintf('\n===== Firing Rate Plot for Channel %d =====\n', channel_to_plot);
+    
+    % nSets  = size(uniqueComb,1);
+    % n_AMP  = numel(Amps);
+    % cmap   = lines(nSets);  % one color per stim set
+    % % win_s  = diff(time_window_ms) / 1000;
+    % win_s  = 15 / 1000;
+    % sp_times = sp_clipped{d(channel_to_plot)}(:,1);  % spike times for this channel
+    % firing_rates = nan(nSets, n_AMP);  % Rows = stim set, Cols = amp
+    % 
+    % for s = 1:nSets
+    %     trial_ids = find(combClass_win == s);
+    %     for a = 1:n_AMP
+    %         trials_this_amp = trial_ids(ampIdx(trial_ids) == a);
+    %         if isempty(trials_this_amp), continue; end
+    % 
+    %         spike_count = 0;
+    %         for tr = trials_this_amp(:)'
+    %             t0_ms = trig(tr)/FS*1000;
+    %             t1 = t0_ms + time_window_ms(1);
+    %             t2 = t0_ms + time_window_ms(2);
+    %             spike_count = spike_count + sum(sp_times >= t1 & sp_times < t2);
+    %         end
+    % 
+    %         firing_rates(s,a) = spike_count / (numel(trials_this_amp) * win_s);
+    %     end
+    % end
+    % 
+    % % ===== Plotting =====
+    % figure('Color','w');
+    % hold on;
+    % for s = 1:nSets
+    %     label = sprintf('Set %s', strjoin(arrayfun(@(x) sprintf('Ch%d', x), ...
+    %         uniqueComb(s, uniqueComb(s,:) > 0), 'UniformOutput', false), '+'));
+    %     plot(Amps, firing_rates(s,:), '-o', ...
+    %         'LineWidth', 2, 'Color', cmap(s,:), 'DisplayName', label);
+    % end
+    % xlabel('Amplitude (µA)');
+    % ylabel(sprintf('Firing Rate (sp/s)\n[%d–%d ms]', time_window_ms(1), time_window_ms(2)));
+    % title(sprintf('Firing Rate — Ch %d', channel_to_plot));
+    % legend('Location','best', 'Interpreter','none');
+    % box off;
+
+    nSets  = size(uniqueComb,1);
+    n_AMP  = numel(Amps);
+    cmap   = lines(nSets);  % one color per stim set
+    win_s  = diff(time_window_ms) / 1000;
+
+    % Extract spike times for the chosen channel (ms)
+    sp_times = sp_clipped{d(channel_to_plot)}(:,1);  
+    firing_rates = nan(nSets, n_AMP);        % mean FR (sp/s)
+    firing_sems  = nan(nSets, n_AMP);        % SEM (standard error)
+
+    for s = 1:nSets
+        trial_ids = find(combClass_win == s);
+        for a = 1:n_AMP
+            trials_this_amp = trial_ids(ampIdx(trial_ids) == a);
+            if isempty(trials_this_amp), continue; end
+
+            fr_per_trial = nan(numel(trials_this_amp), 1);
+
+            for ti = 1:numel(trials_this_amp)
+                tr = trials_this_amp(ti);
+                t0_ms = trig(tr) / FS * 1000;
+                rel_sp_times = sp_times - t0_ms;
+                spk_mask = rel_sp_times >= time_window_ms(1) & rel_sp_times < time_window_ms(2);
+                fr_per_trial(ti) = sum(spk_mask) / win_s;
+            end
+
+            firing_rates(s,a) = mean(fr_per_trial);
+            firing_sems(s,a)  = std(fr_per_trial) / sqrt(numel(fr_per_trial));  % SEM
+        end
+    end
+
+    % ===== Plotting =====
+    figure('Color','w'); hold on;
+    for s = 1:nSets
+        label = sprintf('Set %s', strjoin(arrayfun(@(x) sprintf('Ch%d', x), ...
+            uniqueComb(s, uniqueComb(s,:) > 0), 'UniformOutput', false), '+'));
+
+        errorbar(Amps, firing_rates(s,:), firing_sems(s,:), '-o', ...
+            'LineWidth', 1.5, 'Color', cmap(s,:), 'DisplayName', label, ...
+            'CapSize', 5, 'MarkerFaceColor', cmap(s,:));
+    end
+
+    xlabel('Amplitude (µA)');
+    ylabel(sprintf('Firing Rate (sp/s)\n[%d–%d ms]', time_window_ms(1), time_window_ms(2)));
+    title(sprintf('Firing Rate — Ch %d', channel_to_plot));
+    legend('Location','best', 'Interpreter','none');
+    box off;
+
  end

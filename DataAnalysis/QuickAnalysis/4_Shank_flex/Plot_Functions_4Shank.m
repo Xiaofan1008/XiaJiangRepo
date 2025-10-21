@@ -10,9 +10,9 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 % end
 % cd(data_folder);  % Change to the selected folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
 end
@@ -71,7 +71,7 @@ neg_limit = -100;  % lower bound (µV)
 
 %% Spike Waveform Parameters
 win_ms = 300;         % total time window after each trigger (ms)
-bin_ms = 10;          % bin size (ms)
+bin_ms = 5;          % bin size (ms)
 % nBins  = win_ms / bin_ms;
 nBins  = 100 / bin_ms; % plot 100ms 
 nChn   = numel(sp);
@@ -244,7 +244,7 @@ if spike_plot_per_amp_StimSet == 1
             stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
             figure('Name', sprintf('Ch %d | StimSet %d (%s)', ich, set_id, stimLabel), ...
                    'Color','w','Position', [100 100 700 400]); %'Position', [100 100 1400 800]);
-            tiledlayout(2, 5, 'Padding','compact', 'TileSpacing','compact');
+            tiledlayout(4, 5, 'Padding','compact', 'TileSpacing','compact');
     
             for b = 1:nBins
                 nexttile; hold on;
@@ -396,54 +396,6 @@ end
 
  if firing_rate_curve_per_amp_StimSet == 1
     fprintf('\n===== Firing Rate Plot for Channel %d =====\n', channels_to_plot);
-
-    % nSets  = size(uniqueComb,1);
-    % n_AMP  = numel(Amps);
-    % cmap   = lines(nSets);  % one color per stim set
-    % win_s  = diff(time_window_ms) / 1000;
-    % 
-    % % Extract spike times for the chosen channel (ms)
-    % sp_times = sp_clipped{d(channel_to_plot)}(:,1);  
-    % firing_rates = nan(nSets, n_AMP);        % mean FR (sp/s)
-    % firing_sems  = nan(nSets, n_AMP);        % SEM (standard error)
-    % 
-    % for s = 1:nSets
-    %     trial_ids = find(combClass_win == s);
-    %     for a = 1:n_AMP
-    %         trials_this_amp = trial_ids(ampIdx(trial_ids) == a);
-    %         if isempty(trials_this_amp), continue; end
-    % 
-    %         fr_per_trial = nan(numel(trials_this_amp), 1);
-    % 
-    %         for ti = 1:numel(trials_this_amp)
-    %             tr = trials_this_amp(ti);
-    %             t0_ms = trig(tr) / FS * 1000;
-    %             rel_sp_times = sp_times - t0_ms;
-    %             spk_mask = rel_sp_times >= time_window_ms(1) & rel_sp_times < time_window_ms(2);
-    %             fr_per_trial(ti) = sum(spk_mask) / win_s;
-    %         end
-    % 
-    %         firing_rates(s,a) = mean(fr_per_trial);
-    %         firing_sems(s,a)  = std(fr_per_trial) / sqrt(numel(fr_per_trial));  % SEM
-    %     end
-    % end
-    % 
-    % % ===== Plotting =====
-    % figure('Color','w'); hold on;
-    % for s = 1:nSets
-    %     label = sprintf('Set %s', strjoin(arrayfun(@(x) sprintf('Ch%d', x), ...
-    %         uniqueComb(s, uniqueComb(s,:) > 0), 'UniformOutput', false), '+'));
-    % 
-    %     errorbar(Amps, firing_rates(s,:), firing_sems(s,:), '-o', ...
-    %         'LineWidth', 1.5, 'Color', cmap(s,:), 'DisplayName', label, ...
-    %         'CapSize', 5, 'MarkerFaceColor', cmap(s,:));
-    % end
-    % 
-    % xlabel('Amplitude (µA)');
-    % ylabel(sprintf('Firing Rate (sp/s)\n[%d–%d ms]', time_window_ms(1), time_window_ms(2)));
-    % title(sprintf('Firing Rate — Ch %d', channel_to_plot));
-    % legend('Location','best', 'Interpreter','none');
-    % box off;
 
     nSets  = size(uniqueComb,1);
     n_AMP  = numel(Amps);

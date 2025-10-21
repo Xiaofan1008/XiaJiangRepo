@@ -128,7 +128,7 @@ combClass_win = combClass;
 nSets = size(uniqueComb,1);
 
 % Electrode Map
-d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 %% Spike Amplitude Filtering (Before Plotting)
 sp_clipped = sp;   % copy original spike structure

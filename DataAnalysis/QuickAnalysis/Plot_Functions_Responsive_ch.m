@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Sim1_2_251022_192749'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Seq1_2_25ms_251022_201355';
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Seq4_20ms_251022_224727,';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Sim7_251023_020535';
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
 end
@@ -24,16 +24,18 @@ else
     base_name = last_folder;  % fallback if no underscores
 end
 %% Choice
-Spike_filtering = 0;
+Spike_filtering = 1;
 ForceNegFirst = 0; % check the spike peak sequence (negative first then positive)
 
 spike_plot_per_amp_StimSet =1;
 raster_psth_per_amp_StimSet = 1;
 firing_rate_curve_per_amp_StimSet = 0;
+responsive_ch_identification = 1;
 % For sequential
 spike_plot_per_amp_StimSet_ISI = 0;
 raster_psth_per_amp_StimSet_ISI = 0;
 firing_rate_curve_per_amp_StimSet_ISI = 0;
+responsive_ch_identification_ISI = 0;
 %% Pre Set
 FS=30000; % Sampling frequency
 % Load .sp.mat file
@@ -82,6 +84,16 @@ raster_chn_end = spike_chn_end; %nChn
 %% Firing Rate Curve Plot Parameters
 channel_to_plot = 21;          % target channel
 time_window_ms  = [2,45];    % Firing rate window in ms
+
+%% Responsive channel identification Parameters
+baseline_window_ms = [-60, -5];        % Baseline window (ms)
+response_window_ms = [2, 10];          % Response window (ms)
+% response_window_ms = [7, 15];          % Response window (ms)
+% response_window_ms = [12, 20];          % Response window (ms)
+% response_window_ms = [22, 30];          % Response window (ms)
+% response_window_ms = [27, 35];          % Response window (ms)
+min_FR_diff = 15;                       % Min firing rate difference (sp/s)
+channel_range = spike_chn_start:spike_chn_end;                  % Recorded channels
 
 %% Load StimParams and decode amplitudes, stimulation sets, ISI
 % fileDIR = dir('*_exp_datafile_*.mat');
@@ -134,7 +146,7 @@ n_PULSE = numel(PulsePeriods);
 d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 %% Spike Amplitude Filtering (Before Plotting)
-sp_clipped = sp;   % copy original spike structure
+% % sp_clipped = sp;   % copy original spike structure
 
 if Spike_filtering == 1
 
@@ -184,6 +196,7 @@ if Spike_filtering == 1
 else
     % load([base_name '.sp_xia.mat']);
     load([base_name '.sp.mat']);
+    sp_clipped = sp;
 end
 
 if spike_plot_per_amp_StimSet == 1
@@ -764,5 +777,210 @@ end
     title(sprintf('Firing Rate — Ch %d', channel_to_plot));
     legend(legends, 'Location','best', 'Interpreter','none');
     box off;
+ end
+
+ if responsive_ch_identification == 1
+    amp_list = unique(trialAmps);
+    stim_set_list = unique(combClass_win);
+    nAmps = length(amp_list);
+    nSets = length(stim_set_list);
+    nChn = numel(channel_range);
+
+    delta_FR_matrix = nan(nChn, nAmps, nSets);   % ΔFR [chn × amp × stimSet]
+    p_matrix        = nan(nChn, nAmps, nSets);   % p-values
+    responsive_channels_allsets = [];            % All responsive channels
+    responsive_channels_by_set = cell(nSets, 1); % Per stim set
+
+    fprintf('\n==== Channel Responsiveness by StimSet & Amplitude ====\n');
+
+    for i_ch = 1:nChn
+        ch = channel_range(i_ch);
+        if isempty(sp_clipped{d(ch)}), continue; end
+
+        sp_times = sp_clipped{d(ch)}(:,1);  % spike times in ms
+
+        for si = 1:nSets
+            set_id = stim_set_list(si);
+            is_responsive = false;
+
+            for ai = 1:nAmps
+                amp = amp_list(ai);
+
+                trial_idx = find(trialAmps == amp & combClass_win == set_id);
+                if isempty(trial_idx), continue; end
+
+                baseline_FRs = zeros(length(trial_idx),1);
+                response_FRs = zeros(length(trial_idx),1);
+
+                for ti = 1:length(trial_idx)
+                    t0 = trig(trial_idx(ti)) / FS * 1000;
+                    rel_sp = sp_times - t0;
+
+                    baseline_FRs(ti) = sum(rel_sp >= baseline_window_ms(1) & rel_sp < baseline_window_ms(2)) ...
+                                     / diff(baseline_window_ms) * 1000;
+                    response_FRs(ti) = sum(rel_sp >= response_window_ms(1) & rel_sp < response_window_ms(2)) ...
+                                     / diff(response_window_ms) * 1000;
+                end
+
+                delta_FR = mean(response_FRs) - mean(baseline_FRs);
+                delta_FR_matrix(i_ch, ai, si) = delta_FR;
+
+                try
+                    p = signrank(response_FRs, baseline_FRs);
+                catch
+                    p = 1;
+                end
+                p_matrix(i_ch, ai, si) = p;
+
+                fprintf('Ch %2d | Set %2d | Amp %4d µA: ΔFR = %+5.2f sp/s, p = %.4f\n', ...
+                        ch, set_id, amp, delta_FR, p);
+
+                if delta_FR > min_FR_diff && p < 0.051
+                    is_responsive = true;
+                end
+            end
+
+            % Record responsiveness per set
+            if is_responsive
+                responsive_channels_allsets(end+1) = ch;
+                responsive_channels_by_set{si}(end+1) = ch;
+            end
+        end
+    end
+
+    % === Print responsive channels per set ===
+    fprintf('\n==== Responsive Channels ====\n');
+    for si = 1:nSets
+        set_id = stim_set_list(si);
+        resp_ch = unique(responsive_channels_by_set{si});
+        stimIdx = uniqueComb(set_id, :);
+        stimIdx = stimIdx(stimIdx > 0); % remove zero-padding if any
+    
+        stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
+        fprintf('Stim Ch: [%s]: Ch = [%s]\n', ...
+             stimLabel, num2str(resp_ch));
+    end
+    fprintf('===============================================\n');
+
+    % === Save result ===
+    save([base_name '_responsive_summary.mat'], ...
+        'delta_FR_matrix', 'p_matrix', ...
+        'responsive_channels_by_set', ...
+        'baseline_window_ms', 'response_window_ms', ...
+        'amp_list', 'stim_set_list', 'channel_range');
 end
 
+if responsive_ch_identification_ISI == 1
+    amp_list  = unique(trialAmps);
+    stim_set_list = unique(combClass_win);  % Or whatever variable stores your stim set labels
+    ptp_list  = unique(cell2mat(StimParams(2:end,9)));  % in µs
+    nAmps     = length(amp_list);
+    nPTP      = length(ptp_list);
+    nSets     = size(uniqueComb,1);
+    nChn      = numel(channel_range);
+
+    % Response windows (ms) for each PTP
+    dynamic_windows = [
+        0,      2, 10;
+        5000,   7, 15;
+       10000,  12, 20;
+       20000,  22, 30;
+       25000,  27, 35
+    ];
+
+    % Pre-allocate
+    delta_FR_matrix = nan(nChn, nAmps, nPTP, nSets);  % Ch × Amp × PTP × Set
+    p_matrix        = nan(nChn, nAmps, nPTP, nSets);
+    responsive_channels_by_set_ptp = cell(nSets, nPTP);
+
+    fprintf('\n==== Channel Responsiveness by Set × PTP × Amplitude ====\n');
+
+    for si = 1:nSets
+        set_id = stim_set_list(si);
+        stimIdx = uniqueComb(set_id, :);
+        stimIdx = stimIdx(stimIdx > 0);
+        stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
+        idx_set = find(combClass_win == set_id);
+
+        for pi = 1:nPTP
+            ptp = ptp_list(pi);
+            idx_ptp = idx_set(cell2mat(StimParams(idx_set+1,9)) == ptp);
+            amps_this = trialAmps(idx_ptp);
+
+            win_row = find(dynamic_windows(:,1) == ptp, 1);
+            if isempty(win_row)
+                warning('No response window for PTP %d', ptp);
+                continue;
+            end
+            resp_win = dynamic_windows(win_row, 2:3);
+
+            for i_ch = 1:nChn
+                ch = channel_range(i_ch);
+                if isempty(sp_clipped{d(ch)}), continue; end
+                sp_times = sp_clipped{d(ch)}(:,1);  % in ms
+
+                for ai = 1:nAmps
+                    amp = amp_list(ai);
+                    trial_idx = idx_ptp(amps_this == amp);
+                    if isempty(trial_idx), continue; end
+
+                    baseline_FRs = zeros(length(trial_idx),1);
+                    response_FRs = zeros(length(trial_idx),1);
+
+                    for ti = 1:length(trial_idx)
+                        t0 = trig(trial_idx(ti)) / FS * 1000;
+                        rel_sp = sp_times - t0;
+
+                        baseline_FRs(ti) = sum(rel_sp >= baseline_window_ms(1) & rel_sp < baseline_window_ms(2)) ...
+                                          / diff(baseline_window_ms) * 1000;
+                        response_FRs(ti) = sum(rel_sp >= resp_win(1) & rel_sp < resp_win(2)) ...
+                                          / diff(resp_win) * 1000;
+                    end
+
+                    % ΔFR
+                    delta_FR = mean(response_FRs) - mean(baseline_FRs);
+                    delta_FR_matrix(i_ch, ai, pi, si) = delta_FR;
+
+                    % Wilcoxon signed-rank test
+                    try
+                        p = signrank(response_FRs, baseline_FRs);
+                    catch
+                        p = 1;
+                    end
+                    p_matrix(i_ch, ai, pi, si) = p;
+
+                    % Print result
+                    fprintf('Set %2d | Stim [%s] | PTP %5d | Ch %2d | Amp %4d: ΔFR = %.2f sp/s, p = %.4f\n', ...
+                        set_id, stimLabel, ptp, ch, amp, delta_FR, p);
+
+                    if delta_FR > min_FR_diff && p < 0.05
+                        responsive_channels_by_set_ptp{si, pi}(end+1) = ch;
+                    end
+                end
+            end
+        end
+    end
+
+    fprintf('\n==== Summary: Responsive Channels per Set × PTP ====\n');
+    for si = 1:nSets
+        set_id = stim_set_list(si);
+        stimIdx = uniqueComb(set_id, :);
+        stimIdx = stimIdx(stimIdx > 0);
+        stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
+
+        for pi = 1:nPTP
+            ptp = ptp_list(pi);
+            chn_resp = unique(responsive_channels_by_set_ptp{si, pi});
+            fprintf('Set %2d [%s], PTP %5d: Responsive Ch = [%s]\n', ...
+                set_id, stimLabel, ptp, num2str(chn_resp));
+        end
+    end
+    fprintf('=====================================================\n');
+
+    save([base_name '_responsive_summary_byAmpSetPTP.mat'], ...
+        'delta_FR_matrix', 'p_matrix', ...
+        'responsive_channels_by_set_ptp', ...
+        'baseline_window_ms', 'dynamic_windows', ...
+        'amp_list', 'ptp_list', 'channel_range', ...
+        'stim_set_list', 'uniqueComb');
+end

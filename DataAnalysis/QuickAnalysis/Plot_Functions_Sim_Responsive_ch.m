@@ -83,7 +83,7 @@ raster_chn_end = spike_chn_end; %nChn
 
 %% Firing Rate Curve Plot Parameters
 channel_to_plot = 3;          % target channel
-time_window_ms  = [26,40];    % Firing rate window in ms
+time_window_ms  = [2,10];    % Firing rate window in ms
 
 %% Responsive channel identification Parameters
 baseline_window_ms = [-60, -10];        % Baseline window (ms)
@@ -194,13 +194,10 @@ if Spike_filtering == 1
     fprintf('=====================================\n\n');
     save([base_name '.sp_xia.mat'],'sp_clipped');
 else
-    % load([base_name '.sp_xia.mat']);
+    load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
-    % sp_clipped = sp;
-
-    load([base_name '.sp_xia_FirstPulse.mat']);
-    sp_clipped = sp_seq;
+    % sp_clipped = sp;    
 end
 
 if spike_plot_per_amp_StimSet == 1
@@ -885,15 +882,6 @@ if responsive_ch_identification_ISI == 1
     nSets     = length(stim_set_list);
     nChn      = numel(channel_range);
 
-    % PTP-specific response windows [PTP, start, end] in ms
-    dynamic_windows = [
-         0,   1, 10;
-      5000,   6, 15;
-     10000,  11, 20;
-     20000,  21, 30;
-     25000,  26, 35
-    ];
-
     delta_FR_matrix = nan(nChn, nAmps, nPTP, nSets);  % ch × amp × ptp × set
     p_matrix        = nan(nChn, nAmps, nPTP, nSets);
     responsive_channels = cell(nAmps, nSets, nPTP);
@@ -907,58 +895,47 @@ if responsive_ch_identification_ISI == 1
             idx_set = find(combClass_win == set_id);
             stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
             stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
+                
+            resp_win = [2,10];
+            idx_ptp = idx_set(cell2mat(StimParams(idx_set+1,9)) == ptp);
+            trial_idx = idx_ptp(trialAmps(idx_ptp) == amp);
+            if isempty(trial_idx), continue; end
 
-            for pi = 1:nPTP
-                ptp = ptp_list(pi);
-                win_row = find(dynamic_windows(:,1) == ptp, 1);
-                if isempty(win_row)
-                    warning('No response window for PTP %d', ptp);
-                    continue;
+            for i_ch = 1:nChn
+                ch = channel_range(i_ch);
+                if isempty(sp_clipped{d(ch)}), continue; end
+                sp_times = sp_clipped{d(ch)}(:,1);  % in ms
+
+                baseline_FRs = zeros(length(trial_idx),1);
+                response_FRs = zeros(length(trial_idx),1);
+
+                for ti = 1:length(trial_idx)
+                    t0 = trig(trial_idx(ti)) / FS * 1000;
+                    rel_sp = sp_times - t0;
+                    baseline_FRs(ti) = sum(rel_sp >= baseline_window_ms(1) & rel_sp < baseline_window_ms(2)) ...
+                                     / diff(baseline_window_ms) * 1000;
+                    response_FRs(ti) = sum(rel_sp >= resp_win(1) & rel_sp < resp_win(2)) ...
+                                     / diff(resp_win) * 1000;
                 end
-                resp_win = dynamic_windows(win_row, 2:3);
-                % resp_win = [2,10];
-                resp_win = [2,30];
 
-                idx_ptp = idx_set(cell2mat(StimParams(idx_set+1,9)) == ptp);
-                trial_idx = idx_ptp(trialAmps(idx_ptp) == amp);
-                if isempty(trial_idx), continue; end
+                delta_FR = mean(response_FRs) - mean(baseline_FRs);
+                delta_FR_matrix(i_ch, ai, pi, si) = delta_FR;
 
-                for i_ch = 1:nChn
-                    ch = channel_range(i_ch);
-                    if isempty(sp_clipped{d(ch)}), continue; end
-                    sp_times = sp_clipped{d(ch)}(:,1);  % in ms
-
-                    baseline_FRs = zeros(length(trial_idx),1);
-                    response_FRs = zeros(length(trial_idx),1);
-
-                    for ti = 1:length(trial_idx)
-                        t0 = trig(trial_idx(ti)) / FS * 1000;
-                        rel_sp = sp_times - t0;
-                        baseline_FRs(ti) = sum(rel_sp >= baseline_window_ms(1) & rel_sp < baseline_window_ms(2)) ...
-                                         / diff(baseline_window_ms) * 1000;
-                        response_FRs(ti) = sum(rel_sp >= resp_win(1) & rel_sp < resp_win(2)) ...
-                                         / diff(resp_win) * 1000;
-                    end
-
-                    delta_FR = mean(response_FRs) - mean(baseline_FRs);
-                    delta_FR_matrix(i_ch, ai, pi, si) = delta_FR;
-
-                    try
-                        p = signrank(response_FRs, baseline_FRs);
-                    catch
-                        p = 1;
-                    end
-                    p_matrix(i_ch, ai, pi, si) = p;
-
-                    % Print
-                    fprintf('Amp %4d | Set %2d [%s] | PTP %5d | Ch %2d: ΔFR = %.2f sp/s, p = %.4f\n', ...
-                        amp, set_id, stimLabel, ptp, ch, delta_FR, p);
-
-                    if (delta_FR > min_FR_diff) || (p < 0.051 && delta_FR > 10 )
-                        responsive_channels{ai, si, pi}(end+1) = ch;
-                    end
+                try
+                    p = signrank(response_FRs, baseline_FRs);
+                catch
+                    p = 1;
                 end
-            end
+                p_matrix(i_ch, ai, pi, si) = p;
+
+                % Print
+                fprintf('Amp %4d | Set %2d [%s] | PTP %5d | Ch %2d: ΔFR = %.2f sp/s, p = %.4f\n', ...
+                    amp, set_id, stimLabel, ptp, ch, delta_FR, p);
+
+                if (delta_FR > min_FR_diff) || (p < 0.051 && delta_FR > 10 )
+                    responsive_channels{ai, si, pi}(end+1) = ch;
+                end
+            end            
         end
     end
 

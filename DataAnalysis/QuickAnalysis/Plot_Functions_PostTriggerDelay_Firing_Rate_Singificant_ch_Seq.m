@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Sim1_2_251022_192749'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/CJ268/Xia_Exp1_Seq1_2_25ms_251022_201355';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
 end
@@ -24,11 +24,11 @@ else
     base_name = last_folder;  % fallback if no underscores
 end
 %% Choice
-Spike_filtering =1;
+Spike_filtering =0;
 ForceNegFirst = 0; % check the spike peak sequence (negative first then positive)
 
-spike_plot_per_amp_StimSet =1;
-raster_psth_per_amp_StimSet = 1;
+spike_plot_per_amp_StimSet =0;
+raster_psth_per_amp_StimSet = 0;
 firing_rate_curve_per_amp_StimSet = 0;
 responsive_ch_identification = 0;
 firing_rate_significant_ch_identification = 1;
@@ -195,13 +195,13 @@ if Spike_filtering == 1
     fprintf('=====================================\n\n');
     save([base_name '.sp_xia.mat'],'sp_clipped');
 else
-    load([base_name '.sp_xia.mat']);
+    % load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
-    % load([base_name '.sp_xia_FirstPulse.mat']);
-    % sp_clipped = sp_seq;
+    load([base_name '.sp_xia_FirstPulse.mat']);
+    sp_clipped = sp_seq;
 end
 
 if spike_plot_per_amp_StimSet == 1
@@ -918,7 +918,7 @@ if responsive_ch_identification_ISI == 1
                 end
                 resp_win = dynamic_windows(win_row, 2:3);
                 % resp_win = [2,10];
-                resp_win = [2,30];
+                resp_win = [2,20];
 
                 idx_ptp = idx_set(cell2mat(StimParams(idx_set+1,9)) == ptp);
                 trial_idx = idx_ptp(trialAmps(idx_ptp) == amp);
@@ -955,7 +955,8 @@ if responsive_ch_identification_ISI == 1
                     fprintf('Amp %4d | Set %2d [%s] | PTP %5d | Ch %2d: ΔFR = %.2f sp/s, p = %.4f\n', ...
                         amp, set_id, stimLabel, ptp, ch, delta_FR, p);
 
-                    if (delta_FR > min_FR_diff) || (p < 0.051 && delta_FR > 10 )
+                    % if (delta_FR > min_FR_diff) || (p < 0.051 && delta_FR > 10 )
+                    if (p < 0.05 && delta_FR > 15)
                         responsive_channels{ai, si, pi}(end+1) = ch;
                     end
                 end
@@ -989,4 +990,103 @@ if responsive_ch_identification_ISI == 1
         'baseline_window_ms', 'dynamic_windows', ...
         'amp_list', 'ptp_list', 'channel_range', ...
         'stim_set_list', 'uniqueComb');
+end
+
+
+if firing_rate_significant_ch_identification == 1
+    % === Compute Average FR Curves from Significant Channels ===
+    fprintf('\n===== Averaging Firing Rate Across Significant Channels =====\n');
+
+    nAmps  = length(amp_list);
+    nPTP   = length(ptp_list);
+    nSets  = length(stim_set_list);
+    nChn   = numel(channel_range);
+    win_s  = diff(response_window_ms) / 1000;
+
+    avg_FR_per_amp_set = nan(nAmps, nSets, nPTP);
+    sem_FR_per_amp_set = nan(nAmps, nSets, nPTP);
+    all_FRs_per_ch      = nan(nChn, nAmps, nSets, nPTP);  % store raw FRs per ch
+
+    for ai = 1:nAmps
+        amp = amp_list(ai);
+        for si = 1:nSets
+            set_id = stim_set_list(si);
+            for pi = 1:nPTP
+                ptp = ptp_list(pi);
+
+                ch_list = unique(responsive_channels{ai, si, pi});
+                if isempty(ch_list), continue; end
+
+                trial_idx = find(trialAmps == amp & ...
+                                 combClass_win == set_id & ...
+                                 cell2mat(StimParams(2:simultaneous_stim:end,9)) == ptp);
+                % trial_idx = trial_idx(1:simultaneous_stim:end);  % 1 per trial
+                if isempty(trial_idx), continue; end
+
+                % Time window
+                % win_row = find(dynamic_windows(:,1) == ptp, 1);
+                % if isempty(win_row), continue; end
+                % resp_win = dynamic_windows(win_row, 2:3);
+
+                resp_win = [2,20];
+                win_s = diff(resp_win) / 1000;
+
+                fr_all_ch = nan(numel(ch_list), 1);
+
+                for i = 1:numel(ch_list)
+                    ch = ch_list(i);
+                    sp_times = sp_clipped{d(ch)}(:,1);
+                    rel_FRs = nan(numel(trial_idx), 1);
+
+                    for ti = 1:numel(trial_idx)
+                        t0 = trig(trial_idx(ti)) / FS * 1000;
+                        rel_sp = sp_times - t0;
+                        rel_FRs(ti) = sum(rel_sp >= resp_win(1) & rel_sp < resp_win(2)) / win_s;
+                    end
+
+                    fr_all_ch(i) = mean(rel_FRs);
+                    all_FRs_per_ch(i, ai, si, pi) = fr_all_ch(i);
+                end
+
+                avg_FR_per_amp_set(ai, si, pi) = mean(fr_all_ch);
+                sem_FR_per_amp_set(ai, si, pi) = std(fr_all_ch) / sqrt(numel(fr_all_ch));
+            end
+        end
+    end
+
+    % === Save results ===
+    % save([base_name '_firing_rate_summary_sigCh.mat'], ...
+    %     'avg_FR_per_amp_set', 'sem_FR_per_amp_set', ...
+    %     'all_FRs_per_ch', ...
+    %     'amp_list', 'ptp_list', 'stim_set_list', 'uniqueComb');
+
+    fprintf('Saved average FR summary to "%s_firing_rate_summary_sigCh.mat"\n', base_name);
+
+    % === Optional Plot ===
+    figure('Color','w'); hold on;
+    cmap = lines(nSets);
+    for si = 1:nSets
+        if all(isnan(avg_FR_per_amp_set(:,si))), continue; end
+    
+        err = sem_FR_per_amp_set(:, si);
+        plot_color = cmap(si,:);
+        
+        % Extract stimulation channel numbers for this set
+        stimChs = uniqueComb(stim_set_list(si), :);
+        stimChs = stimChs(stimChs > 0);  % remove 0s
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
+    
+        % Plot
+        errorbar(amp_list, avg_FR_per_amp_set(:,si), err, ...
+            '-o', 'LineWidth', 1.5, 'Color', plot_color, ...
+            'MarkerFaceColor', plot_color, 'CapSize', 5, ...
+            'DisplayName', sprintf('Set %d (%s)', si, setLabel));
+    end
+
+    xlabel('Amplitude (µA)');
+    ylabel('Firing Rate (sp/s)');
+    title('Firing Rate');
+    legend('Location','best', 'Interpreter','none');
+    ylim([0, ceil(max(avg_FR_per_amp_set(:) + sem_FR_per_amp_set(:))/10)*10]);
+    box off
 end

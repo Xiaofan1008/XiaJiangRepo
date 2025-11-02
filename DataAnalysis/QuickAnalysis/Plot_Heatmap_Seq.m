@@ -246,8 +246,9 @@ end
 % end
 
 
-FR_heatmap_norm = nan(size(FR_heatmap));  % [channel × amp × stim set]
+FR_heatmap_norm_seq = nan(size(FR_heatmap));  % [channel × amp × stim set]
 load('max_FR_pre_shank_single.mat');
+load('max_FR_pre_shank_full.mat');
 
 shank_map = {
     1:16;       % Shank 1
@@ -256,23 +257,23 @@ shank_map = {
     17:32       % Shank 4
 };
 
-max_FR_per_shank = zeros(nSets, n_shank);
+max_FR_per_shank_seq = zeros(nSets, n_shank);
 for si = 1:nSets
     for sh = 1:4
         ch_idx = shank_map{sh};
-        max_FR_per_shank(si, sh) = max(max(FR_heatmap(ch_idx,:,si), [], 2, 'omitnan'), [], 'omitnan');
+        max_FR_per_shank_seq(si, sh) = max(max(FR_heatmap(ch_idx,:,si), [], 2, 'omitnan'), [], 'omitnan');
     end
 end
 
 for si = 1:nSets
     for sh = 1:n_shank
         ch_idx = shank_map{sh};
-        max_val = max_FR_per_shank_single_fix(si, sh);
-
+        % max_val = max_FR_per_shank_single_fix(si, sh);
+        max_val = max_FR_full(si, sh);
         if max_val > 0
-            FR_heatmap_norm(ch_idx,:,si) = FR_heatmap(ch_idx,:,si) / max_val;
+            FR_heatmap_norm_seq(ch_idx,:,si) = FR_heatmap(ch_idx,:,si) / max_val;
         else
-            FR_heatmap_norm(ch_idx,:,si) = 0;
+            FR_heatmap_norm_seq(ch_idx,:,si) = 0;
         end
     end
 end
@@ -292,7 +293,7 @@ for si = 1:nSets
         subplot(1, n_shank, sh);
         ch_idx = shank_map{sh};
         % imagesc(FR_heatmap_norm(ch_idx,:,si));
-        imagesc(flipud(FR_heatmap_norm(ch_idx,:,si)));
+        imagesc(flipud(FR_heatmap_norm_seq(ch_idx,:,si)));
         colormap(parula);
         caxis([0 1]); 
         

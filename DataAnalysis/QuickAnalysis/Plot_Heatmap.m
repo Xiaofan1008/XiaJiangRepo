@@ -5,8 +5,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -19,7 +19,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 2
+if numel(underscores) >= 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores
@@ -105,7 +105,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 %% Spike Amplitude Filtering (Before Plotting)
 % % sp_clipped = sp;   % copy original spike structure
@@ -157,9 +157,8 @@ else
     % sp_clipped = sp_seq;
 end
 
-
 %% === Baseline-Corrected Firing Rate per Channel === %%
-fprintf('\n===== Computing Baseline-Corrected FR per Channel =====\n');
+fprintf('\n• Computing Baseline-Corrected FR per Channel \n');
 
 nChn = numel(sp_clipped);
 nTrials = length(trialAmps);
@@ -189,12 +188,12 @@ for ch = 1:nChn
 end
 
 %% === Average FR per Channel per Amp per Stim Set ===
-% FR_heatmap = nan(nChn, n_AMP, nSets);
-FR_heatmap = nan(nChn, 6, nSets);
-
+FR_heatmap = nan(nChn, n_AMP, nSets);
+% FR_heatmap = nan(nChn, 6, nSets);
+% FR_heatmap = nan(nChn, 5, nSets);
 for si = 1:nSets
     trial_set = find(combClass_win == si);
-    for ai = 1:6 %n_AMP
+    for ai = 1:n_AMP
         trial_amp = find(trialAmps == Amps(ai));
         trials_here = intersect(trial_set, trial_amp);
         if isempty(trials_here), continue; end
@@ -205,19 +204,16 @@ end
 
 %% === Normalize per-channel within each stim set ===
 % max_FR_single = nan(nSets, nChn);
-load('max_FR_per_channel_singleStim.mat');  % loads max_FR_single
+% load('max_FR_per_channel_singleStim.mat');  % loads max_FR_single
 FR_heatmap_norm = nan(size(FR_heatmap));
 for si = 1:nSets
     for ch = 1:nChn
         max_val = max(FR_heatmap(ch,:,si), [], 'omitnan');
         % max_FR_single(si,ch) = max_val;
-        if max_val > 0
-            if si <=2 
+        if max_val > 0            
             % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_val;
-                FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(1,ch);
-            else 
-                FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(3,ch);
-            end
+                % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(1,ch);
+                FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si);            
         else
             FR_heatmap_norm(ch,:,si) = 0;
         end
@@ -226,7 +222,7 @@ end
 % save('max_FR_per_channel_singleStim.mat', 'max_FR_single');
 %% === Plot Heatmaps: One per Stimulation Set ===
 for si = 1:nSets
-    figure('Color','w', 'Name', sprintf('Normalized FR - Stim Set %d', si));
+    figure('Color','w', 'Name', sprintf('Stim Set %d', si));
     imagesc(FR_heatmap_norm(:,:,si));
     colormap(parula);
     colorbar;
@@ -234,10 +230,70 @@ for si = 1:nSets
     stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
     stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
 
-    title(sprintf('Stim Set %d: %s', si, stimLabel), 'Interpreter','none');
+    title(sprintf('%s (Simultaneous)', stimLabel), 'Interpreter','none');
     xlabel('Amplitude (µA)');
     xticks(1:n_AMP);
     xticklabels(arrayfun(@(x) num2str(x), Amps, 'UniformOutput', false));
     ylabel('Channel');
-    caxis([0 1]);  % normalized
+    % caxis([0 1]);  % normalized
 end
+
+
+
+%% === Plot Average FR per Stim Set with Error Bars ===
+fprintf('\n• Plotting Average Firing Rate Curves per Stim Set \n');
+
+mean_FR_set = cell(1, nSets);
+sem_FR_set  = cell(1, nSets);
+
+for si = 1:nSets
+    data = FR_heatmap_norm(:,:,si);  % [channels × amplitudes]
+    
+    % Exclude 0 and negative FR values
+    % data(data <= 0) = NaN;
+    
+    % Compute average and SEM across channels (omit NaNs)
+    mean_FR = mean(data, 1, 'omitnan');
+    sem_FR  = std(data, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data), 1));
+
+    % Save to variables for future access
+    mean_FR_set{si} = mean_FR;
+    sem_FR_set{si}  = sem_FR;
+
+    % Plot with error bars
+    figure('Color','w', 'Name', sprintf('Avg FR – Stim Set %d', si));
+    errorbar(Amps, mean_FR, sem_FR, '-o', 'LineWidth', 1.5);
+    hold on;
+
+    stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
+    stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
+
+    title(sprintf('Avg Firing Rate – %s (Simultaneous)', stimLabel), 'Interpreter','none');
+    xlabel('Amplitude (µA)');
+    ylabel('Mean Firing Rate (spikes/s)');
+    ylim([0, 1.1 * max(mean_FR + sem_FR, [], 'omitnan')]);
+    legend(sprintf('Stim Set %d', si), 'Location', 'northwest');
+    box off;
+end
+
+%% === Save Firing Rate per Channel for Each Stim Set ===
+fprintf('\n• Saving Firing Rate per Channel for Each Stim Set\n');
+
+FR_data = struct();
+
+for si = 1:nSets
+    stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
+    stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
+
+    FR_data(si).stimSet      = si;
+    FR_data(si).stimChannels = stimChs;
+    FR_data(si).stimLabel    = stimLabel;
+    FR_data(si).Amps         = Amps;
+    FR_data(si).FR_perCh     = FR_heatmap_norm(:,:,si);  % [channels × amplitudes]
+    FR_data(si).meanFR       = mean_FR_set{si};          % [1 × amplitudes]
+    FR_data(si).semFR        = sem_FR_set{si};           % [1 × amplitudes]
+end
+
+output_filename = sprintf('%s_FR_perChn_perSet.mat', base_name);
+save(output_filename, 'FR_data', 'Amps', 'uniqueComb', 'FR_heatmap_norm');
+fprintf('• Saved firing rate summary to: %s\n', output_filename);

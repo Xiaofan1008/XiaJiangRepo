@@ -1,13 +1,13 @@
-% clear all
+clear all
 % close all
 % addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% Choose Folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2'; 
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1_251104_113037';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -27,7 +27,7 @@ end
 
 %% Choice
 Spike_filtering =0;
-n_shank = 1;
+
 
 %% Pre Set
 FS=30000; % Sampling frequency
@@ -148,18 +148,18 @@ if Spike_filtering == 1
     fprintf('=====================================\n\n');
     save([base_name '.sp_xia.mat'],'sp_clipped');
 else
-    % load([base_name '.sp_xia.mat']);
+    load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
-    load([base_name '.sp_xia_FirstPulse.mat']);
-    sp_clipped = sp_seq;
+    % load([base_name '.sp_xia_FirstPulse.mat']);
+    % sp_clipped = sp_seq;
 end
 
 
 %% === Baseline-Corrected Firing Rate per Channel === %%
-fprintf('\n===== Computing Baseline-Corrected FR per Channel =====\n');
+fprintf('\n• Computing Baseline-Corrected FR per Channel\n');
 
 nChn = numel(sp_clipped);
 nTrials = length(trialAmps);
@@ -167,7 +167,7 @@ FR_baseline = nan(nChn, nTrials);
 FR_response = nan(nChn, nTrials);
 FR_corrected = nan(nChn, nTrials);
 
-win_baseline = baseline_window_ms;
+win_baseline = baseline_window_ms;  
 win_response = response_window_ms;  
 
 baseline_s = diff(win_baseline) / 1000;
@@ -189,9 +189,9 @@ for ch = 1:nChn
 end
 
 %% === Average FR per Channel per Amp per Stim Set ===
-FR_heatmap = nan(nChn, n_AMP, nSets);
+% FR_heatmap = nan(nChn, n_AMP, nSets);
 % FR_heatmap = nan(nChn, 6, nSets);
-
+FR_heatmap = nan(nChn, 5, nSets);
 for si = 1:nSets
     trial_set = find(combClass_win == si);
     for ai = 1:n_AMP
@@ -206,156 +206,144 @@ end
 %% === Normalize per-channel within each stim set ===
 % max_FR_single = nan(nSets, nChn);
 % load('max_FR_per_channel_singleStim.mat');  % loads max_FR_single
-% FR_heatmap_norm = nan(size(FR_heatmap));
-% for si = 1:nSets
-%     for ch = 1:nChn
-%         max_val = max(FR_heatmap(ch,:,si), [], 'omitnan');
-%         % max_FR_single(si,ch) = max_val;
-%         if max_val > 0
-%             if si == 1 
-%             % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_val;
-%                 % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(1,ch);
-%                 FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / 20;
-%             else 
-%                 % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(3,ch);
-%                 FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / 20;
-%             end
-%         else
-%             FR_heatmap_norm(ch,:,si) = 0;
-%         end
-%     end
-% end
-% % save('max_FR_per_channel_singleStim.mat', 'max_FR_single');
-% %% === Plot Heatmaps: One per Stimulation Set ===
-% for si = 1:nSets
-%     figure('Color','w', 'Name', sprintf('Normalized FR - Stim Set %d', si));
-%     imagesc(FR_heatmap_norm(:,:,si));
-%     colormap(parula);
-%     colorbar;
-% 
-%     stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
-%     stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
-% 
-%     title(sprintf('Stim Set %d: %s', si, stimLabel), 'Interpreter','none');
-%     xlabel('Amplitude (µA)');
-%     xticks(1:n_AMP);
-%     xticklabels(arrayfun(@(x) num2str(x), Amps, 'UniformOutput', false));
-%     ylabel('Channel');
-%     % caxis([0 1]);  % normalized
-%     caxis([0 3]); 
-% end
-
-
-FR_heatmap_norm_seq = nan(size(FR_heatmap));  % [channel × amp × stim set]
-% load('max_FR_pre_shank_single.mat');
-% load('max_FR_pre_shank_full.mat');
-
-% shank_map = {
-%     1:16;       % Shank 1
-%     33:48;      % Shank 2
-%     49:64;      % Shank 3
-%     17:32       % Shank 4
-% };
-
-shank_map = {
-    1:32;
-};
-
-max_FR_per_shank_seq = zeros(nSets, n_shank);
+FR_heatmap_norm = nan(size(FR_heatmap));
 for si = 1:nSets
-    for sh = 1:n_shank
-        ch_idx = shank_map{sh};
-        max_FR_per_shank_seq(si, sh) = max(max(FR_heatmap(ch_idx,:,si), [], 2, 'omitnan'), [], 'omitnan');
-    end
-end
-
-for si = 1:nSets
-    for sh = 1:n_shank
-        ch_idx = shank_map{sh};
-        % max_val = max_FR_per_shank_single_fix(si, sh);
-        % max_val = max_FR_full(si, sh);
-        max_val = max_FR_per_shank_seq(si, sh);
+    for ch = 1:nChn
+        max_val = max(FR_heatmap(ch,:,si), [], 'omitnan');
+        % max_FR_single(si,ch) = max_val;
         if max_val > 0
-            % FR_heatmap_norm_seq(ch_idx,:,si) = FR_heatmap(ch_idx,:,si) / max_val;
-            FR_heatmap_norm_seq(ch_idx,:,si) = FR_heatmap(ch_idx,:,si);
+            % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_val;
+                % FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si) / max_FR_single(1,ch);
+                FR_heatmap_norm(ch,:,si) = FR_heatmap(ch,:,si);        
         else
-            FR_heatmap_norm_seq(ch_idx,:,si) = 0;
+            FR_heatmap_norm(ch,:,si) = 0;
         end
     end
 end
-
-% shank_labels = {'Shank 1: Ch 1–16', 'Shank 2: Ch 33–48', ...
-%                 'Shank 3: Ch 49–64', 'Shank 4: Ch 17–32'};
-% shank_labels = {'Shank 1: Ch 1–32'};
-
-% Plot
+% save('max_FR_per_channel_singleStim.mat', 'max_FR_single');
+%% === Plot Heatmaps: One per Stimulation Set ===
 for si = 1:nSets
-    figure('Color','w', 'Name', sprintf('Stim Set %d', si));
-    
+    figure('Color','w', 'Name', sprintf(' Stim Set %d', si));
+    imagesc(FR_heatmap_norm(:,:,si));
+    colormap(parula);
+    colorbar;
+
     stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
     stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
-    sgtitle(sprintf('%s (Sequential)', stimLabel), 'FontWeight', 'bold', 'Interpreter','none');
 
-    for sh = 1:n_shank
-        subplot(1, n_shank, sh);
-        ch_idx = shank_map{sh};
-        imagesc(FR_heatmap_norm_seq(ch_idx,:,si));
-        % imagesc(flipud(FR_heatmap_norm_seq(ch_idx,:,si)));
-        colormap(parula);
-        % caxis([0 1]); 
-        
-        xticks(1:n_AMP);
-        xticklabels(arrayfun(@(x) num2str(x), Amps, 'UniformOutput', false));
-        ylabel('Channel');
-        xlabel('Amplitude (µA)');
-        yticks(1:length(ch_idx));
-        yticklabels(arrayfun(@num2str, ch_idx, 'UniformOutput', false));
-        % yticklabels(arrayfun(@num2str, flip(ch_idx), 'UniformOutput', false));
-        % title(shank_labels{sh}, 'Interpreter','none');
-    end
-
-    % Add one colorbar for the whole figure
-    cb = colorbar('Position', [0.93 0.11 0.02 0.78]);
-    cb.Label.String = 'Normalized Firing Rate';
+    title(sprintf('Stim Set %d: %s (Seperate)', si, stimLabel), 'Interpreter','none');
+    xlabel('Amplitude (µA)');
+    xticks(1:n_AMP);
+    xticklabels(arrayfun(@(x) num2str(x), Amps, 'UniformOutput', false));
+    ylabel('Channel');
+    % caxis([0 1]);  % normalized
 end
 
+%% === Plot Combined Heatmap of Two Stim Sets ===
+% Choose the two stimulation sets you want to combine
+setA = 1;  % e.g., Stim Set 1
+setB = 2;  % e.g., Stim Set 2
 
-%% === Plot Average Firing Rate Across Channels for Each Stim Set ===
-fprintf('\n===== Plotting Average Firing Rate Curves =====\n');
+% Check dimensions match before summing
+assert(all(size(FR_heatmap_norm(:,:,setA)) == size(FR_heatmap_norm(:,:,setB))), ...
+    'FR matrices from the two sets must be the same size');
 
-mean_FR_all = struct();
+% Sum their firing rate matrices
+FR_combined = FR_heatmap_norm(:,:,setA) + FR_heatmap_norm(:,:,setB);
+
+% Get stim channel labels for combined sets
+stimChs_A = uniqueComb(setA, uniqueComb(setA,:) > 0);
+stimChs_B = uniqueComb(setB, uniqueComb(setB,:) > 0);
+stimLabel_A = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs_A, 'UniformOutput', false), '+');
+stimLabel_B = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs_B, 'UniformOutput', false), '+');
+
+% Plot combined heatmap
+figure('Color','w', 'Name', sprintf('Combined Heatmap: Set %d + Set %d', setA, setB));
+imagesc(FR_combined);
+colormap(parula);
+colorbar;
+
+title(sprintf('Combined FR – %s+%s (Separate）', ...
+    stimLabel_A, stimLabel_B), 'Interpreter','none');
+
+xlabel('Amplitude (µA)');
+xticks(1:n_AMP);
+xticklabels(arrayfun(@(x) num2str(x), Amps, 'UniformOutput', false));
+ylabel('Channel');
+yticks(1:nChn);
+yticklabels(arrayfun(@num2str, 1:nChn, 'UniformOutput', false));
+
+
+
+%% === Plot Average FR per Stim Set with Error Bars ===
+fprintf('\n• Plotting Average Firing Rate Curves per Stim Set\n');
+
+mean_FR_set = cell(1, nSets);
+sem_FR_set  = cell(1, nSets);
 
 for si = 1:nSets
-    % Compute mean and SEM across all channels
-    data = FR_heatmap_norm_seq(:,:,si);
+    data = FR_heatmap_norm(:,:,si);  % [channels × amplitudes]
+    
+    % Exclude 0 and negative FR values
+    % data(data <= 0) = NaN;
+    
+    % Compute average and SEM across channels (omit NaNs)
     mean_FR = mean(data, 1, 'omitnan');
     sem_FR  = std(data, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data), 1));
-
-    % Save to structure
-    set_name = sprintf('Set%d', si);
-    mean_FR_all.(set_name).mean = mean_FR;
-    mean_FR_all.(set_name).sem  = sem_FR;
+    
+    % Save to variables for future access
+    mean_FR_set{si} = mean_FR;
+    sem_FR_set{si}  = sem_FR;
 
     % Plot with error bars
-    figure('Color','w', 'Name', sprintf('Average FR - %s (Sequential)', stimLabel));
+    figure('Color','w', 'Name', sprintf('Avg FR – Stim Set %d', si));
     errorbar(Amps, mean_FR, sem_FR, '-o', 'LineWidth', 1.5);
     hold on;
 
-    title(sprintf('Ave Firing Rate – %s (Sequential)', stimLabel));
-    xlabel('Amplitude (µA)');
-    ylabel('Ave Firing Rate (spikes/s), Sequential');
-    legend(sprintf('Set %d', si), 'Location', 'northwest');
-    ylim([0, 1.1 * max(mean_FR + sem_FR, [], 'omitnan')]);
-    box off;
+    stimChs = uniqueComb(si, uniqueComb(si,:) > 0);
+    stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs, 'UniformOutput', false), '+');
 
-    % Optional: mark non-zero amplitudes only
-    valid_idx = Amps > 0;
-    plot(Amps(valid_idx), mean_FR(valid_idx), 'r.-', 'LineWidth', 1.2);
+    title(sprintf('Avg Firing Rate: %s (Seperate)', stimLabel), 'Interpreter','none');
+    xlabel('Amplitude (µA)');
+    ylabel('Mean Firing Rate (spikes/s)');
+    ylim([0, 1.1 * max(mean_FR + sem_FR, [], 'omitnan')]);
+    legend(sprintf('Stim Set %d', si), 'Location', 'northwest');
+    box off;
 end
 
+%% === Plot Combined Average FR of Two Stim Sets ===
+setA = 1;  % change if needed
+setB = 2;  % change if needed
 
-%% === Save Firing Rate per Channel and Summary Data ===
-fprintf('\n===== Saving Firing Rate per Channel and Summary Data =====\n');
+fprintf('• Plotting Combined Average Firing Rate: Set %d + Set %d\n', setA, setB);
+
+% Extract data
+dataA = FR_heatmap_norm(:,:,setA);  % [channel × amp]
+dataB = FR_heatmap_norm(:,:,setB);
+
+% Combine
+combined_data = dataA + dataB;
+mean_combined = mean(combined_data, 1, 'omitnan');
+sem_combined = std(combined_data, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(combined_data), 1));
+
+% Get stim labels
+stimChs_A = uniqueComb(setA, uniqueComb(setA,:) > 0);
+stimChs_B = uniqueComb(setB, uniqueComb(setB,:) > 0);
+stimLabel_A = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs_A, 'UniformOutput', false), '+');
+stimLabel_B = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimChs_B, 'UniformOutput', false), '+');
+
+% Plot
+figure('Color','w', 'Name', sprintf('Combined Avg FR – Sets %d+%d', setA, setB));
+errorbar(Amps, mean_combined, sem_combined, '-o', 'LineWidth', 1.5);
+title(sprintf('Combined Avg FR: %s + %s', stimLabel_A, stimLabel_B), 'Interpreter','none');
+xlabel('Amplitude (µA)');
+ylabel('Firing Rate (spikes/s)');
+ylim([0, 1.1 * max(mean_combined + sem_combined, [], 'omitnan')]);
+legend(sprintf('Sets %d + %d', setA, setB), 'Location', 'northwest');
+box off;
+
+%% === Save Firing Rate per Channel for Each Stim Set ===
+fprintf('\n• Saving Firing Rate per Channel for Each Stim Set\n');
 
 FR_data = struct();
 
@@ -367,21 +355,15 @@ for si = 1:nSets
     FR_data(si).stimChannels = stimChs;
     FR_data(si).stimLabel    = stimLabel;
     FR_data(si).Amps         = Amps;
-    FR_data(si).FR_perCh     = FR_heatmap_norm_seq(:,:,si);  % [channels × amplitudes]
-    FR_data(si).meanFR       = mean_FR_all.(sprintf('Set%d', si)).mean;  % [1 × amplitudes]
-    FR_data(si).semFR        = mean_FR_all.(sprintf('Set%d', si)).sem;   % [1 × amplitudes]
+    FR_data(si).FR_perCh     = FR_heatmap_norm(:,:,si);  % [channels × amplitudes]
+    FR_data(si).meanFR       = mean_FR_set{si};          % [1 × amplitudes]
+    FR_data(si).semFR        = sem_FR_set{si};           % [1 × amplitudes]
 end
 
-% === Generate output file name based on base_name ===
 output_filename = sprintf('%s_FR_perChn_perSet.mat', base_name);
-
-% Save relevant variables
-save(output_filename, ...
-    'FR_data', 'FR_heatmap_norm_seq', 'FR_heatmap', ...
-    'Amps', 'uniqueComb', 'mean_FR_all');
-
-fprintf(' Firing rate data saved to: %s\n', output_filename);
-fprintf(' Each FR_data(si) includes:\n');
+save(output_filename, 'FR_data', 'Amps', 'uniqueComb', 'FR_heatmap_norm');
+fprintf(' Saved file: FR_perChannel_perStimSet.mat\n');
+fprintf(' Each FR_data(si) contains:\n');
 fprintf('  • stimSet, stimChannels, stimLabel\n');
 fprintf('  • FR_perCh [channels × amplitudes]\n');
 fprintf('  • meanFR, semFR\n\n');

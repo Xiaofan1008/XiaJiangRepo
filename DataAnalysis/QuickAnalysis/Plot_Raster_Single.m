@@ -5,8 +5,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1'; 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2_251104_122817';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2_251104_123934'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -26,7 +26,7 @@ else
 end
 
 %% Choice
-Spike_filtering =0;
+Spike_filtering =3;
 
 
 %% Pre Set

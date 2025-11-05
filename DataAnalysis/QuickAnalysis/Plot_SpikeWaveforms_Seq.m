@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 
 %% Spike Filtering Parameters
-Spike_filtering = 1; 
+Spike_filtering = 0; 
 pos_limit = 100;    % upper bound (µV)
 neg_limit = -100;  % lower bound (µV)
 width_min_ms = 0.01;
@@ -13,13 +13,13 @@ width_max_ms = 0.4;
 
 %% Spike waveform channel 
 spike_chn_start = 1;
-spike_chn_end = 64; %nChn
+spike_chn_end = 32; %nChn
 
 %% Choose Folder
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq7_5ms_251104_200055';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -59,8 +59,8 @@ trig = loadTrig(0);
 
 %% Spike Amplitude Filtering (Before Plotting)
 % % sp_clipped = sp;   % copy original spike structure
-load([base_name '.sp_xia_FirstPulse.mat']);
-sp = sp_seq;
+% load([base_name '.sp_xia_FirstPulse.mat']);
+% sp = sp_seq;
 if Spike_filtering == 1
     fprintf('\n===== Spike Amplitude Filtering =====\n'); 
     
@@ -96,8 +96,8 @@ if Spike_filtering == 1
         % Keep spikes within amplitude bounds
         % valid_idx = (max_vals <= pos_limit) & (min_vals >= neg_limit);
         % Final combined condition
-        % valid_idx = in_range & crosses_zero;
-        valid_idx = in_range & crosses_zero & width_valid;
+        valid_idx = in_range & crosses_zero;
+        % valid_idx = in_range & crosses_zero & width_valid;
 
         % Apply filter
         sp_clipped{ch} = sp{ch}(valid_idx, :);
@@ -113,13 +113,13 @@ if Spike_filtering == 1
     save([base_name '.sp_xia.mat'],'sp_clipped');
     % save([base_name '.sp_xia_FirstPulse.mat'],'sp_clipped');
 else
-    % load([base_name '.sp_xia.mat']);
+    load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
-    load([base_name '.sp_xia_FirstPulse.mat']);
-    sp_clipped = sp_seq;
+    % load([base_name '.sp_xia_FirstPulse.mat']);
+    % sp_clipped = sp_seq;
 end
 
 %% Load StimParams and decode amplitudes, stimulation sets, ISI
@@ -166,8 +166,14 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 [PulsePeriods, ~, pulseIdx] = unique(pulseTrain(:));
 n_PULSE = numel(PulsePeriods);
 
+% Extract post-trigger delay
+postTrigDelay_all = cell2mat(StimParams(2:end,6));
+postTrigDelay = postTrigDelay_all(1:simultaneous_stim:end);
+[uniqueDelays, ~, delayIdx] = unique(postTrigDelay);
+n_DELAYS = numel(uniqueDelays);
+
 % Electrode Map
-d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters
@@ -197,7 +203,9 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
 
     t_wave = (0:size(sp_wave,2)-1) / FS * 1000;
 
-    for s = 1:nSets
+    for delay_i = 1:n_DELAYS
+        delay_val = uniqueDelays(delay_i);
+        for s = 1:nSets
         set_id = s;
         trial_mask = (combClass_win == set_id);
         if ~any(trial_mask), continue; end
@@ -275,5 +283,6 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
         legend_entries = arrayfun(@(a) sprintf('%g µA', Amps(a)), 1:n_AMP, 'UniformOutput', false);
         legend_colors = arrayfun(@(a) plot(nan,nan,'-', 'Color', cmap(a,:), 'LineWidth',1.5), 1:n_AMP);
         legend(legend_colors, legend_entries, 'Location','northeastoutside');
+        end
     end
 end

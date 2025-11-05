@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 
 %% Spike Filtering Parameters
-Spike_filtering = 1; 
+Spike_filtering = 0; 
 pos_limit = 100;    % upper bound (µV)
 neg_limit = -100;  % lower bound (µV)
 width_min_ms = 0.01;
@@ -13,12 +13,12 @@ width_max_ms = 0.4;
 
 %% Spike waveform channel 
 spike_chn_start = 1;
-spike_chn_end = 64; %nChn
+spike_chn_end = 32; %nChn
 
 %% Choose Folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1'; 
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -31,7 +31,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 2
+if numel(underscores) >= 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores
@@ -95,8 +95,8 @@ if Spike_filtering == 1
         % Keep spikes within amplitude bounds
         % valid_idx = (max_vals <= pos_limit) & (min_vals >= neg_limit);
         % Final combined condition
-        % valid_idx = in_range & crosses_zero;
-        valid_idx = in_range & crosses_zero & width_valid;
+        valid_idx = in_range & crosses_zero;
+        % valid_idx = in_range & crosses_zero & width_valid;
 
         % Apply filter
         sp_clipped{ch} = sp{ch}(valid_idx, :);
@@ -165,7 +165,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters

@@ -2,8 +2,8 @@
 clear all
 
 % === USER PARAMETERS === %
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single4_251104_151813';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms_251104_154310';
 single_win_ms     = [1 6.5];     % spike window after trigger (ms)
 pulse_offset_ms   = 0;         % when to inject relative to 1st pulse (ms)
 FS = 30000;                    % Sampling rate
@@ -54,13 +54,13 @@ stimChPerTrial_seq = arrayfun(@(t) unique(idx_all_seq((t-1)*simultaneous_stim + 
 % Load POST-TRIGGER DELAY (column 6)
 post_trigger_delay_us = cell2mat(StimParams(3:simultaneous_stim:end,6));
 
-d = Depth_s(2);
+d = Depth_s(1);
 total_spikes_added_all = 0;
 unique_amps = unique(trialAmps_seq);
 
 fprintf('\n=== Counting Added Spikes to Sequential Data ===\n');
 
-for a = 2:numel(unique_amps)
+for a = 1:numel(unique_amps)
     amp = unique_amps(a);
     total_spikes_added = 0;
 

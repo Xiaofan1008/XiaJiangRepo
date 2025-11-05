@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -19,7 +19,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 2
+if numel(underscores) >= 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores
@@ -105,7 +105,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(2); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 %% Spike Amplitude Filtering (Before Plotting)
 % % sp_clipped = sp;   % copy original spike structure
@@ -186,7 +186,8 @@ raster_chn_end = 32; %nChn
                 trials_this_period = find(pulseIdx == pi & combClass_win == set_id);
                 if isempty(trials_this_period), continue; end
 
-                figure('Color','w','Name',sprintf('Ch %d | Set %s | %d µs', ich, setLabel, pulse_val));
+                % figure('Color','w','Name',sprintf('Ch %d | Set %s | %d µs', ich, setLabel, pulse_val));
+                figure('Color','w','Name',sprintf('Ch %d | Set %s', ich, setLabel));
                 tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
                 ax1 = nexttile([3 1]); hold(ax1,'on'); box(ax1,'off');
                 ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
@@ -256,8 +257,10 @@ raster_chn_end = 32; %nChn
                     % fprintf('Ch %2d | Set %s | %4d µs | %3d µA — Total spikes: %d\n', ...
                     %     ich, setLabel, pulse_val, amp_val, total_spikes_amp);
                 end
-                fprintf('Ch %2d | Set %s | %4d µs — Total spikes: %d\n', ...
-                        ich, setLabel, pulse_val, total_spikes);
+                % fprintf('Ch %2d | Set %s | %4d µs — Total spikes: %d\n', ...
+                %         ich, setLabel, pulse_val, total_spikes);
+
+                fprintf('Ch %2d | Set %s — Total spikes: %d\n',ich, setLabel, total_spikes);
 
                 % Finalize raster plot
                 xline(ax1, 0, 'r', 'LineWidth', 1.5);
@@ -266,7 +269,8 @@ raster_chn_end = 32; %nChn
                 yticks(ax1, ytick_vals);
                 yticklabels(ax1, ytick_labels);
                 ylabel(ax1, 'Amplitude');
-                title(ax1, sprintf('Raster — Ch %d | Set: %s | %d µs', ich, setLabel, pulse_val), 'Interpreter','none');
+                % title(ax1, sprintf('Raster — Ch %d | Set: %s | %d µs', ich, setLabel, pulse_val), 'Interpreter','none');
+                title(ax1, sprintf('Raster — Ch %d | Set: %s', ich, setLabel), 'Interpreter','none');
 
                 % PSTH
                 for ai = 1:n_AMP

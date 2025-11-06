@@ -2,8 +2,8 @@
 clear all
 
 % === USER PARAMETERS === %
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single4_251104_151813';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms_251104_154310';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single6_251106_162313';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq6_5ms_251106_164125';
 single_win_ms     = [1 6.5];     % spike window after trigger (ms)
 pulse_offset_ms   = 0;         % when to inject relative to 1st pulse (ms)
 FS = 30000;                    % Sampling rate

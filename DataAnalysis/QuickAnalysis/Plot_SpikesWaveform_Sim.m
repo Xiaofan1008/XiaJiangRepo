@@ -17,8 +17,8 @@ spike_chn_end = 32; %nChn
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1'; 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single7_251106_173048'; 
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim4_251106_140646';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)

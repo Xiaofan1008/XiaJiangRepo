@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single1_251106_104115'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1_251104_113037';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -186,7 +186,7 @@ for ch = 1:nChn
         FR_corrected(ch,tr) = FR_response(ch,tr) - FR_baseline(ch,tr);
         % FR_corrected(ch,tr) = FR_response(ch,tr);
     end
-end
+end 
 
 %% === Average FR per Channel per Amp per Stim Set ===
 % FR_heatmap = nan(nChn, n_AMP, nSets);
@@ -358,6 +358,7 @@ for si = 1:nSets
     FR_data(si).FR_perCh     = FR_heatmap_norm(:,:,si);  % [channels × amplitudes]
     FR_data(si).meanFR       = mean_FR_set{si};          % [1 × amplitudes]
     FR_data(si).semFR        = sem_FR_set{si};           % [1 × amplitudes]
+
 end
 
 output_filename = sprintf('%s_FR_perChn_perSet.mat', base_name);

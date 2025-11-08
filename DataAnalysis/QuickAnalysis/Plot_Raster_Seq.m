@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq6_5ms_251106_164125';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq5_5ms';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -110,43 +110,92 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 %% Spike Amplitude Filtering (Before Plotting)
 % % sp_clipped = sp;   % copy original spike structure
 
-if Spike_filtering == 1
+% if Spike_filtering == 1
+% 
+%     fprintf('\n===== Spike Amplitude Filtering =====\n');
+%     fprintf('Criteria: max ≤ %.1f µV and min ≥ %.1f µV\n', pos_limit, neg_limit);
+% 
+%     for ch = 1:numel(sp)
+%         if isempty(sp{ch}), continue; end
+% 
+%         waveforms = sp{ch}(:, 2:end);
+% 
+%         % Amplitude-based filtering
+%         max_vals = max(waveforms, [], 2);
+%         min_vals = min(waveforms, [], 2);
+%         in_range = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+% 
+%         % Zero-crossing check (must include both positive and negative values)
+%         has_positive = any(waveforms > 0, 2);
+%         has_negative = any(waveforms < 0, 2);
+%         crosses_zero = has_positive & has_negative;
+% 
+%         % Keep spikes within amplitude bounds
+%         % valid_idx = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+%         % Final combined condition
+%         valid_idx = in_range & crosses_zero;
+% 
+%         % Apply filter
+%         sp_clipped{ch} = sp{ch}(valid_idx, :);
+% 
+%         % Print summary
+%         n_total = size(sp{ch}, 1);
+%         n_keep  = sum(valid_idx);
+%         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
+%             ch, n_keep, n_total, 100*n_keep/n_total);
+%     end
+% 
+%     fprintf('=====================================\n\n');
+%     save([base_name '.sp_xia.mat'],'sp_clipped');
+% else
+%     % load([base_name '.sp_xia.mat']);
+% 
+%     % load([base_name '.sp.mat']);
+%     % sp_clipped = sp;
+% 
+%     load([base_name '.sp_xia_FirstPulse.mat']);
+%     sp_clipped = sp_seq;
+% end
 
-    fprintf('\n===== Spike Amplitude Filtering =====\n');
-    fprintf('Criteria: max ≤ %.1f µV and min ≥ %.1f µV\n', pos_limit, neg_limit);
+if Spike_filtering == 1
+    fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
+    
+    SSD_threshold_factor = 16;  % from Allison-Walker (2022)
+    t_axis = (0:48) / FS * 1000;
     
     for ch = 1:numel(sp)
         if isempty(sp{ch}), continue; end
-    
-        waveforms = sp{ch}(:, 2:end);
-    
-        % Amplitude-based filtering
-        max_vals = max(waveforms, [], 2);
-        min_vals = min(waveforms, [], 2);
-        in_range = (max_vals <= pos_limit) & (min_vals >= neg_limit);
-    
-        % Zero-crossing check (must include both positive and negative values)
-        has_positive = any(waveforms > 0, 2);
-        has_negative = any(waveforms < 0, 2);
-        crosses_zero = has_positive & has_negative;
 
-        % Keep spikes within amplitude bounds
-        % valid_idx = (max_vals <= pos_limit) & (min_vals >= neg_limit);
-        % Final combined condition
-        valid_idx = in_range & crosses_zero;
+        waveforms = sp{ch}(:, 2:end);   % exclude timestamps
+        nSpikes = size(waveforms, 1);
+        if nSpikes < 5
+            sp_clipped{ch} = sp{ch};
+            continue;
+        end
 
-        % Apply filter
+        % --- Compute mean spike waveform for this channel ---
+        mean_wave = mean(waveforms, 1);
+
+        % --- Compute sum of squared differences (SSD) for each spike ---
+        diff_mat = waveforms - mean_wave;      % deviation matrix
+        SSD = sum(diff_mat.^2, 2);             % one SSD value per spike
+        mean_SSD = mean(SSD);
+
+        % --- Reject spikes whose SSD exceeds threshold ---
+        valid_idx = SSD <= (SSD_threshold_factor * mean_SSD);
+
+        % --- Apply filter ---
         sp_clipped{ch} = sp{ch}(valid_idx, :);
-    
-        % Print summary
+
+        % --- Summary ---
         n_total = size(sp{ch}, 1);
         n_keep  = sum(valid_idx);
         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
             ch, n_keep, n_total, 100*n_keep/n_total);
     end
-    
+
     fprintf('=====================================\n\n');
-    save([base_name '.sp_xia.mat'],'sp_clipped');
+    save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
     % load([base_name '.sp_xia.mat']);
 

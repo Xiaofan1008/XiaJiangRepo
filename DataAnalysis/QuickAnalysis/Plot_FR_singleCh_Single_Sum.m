@@ -1,3 +1,6 @@
+% This code plots the firing rate curve for a selected channel and stimulation set,
+% also plots the summed firing rate curve from two stimulation sets for the same channel.
+
 clear all
 % close all
 % addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
@@ -28,7 +31,8 @@ end
 %% Choice
 Spike_filtering =0;
 ch_to_plot = 18; 
-stimSet_to_plot = 1;
+stimSet_to_plot = 1; % choose one set to plot the curve
+stimSets_to_sum = [1, 2];  % choose the two sets to sum
 %% Pre Set
 FS=30000; % Sampling frequency
 % Load .sp.mat file
@@ -225,3 +229,69 @@ stim_str = sprintf('Set %d: [Ch %s]', stimSet_to_plot, num2str(stim_electrodes))
 title(sprintf('Channel %d | %s', ch_to_plot, stim_str), 'FontWeight', 'bold');
 legend({sprintf('Stim Set %d', stimSet_to_plot)}, 'Location', 'best');
 
+%% === Plot Firing Rates for Two Sets and Their Sum === %%
+fprintf('\nPlotting FR for Stim Sets %s and their sum\n', num2str(stimSets_to_sum));
+
+% Create trial masks for each set
+mask1 = (combClass_win == stimSets_to_sum(1));
+mask2 = (combClass_win == stimSets_to_sum(2));
+
+% Extract amplitudes and FRs
+amps1 = trialAmps(mask1);
+amps2 = trialAmps(mask2);
+FR1   = FR_corrected(ch_to_plot, mask1);
+FR2   = FR_corrected(ch_to_plot, mask2);
+
+% --- Compute mean ± SEM for each set ---
+[amps_unique, ~, amp_idx] = unique(amps1);
+mean_FR1 = nan(size(amps_unique)); sem_FR1 = nan(size(amps_unique));
+mean_FR2 = nan(size(amps_unique)); sem_FR2 = nan(size(amps_unique));
+mean_FR_sum = nan(size(amps_unique)); sem_FR_sum = nan(size(amps_unique));
+
+for i = 1:numel(amps_unique)
+    vals1 = FR1(amp_idx == i); vals1 = vals1(~isnan(vals1));
+    vals2 = FR2(amp_idx == i); vals2 = vals2(~isnan(vals2));
+    if isempty(vals1) || isempty(vals2), continue; end
+
+    mean_FR1(i) = mean(vals1);
+    mean_FR2(i) = mean(vals2);
+    sem_FR1(i)  = std(vals1) / sqrt(numel(vals1));
+    sem_FR2(i)  = std(vals2) / sqrt(numel(vals2));
+
+    % Summed FR (mean₁ + mean₂), SEM propagated
+    mean_FR_sum(i) = mean_FR1(i) + mean_FR2(i);
+    sem_FR_sum(i)  = sqrt(sem_FR1(i)^2 + sem_FR2(i)^2);
+end
+
+% --- Get stimulation electrode numbers for legend labels ---
+stim_elec_1 = uniqueComb(stimSets_to_sum(1), :); stim_elec_1 = stim_elec_1(stim_elec_1 > 0);
+stim_elec_2 = uniqueComb(stimSets_to_sum(2), :); stim_elec_2 = stim_elec_2(stim_elec_2 > 0);
+stim_label_1 = sprintf('Set %d [Ch %s]', stimSets_to_sum(1), num2str(stim_elec_1));
+stim_label_2 = sprintf('Set %d [Ch %s]', stimSets_to_sum(2), num2str(stim_elec_2));
+stim_label_sum = sprintf('Sum (%d+%d) [Ch %s + %s]', ...
+    stimSets_to_sum(1), stimSets_to_sum(2), num2str(stim_elec_1), num2str(stim_elec_2));
+
+% --- Plot ---
+figure; hold on; box off;
+set(gcf, 'Color', 'w');
+set(gca, 'FontSize', 12, 'LineWidth', 1);
+
+% Colors for the two sets
+color1 = cmap(mod(stimSets_to_sum(1)-1, size(cmap,1))+1, :);
+color2 = cmap(mod(stimSets_to_sum(2)-1, size(cmap,1))+1, :);
+
+% Plot individual sets (solid lines)
+errorbar(amps_unique, mean_FR1, sem_FR1, 'o-', 'LineWidth', 2, ...
+    'MarkerSize', 6, 'Color', color1, 'DisplayName', sprintf('Set %d', stimSets_to_sum(1)));
+errorbar(amps_unique, mean_FR2, sem_FR2, 'o-', 'LineWidth', 2, ...
+    'MarkerSize', 6, 'Color', color2, 'DisplayName', sprintf('Set %d', stimSets_to_sum(2)));
+
+% Plot summed curve (dashed)
+errorbar(amps_unique, mean_FR_sum, sem_FR_sum, 's--', 'LineWidth', 2, ...
+    'MarkerSize', 6, 'Color', [0.3 0.3 0.3], 'DisplayName', sprintf('Sum (%d + %d)', stimSets_to_sum(1), stimSets_to_sum(2)));
+
+% Axis labels , title and legend
+xlabel('Amplitude (µA)', 'FontWeight', 'bold');
+ylabel(' Firing Rate (spikes/s)', 'FontWeight', 'bold');
+legend('show', 'Location', 'best');
+title(sprintf('Channel %d | Stim Ch%s + Ch%s', ch_to_plot, num2str(stim_elec_1), num2str(stim_elec_2)), 'FontWeight', 'bold');

@@ -19,7 +19,7 @@ spike_chn_end = 32; %nChn
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq7_251106_174944';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -31,7 +31,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 2
+if numel(underscores) >= 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores
@@ -113,13 +113,13 @@ if Spike_filtering == 1
     save([base_name '.sp_xia.mat'],'sp_clipped');
     % save([base_name '.sp_xia_FirstPulse.mat'],'sp_clipped');
 else
-    load([base_name '.sp_xia.mat']);
+    % load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
-    % load([base_name '.sp_xia_FirstPulse.mat']);
-    % sp_clipped = sp_seq;
+    load([base_name '.sp_xia_FirstPulse.mat']);
+    sp_clipped = sp_seq;
 end
 
 %% Load StimParams and decode amplitudes, stimulation sets, ISI

@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim7'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2_251104_122817';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -26,7 +26,7 @@ else
 end
 
 %% Choice
-Spike_filtering =1;
+Spike_filtering =0;
 
 
 %% Pre Set
@@ -157,60 +157,11 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 %     % sp_clipped = sp_seq;
 % end
 
-% if Spike_filtering == 1
-%     fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
-% 
-%     SSD_threshold_factor = 16;  % from Allison-Walker (2022)
-%     t_axis = (0:48) / FS * 1000;
-% 
-%     for ch = 1:numel(sp)
-%         if isempty(sp{ch}), continue; end
-% 
-%         waveforms = sp{ch}(:, 2:end);   % exclude timestamps
-%         nSpikes = size(waveforms, 1);
-%         if nSpikes < 5
-%             sp_clipped{ch} = sp{ch};
-%             continue;
-%         end
-% 
-%         % --- Compute mean spike waveform for this channel ---
-%         mean_wave = mean(waveforms, 1);
-% 
-%         % --- Compute sum of squared differences (SSD) for each spike ---
-%         diff_mat = waveforms - mean_wave;      % deviation matrix
-%         SSD = sum(diff_mat.^2, 2);             % one SSD value per spike
-%         mean_SSD = mean(SSD);
-% 
-%         % --- Reject spikes whose SSD exceeds threshold ---
-%         valid_idx = SSD <= (SSD_threshold_factor * mean_SSD);
-% 
-%         % --- Apply filter ---
-%         sp_clipped{ch} = sp{ch}(valid_idx, :);
-% 
-%         % --- Summary ---
-%         n_total = size(sp{ch}, 1);
-%         n_keep  = sum(valid_idx);
-%         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
-%             ch, n_keep, n_total, 100*n_keep/n_total);
-%     end
-% 
-%     fprintf('=====================================\n\n');
-%     save([base_name '.sp_xia.mat'], 'sp_clipped');
-% else
-%     load([base_name '.sp_xia.mat']);
-% 
-%     % load([base_name '.sp.mat']);
-%     % sp_clipped = sp;
-% 
-%     % load([base_name '.sp_xia_FirstPulse.mat']);
-%     % sp_clipped = sp_seq;
-% end
-
 if Spike_filtering == 1
-    fprintf('\n===== Spike Amplitude + Zero-Crossing + SSD Filtering =====\n');
+    fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
 
-    SSD_threshold_factor = 16;   % from Allison-Walker (2022)
-    t_axis = (0:48) / FS * 1000; % waveform sample timing (ms)
+    SSD_threshold_factor = 16;  % from Allison-Walker (2022)
+    t_axis = (0:48) / FS * 1000;
 
     for ch = 1:numel(sp)
         if isempty(sp{ch}), continue; end
@@ -222,54 +173,29 @@ if Spike_filtering == 1
             continue;
         end
 
-        %% === 1. Amplitude-based filtering ===
-        max_vals = max(waveforms, [], 2);
-        min_vals = min(waveforms, [], 2);
-        in_range = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+        % --- Compute mean spike waveform for this channel ---
+        mean_wave = mean(waveforms, 1);
 
-        %% === 2. Zero-crossing check ===
-        has_positive = any(waveforms > 0, 2);
-        has_negative = any(waveforms < 0, 2);
-        crosses_zero = has_positive & has_negative;
+        % --- Compute sum of squared differences (SSD) for each spike ---
+        diff_mat = waveforms - mean_wave;      % deviation matrix
+        SSD = sum(diff_mat.^2, 2);             % one SSD value per spike
+        mean_SSD = mean(SSD);
 
-        %% === 3. Combine amplitude + zero-crossing filters ===
-        valid_idx_lvl1 = in_range & crosses_zero;
-        waveforms_lvl1 = waveforms(valid_idx_lvl1, :);
+        % --- Reject spikes whose SSD exceeds threshold ---
+        valid_idx = SSD <= (SSD_threshold_factor * mean_SSD);
 
-        %% === 4. SSD-based waveform consistency filter ===
-        if size(waveforms_lvl1, 1) > 5
-            % Compute mean waveform
-            mean_wave = mean(waveforms_lvl1, 1);
+        % --- Apply filter ---
+        sp_clipped{ch} = sp{ch}(valid_idx, :);
 
-            % Compute sum of squared differences for each spike
-            diff_mat = waveforms_lvl1 - mean_wave;
-            SSD = sum(diff_mat.^2, 2);
-            mean_SSD = mean(SSD);
-
-            % Keep spikes whose SSD ≤ 16×mean SSD
-            valid_idx_lvl2 = SSD <= (SSD_threshold_factor * mean_SSD);
-
-            % Combine both levels
-            final_valid = valid_idx_lvl1;
-            final_valid(valid_idx_lvl1) = valid_idx_lvl2;
-        else
-            % Too few spikes for SSD calculation
-            final_valid = valid_idx_lvl1;
-        end
-
-        %% === 5. Apply combined filters ===
-        sp_clipped{ch} = sp{ch}(final_valid, :);
-
-        %% === 6. Summary printout ===
+        % --- Summary ---
         n_total = size(sp{ch}, 1);
-        n_keep  = sum(final_valid);
+        n_keep  = sum(valid_idx);
         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
-            ch, n_keep, n_total, 100 * n_keep / n_total);
+            ch, n_keep, n_total, 100*n_keep/n_total);
     end
 
     fprintf('=====================================\n\n');
     save([base_name '.sp_xia.mat'], 'sp_clipped');
-
 else
     load([base_name '.sp_xia.mat']);
 
@@ -279,6 +205,80 @@ else
     % load([base_name '.sp_xia_FirstPulse.mat']);
     % sp_clipped = sp_seq;
 end
+
+% if Spike_filtering == 1
+%     fprintf('\n===== Spike Amplitude + Zero-Crossing + SSD Filtering =====\n');
+% 
+%     SSD_threshold_factor = 16;   % from Allison-Walker (2022)
+%     t_axis = (0:48) / FS * 1000; % waveform sample timing (ms)
+% 
+%     for ch = 1:numel(sp)
+%         if isempty(sp{ch}), continue; end
+% 
+%         waveforms = sp{ch}(:, 2:end);   % exclude timestamps
+%         nSpikes = size(waveforms, 1);
+%         if nSpikes < 5
+%             sp_clipped{ch} = sp{ch};
+%             continue;
+%         end
+% 
+%         %% === 1. Amplitude-based filtering ===
+%         max_vals = max(waveforms, [], 2);
+%         min_vals = min(waveforms, [], 2);
+%         in_range = (max_vals <= pos_limit) & (min_vals >= neg_limit);
+% 
+%         %% === 2. Zero-crossing check ===
+%         has_positive = any(waveforms > 0, 2);
+%         has_negative = any(waveforms < 0, 2);
+%         crosses_zero = has_positive & has_negative;
+% 
+%         %% === 3. Combine amplitude + zero-crossing filters ===
+%         valid_idx_lvl1 = in_range & crosses_zero;
+%         waveforms_lvl1 = waveforms(valid_idx_lvl1, :);
+% 
+%         %% === 4. SSD-based waveform consistency filter ===
+%         if size(waveforms_lvl1, 1) > 5
+%             % Compute mean waveform
+%             mean_wave = mean(waveforms_lvl1, 1);
+% 
+%             % Compute sum of squared differences for each spike
+%             diff_mat = waveforms_lvl1 - mean_wave;
+%             SSD = sum(diff_mat.^2, 2);
+%             mean_SSD = mean(SSD);
+% 
+%             % Keep spikes whose SSD ≤ 16×mean SSD
+%             valid_idx_lvl2 = SSD <= (SSD_threshold_factor * mean_SSD);
+% 
+%             % Combine both levels
+%             final_valid = valid_idx_lvl1;
+%             final_valid(valid_idx_lvl1) = valid_idx_lvl2;
+%         else
+%             % Too few spikes for SSD calculation
+%             final_valid = valid_idx_lvl1;
+%         end
+% 
+%         %% === 5. Apply combined filters ===
+%         sp_clipped{ch} = sp{ch}(final_valid, :);
+% 
+%         %% === 6. Summary printout ===
+%         n_total = size(sp{ch}, 1);
+%         n_keep  = sum(final_valid);
+%         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
+%             ch, n_keep, n_total, 100 * n_keep / n_total);
+%     end
+% 
+%     fprintf('=====================================\n\n');
+%     save([base_name '.sp_xia.mat'], 'sp_clipped');
+% 
+% else
+%     load([base_name '.sp_xia.mat']);
+% 
+%     % load([base_name '.sp.mat']);
+%     % sp_clipped = sp;
+% 
+%     % load([base_name '.sp_xia_FirstPulse.mat']);
+%     % sp_clipped = sp_seq;
+% end
 
 %% Raster Plot Parameters
 ras_win         = [-20 100];   % ms

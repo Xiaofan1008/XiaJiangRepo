@@ -2,19 +2,18 @@
 % Compute mean ± SEM firing rate per channel and per stimulation set
 % ============================================================
 % This code calculates baseline-corrected firing rates for every channel
-% and every stimulation set, stores mean, SEM, and raw trial values,
-% and saves the results into a .mat file.
-% The resulting .mat file can later be loaded and compared across
-% stimulation types (Single, Simultaneous, Sequential).
+% and stimulation set, performs a signed-rank test (p < 0.05) to detect
+% significantly responsive channels, prints the results (channel numbers),
+% and saves all outputs to a .mat file.
 % ============================================================
 
 clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
-%% Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim4';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms';
+% Choose Folder
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -31,13 +30,13 @@ if numel(underscores) >= 4
 else
     base_name = last_folder;
 end
-isSequential = contains(lower(data_folder), 'seq'); % if it is the sequential stimulation mode
+isSequential = contains(lower(data_folder), 'seq'); % detect sequential mode
 
 %% Parameters
 Spike_filtering = 0;
 FS = 30000; % Sampling rate
 baseline_window_ms = [-60, -5];
-response_window_ms = [2, 10];
+response_window_ms = [2, 15];
 pos_limit = 100;
 neg_limit = -100;
 
@@ -95,7 +94,7 @@ pulseTrain_all = cell2mat(StimParams(2:end,9));
 pulseTrain = pulseTrain_all(1:simultaneous_stim:end);
 [PulsePeriods,~,pulseIdx] = unique(pulseTrain(:));
 
-d = Depth_s(1); % channel depth mapping: 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(1); % channel depth mapping
 
 %% Spike Amplitude Filtering (optional)
 if Spike_filtering == 1
@@ -115,7 +114,7 @@ if Spike_filtering == 1
 else
     if isSequential
         load([base_name '.sp_xia_FirstPulse.mat']);
-        sp_clipped = sp_seq; 
+        sp_clipped = sp_seq;
     else
         load([base_name '.sp_xia.mat']);
     end
@@ -145,25 +144,46 @@ for ch = 1:nChn
     end
 end
 
-%% === Compute Mean ± SEM per Channel & Set === %%
+%% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test === %%
 FR_summary = struct;
+responsive_counts = zeros(1, nSets);
+responsive_channels = cell(1, nSets);
+
+fprintf('\nPerforming signed-rank test for responsiveness...\n');
+
 for s = 1:nSets
     stim_mask = (combClass_win == s);
     amps_this = trialAmps(stim_mask);
     [amps_unique,~,amp_idx] = unique(amps_this);
     nAmp = numel(amps_unique);
-    
+
     FR_summary(s).stimSet = s;
     FR_summary(s).amps = amps_unique;
     FR_summary(s).mean = nan(nChn,nAmp);
     FR_summary(s).sem  = nan(nChn,nAmp);
     FR_summary(s).raw  = cell(nChn,nAmp);
     FR_summary(s).stimCh = uniqueComb(s,uniqueComb(s,:)>0);
-    
+    FR_summary(s).pval  = nan(nChn,1);
+    FR_summary(s).sig   = false(nChn,1);
+
     for ch = 1:nChn
-        FR_thisCh = FR_corrected(ch,stim_mask);
+        FR_base = FR_baseline(ch, stim_mask);
+        FR_resp = FR_response(ch, stim_mask);
+        if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
+
+        % --- Wilcoxon signed-rank test (right-tailed) ---
+        try
+            p = signrank(FR_resp, FR_base, 'tail', 'right');
+        catch
+            p = NaN;
+        end
+        FR_summary(s).pval(ch) = p;
+        FR_summary(s).sig(ch)  = (p < 0.05);
+
+        % Compute mean ± SEM
         for i = 1:nAmp
-            vals = FR_thisCh(amp_idx==i);
+            vals = FR_corrected(ch, stim_mask);
+            vals = vals(amp_idx == i);
             vals = vals(~isnan(vals));
             if isempty(vals), continue; end
             FR_summary(s).mean(ch,i) = mean(vals);
@@ -171,9 +191,27 @@ for s = 1:nSets
             FR_summary(s).raw{ch,i}  = vals;
         end
     end
+
+    % --- Count and list responsive channels ---
+    responsive_idx = find(FR_summary(s).sig);
+    responsive_counts(s) = numel(responsive_idx);
+    responsive_channels{s} = responsive_idx;
+
+    if ~isempty(responsive_idx)
+        fprintf('Stim Set %d [Ch %s]: %d responsive channels (p<0.05)\n', ...
+            s, num2str(FR_summary(s).stimCh), responsive_counts(s));
+        fprintf('→ Responding channel numbers: %s\n', num2str(responsive_idx(:)'));
+    else
+        fprintf('Stim Set %d [Ch %s]: 0 responsive channels.\n', ...
+            s, num2str(FR_summary(s).stimCh));
+    end
 end
 
 %% === Save Results === %%
 save_name = sprintf('%s_FR_AllCh_AllSets.mat', base_name);
-save(fullfile(data_folder, save_name),'FR_summary','Amps','E_MAP','uniqueComb','combClass_win','-v7.3');
-fprintf('Firing rate summary saved to:\n%s\n', fullfile(data_folder, save_name));
+save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
+    'uniqueComb', 'combClass_win', 'responsive_counts', 'responsive_channels', '-v7.3');
+
+fprintf('\nFiring rate summary and test results saved to:\n%s\n', ...
+    fullfile(data_folder, save_name));
+fprintf('\nTotal responsive channels across all sets: %d\n', sum(responsive_counts));

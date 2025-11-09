@@ -6,7 +6,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %% Choose Folder
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2_251104_123934'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single5';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single4_251106_135231';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -26,7 +26,7 @@ else
 end
 
 %% Choice
-Spike_filtering =1;
+Spike_filtering = 1s;
 
 
 %% Pre Set
@@ -160,7 +160,7 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 if Spike_filtering == 1
     fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
 
-    SSD_threshold_factor = 16;  % from Allison-Walker (2022)
+    SSD_threshold_factor = 10;  % from Allison-Walker (2022)
     t_axis = (0:48) / FS * 1000;
 
     for ch = 1:numel(sp)
@@ -173,7 +173,7 @@ if Spike_filtering == 1
             continue;
         end
 
-        % --- Compute mean spike waveform for this channel ---
+        % --- Compute mean spike waveform ---
         mean_wave = mean(waveforms, 1);
 
         % --- Compute sum of squared differences (SSD) for each spike ---

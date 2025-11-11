@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim7'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2_251104_122817';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -284,8 +284,8 @@ end
 ras_win         = [-20 100];   % ms
 bin_ms_raster   = 2;           % bin size
 smooth_ms       = 3;           % smoothing window
-raster_chn_start = 1;
-raster_chn_end = 32; %nChn
+raster_chn_start = 15;
+raster_chn_end = 15; %nChn
 
 
 %% Raster Plot 

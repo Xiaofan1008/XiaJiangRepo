@@ -1,23 +1,18 @@
 % ============================================================
 % Compute mean ± SEM firing rate per channel and per stimulation set
-% ============================================================
+%
 % This code calculates baseline-corrected firing rates for every channel
-% and stimulation set, performs a signed-rank test (p < 0.05) to detect
+% and stimulation set, performs a permutation test (p < 0.05) to detect
 % significantly responsive channels, prints the results (channel numbers),
 % and saves all outputs to a .mat file.
 % ============================================================
 
 clear all
-addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+% addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
-% Choose Folder
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
-
-if ~isfolder(data_folder)
-    error('The specified folder does not exist. Please check the path.');
-end
+%% === Folder Selection ===
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';  % change as needed
+assert(isfolder(data_folder), 'Folder not found!');
 cd(data_folder);
 fprintf('Changed directory to:\n%s\n', data_folder);
 
@@ -32,15 +27,16 @@ else
 end
 isSequential = contains(lower(data_folder), 'seq'); % detect sequential mode
 
-%% Parameters
+%% === Parameters ===
 Spike_filtering = 0;
 FS = 30000; % Sampling rate
 baseline_window_ms = [-60, -5];
 response_window_ms = [2, 15];
 pos_limit = 100;
 neg_limit = -100;
+nPerm = 5000;  % number of permutations for the permutation test
 
-%% Load spike data
+%% === Load Spike Data ===
 sp_files = dir(fullfile(data_folder, '*.sp.mat'));
 assert(~isempty(sp_files), 'No .sp.mat file found.');
 sp_filename = fullfile(data_folder, sp_files(1).name);
@@ -55,7 +51,7 @@ if isempty(dir(fullfile(data_folder, '*.trig.dat')))
 end
 trig = loadTrig(0);
 
-%% Load StimParams and decode sets
+%% === Load StimParams and Decode Sets ===
 fileDIR = dir(fullfile(data_folder, '*_exp_datafile_*.mat'));
 assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat found.');
 S = load(fullfile(data_folder, fileDIR(1).name), ...
@@ -65,13 +61,14 @@ simultaneous_stim = S.simultaneous_stim;
 E_MAP = S.E_MAP;
 n_Trials = S.n_Trials;
 
-% Decode trial structure
+% Trial amplitudes
 trialAmps_all = cell2mat(StimParams(2:end,16));
 trialAmps = trialAmps_all(1:simultaneous_stim:end);
 [Amps,~,ampIdx] = unique(trialAmps(:));
 if any(Amps==-1), Amps(Amps==-1)=0; end
 n_AMP = numel(Amps);
 
+% Stimulation set decoding
 E_NAME = E_MAP(2:end);
 stimNames = StimParams(2:end,1);
 [~,idx_all] = ismember(stimNames,E_NAME);
@@ -90,13 +87,14 @@ end
 combClass_win = combClass;
 nSets = size(uniqueComb,1);
 
+% Pulse train period
 pulseTrain_all = cell2mat(StimParams(2:end,9));
 pulseTrain = pulseTrain_all(1:simultaneous_stim:end);
 [PulsePeriods,~,pulseIdx] = unique(pulseTrain(:));
 
-d = Depth_s(1); % channel depth mapping
+d = Depth_s(1);
 
-%% Spike Amplitude Filtering (optional)
+%% === Load Filtered Spikes ===
 if Spike_filtering == 1
     fprintf('\nApplying spike amplitude filtering...\n');
     for ch = 1:numel(sp)
@@ -120,9 +118,8 @@ else
     end
 end
 
-%% === Compute Firing Rate for Each Channel & Set === %%
-fprintf('\nComputing firing rates for all channels and all stim sets...\n');
-
+%% === Compute Firing Rates ===
+fprintf('\nComputing firing rates for all channels and stim sets...\n');
 nChn = numel(sp_clipped);
 nTrials = length(trialAmps);
 FR_baseline = nan(nChn,nTrials);
@@ -144,88 +141,12 @@ for ch = 1:nChn
     end
 end
 
-%% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test === %%
-% FR_summary = struct;
-% responsive_counts = zeros(1, nSets);
-% responsive_channels = cell(1, nSets);
-% 
-% fprintf('\nPerforming signed-rank test for responsiveness...\n');
-% 
-% for s = 1:nSets
-%     stim_mask = (combClass_win == s);
-%     amps_this = trialAmps(stim_mask);
-%     [amps_unique,~,amp_idx] = unique(amps_this);
-%     nAmp = numel(amps_unique);
-% 
-%     FR_summary(s).stimSet = s;
-%     FR_summary(s).amps = amps_unique;
-%     FR_summary(s).mean = nan(nChn,nAmp);
-%     FR_summary(s).sem  = nan(nChn,nAmp);
-%     FR_summary(s).raw  = cell(nChn,nAmp);
-%     FR_summary(s).stimCh = uniqueComb(s,uniqueComb(s,:)>0);
-%     FR_summary(s).pval  = nan(nChn,1);
-%     FR_summary(s).sig   = false(nChn,1);
-% 
-%     for ch = 1:nChn
-%         FR_base = FR_baseline(ch, stim_mask);
-%         FR_resp = FR_response(ch, stim_mask);
-%         if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
-% 
-%         % --- Wilcoxon signed-rank test (right-tailed) ---
-%         try
-%             p = signrank(FR_resp, FR_base, 'tail', 'right');
-%         catch
-%             p = NaN;
-%         end
-%         FR_summary(s).pval(ch) = p;
-%         FR_summary(s).sig(ch)  = (p < 0.05);
-% 
-%         % Compute mean ± SEM
-%         for i = 1:nAmp
-%             vals = FR_corrected(ch, stim_mask);
-%             vals = vals(amp_idx == i);
-%             vals = vals(~isnan(vals));
-%             if isempty(vals), continue; end
-%             FR_summary(s).mean(ch,i) = mean(vals);
-%             FR_summary(s).sem(ch,i)  = std(vals)/sqrt(numel(vals));
-%             FR_summary(s).raw{ch,i}  = vals;
-%         end
-%     end
-% 
-%     % --- Count and list responsive channels ---
-%     responsive_idx = find(FR_summary(s).sig);
-%     responsive_counts(s) = numel(responsive_idx);
-%     responsive_channels{s} = responsive_idx;
-% 
-%     if ~isempty(responsive_idx)
-%         fprintf('Stim Set %d [Ch %s]: %d responsive channels (p<0.05)\n', ...
-%             s, num2str(FR_summary(s).stimCh), responsive_counts(s));
-%         fprintf('→ Responding channel numbers: %s\n', num2str(responsive_idx(:)'));
-%     else
-%         fprintf('Stim Set %d [Ch %s]: 0 responsive channels.\n', ...
-%             s, num2str(FR_summary(s).stimCh));
-%     end
-% end
-% 
-% %% === Save Results === %%
-% save_name = sprintf('%s_FR_AllCh_AllSets.mat', base_name);
-% save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
-%     'uniqueComb', 'combClass_win', 'responsive_counts', 'responsive_channels', '-v7.3');
-% 
-% fprintf('\nFiring rate summary and test results saved to:\n%s\n', ...
-%     fullfile(data_folder, save_name));
-% fprintf('\nTotal responsive channels across all sets: %d\n', sum(responsive_counts));
-
-
-%% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test & Response freaction threshold === %%
+%% === Permutation Test for Responsiveness ===
 FR_summary = struct;
 responsive_counts = zeros(1, nSets);
 responsive_channels = cell(1, nSets);
 
-response_fraction_thresh = 0.1; 
-
-fprintf('\nPerforming signed-rank test with response fraction check (%.0f%% threshold)...\n', ...
-    response_fraction_thresh*100);
+fprintf('\nPerforming permutation test for responsiveness (nPerm = %d)...\n', nPerm);
 
 for s = 1:nSets
     stim_mask = (combClass_win == s);
@@ -241,43 +162,33 @@ for s = 1:nSets
     FR_summary(s).stimCh = uniqueComb(s,uniqueComb(s,:)>0);
     FR_summary(s).pval  = nan(nChn,1);
     FR_summary(s).sig   = false(nChn,1);
-    FR_summary(s).respFrac = nan(nChn,1); % store response fraction
 
     for ch = 1:nChn
         FR_base = FR_baseline(ch, stim_mask);
         FR_resp = FR_response(ch, stim_mask);
-
         if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
-        valid_idx = ~isnan(FR_base) & ~isnan(FR_resp);
-        FR_base = FR_base(valid_idx);
-        FR_resp = FR_resp(valid_idx);
 
-        % --- Step 1: Compute response fraction ---
-        nTrials_valid = numel(FR_base);
-        if nTrials_valid < 3
-            continue; % skip channels with too few trials
-        end
-        n_higher = sum(FR_resp > FR_base);
-        resp_fraction = n_higher / nTrials_valid;
-        FR_summary(s).respFrac(ch) = resp_fraction;
+        % --- Permutation test ---
+        diff_obs = mean(FR_resp - FR_base, 'omitnan');
+        valid_idx = ~isnan(FR_resp) & ~isnan(FR_base);
+        FR_diff = FR_resp(valid_idx) - FR_base(valid_idx);
 
-        % --- Step 2: Apply fraction threshold ---
-        if resp_fraction < response_fraction_thresh
-            FR_summary(s).pval(ch) = NaN;
-            FR_summary(s).sig(ch)  = false;
-            continue;
+        if numel(FR_diff) < 5
+            p = NaN;  % too few trials
+        else
+            nTrials_valid = numel(FR_diff);
+            null_diffs = zeros(1,nPerm);
+            for p_i = 1:nPerm
+                signs = (rand(1,nTrials_valid) > 0.5)*2 - 1; % ±1 random flip
+                null_diffs(p_i) = mean(signs .* FR_diff);
+            end
+            p = sum(null_diffs >= diff_obs) / nPerm; % one-tailed test
         end
 
-        % --- Step 3: Wilcoxon signed-rank test (right-tailed) ---
-        try
-            p = signrank(FR_resp, FR_base, 'tail', 'right');
-        catch
-            p = NaN;
-        end
         FR_summary(s).pval(ch) = p;
         FR_summary(s).sig(ch)  = (p < 0.05);
 
-        % --- Step 4: Compute mean ± SEM per amplitude ---
+        % --- Mean ± SEM per amplitude ---
         for i = 1:nAmp
             vals = FR_corrected(ch, stim_mask);
             vals = vals(amp_idx == i);
@@ -289,14 +200,14 @@ for s = 1:nSets
         end
     end
 
-    % --- Step 5: Report responsive channels ---
+    % Count responsive channels
     responsive_idx = find(FR_summary(s).sig);
     responsive_counts(s) = numel(responsive_idx);
     responsive_channels{s} = responsive_idx;
 
     if ~isempty(responsive_idx)
-        fprintf('Stim Set %d [Ch %s]: %d responsive channels (p<0.05, ≥%.0f%% resp trials)\n', ...
-            s, num2str(FR_summary(s).stimCh), responsive_counts(s), response_fraction_thresh*100);
+        fprintf('Stim Set %d [Ch %s]: %d responsive channels (p<0.05)\n', ...
+            s, num2str(FR_summary(s).stimCh), responsive_counts(s));
         fprintf('→ Responding channels: %s\n', num2str(responsive_idx(:)'));
     else
         fprintf('Stim Set %d [Ch %s]: 0 responsive channels.\n', ...
@@ -304,11 +215,10 @@ for s = 1:nSets
     end
 end
 
-%% === Save Results === %%
-% save_name = sprintf('%s_FR_AllCh_AllSets_FRcheck.mat', base_name);
+%% === Save Results ===
+% save_name = sprintf('%s_FR_AllCh_AllSets_permTest.mat', base_name);
 % save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
 %     'uniqueComb', 'combClass_win', 'responsive_counts', 'responsive_channels', '-v7.3');
-
-fprintf('\nResults saved to:\n%s\n', fullfile(data_folder, save_name));
-fprintf('\nTotal responsive channels (≥%.0f%% rule): %d\n', ...
-    response_fraction_thresh*100, sum(responsive_counts));
+% 
+% fprintf('\nPermutation test results saved to:\n%s\n', fullfile(data_folder, save_name));
+% fprintf('\nTotal responsive channels: %d\n', sum(responsive_counts));

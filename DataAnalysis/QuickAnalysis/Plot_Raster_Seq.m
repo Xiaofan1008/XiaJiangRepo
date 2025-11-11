@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq7_5ms';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -57,7 +57,7 @@ pos_limit = 100;    % upper bound (µV)
 neg_limit = -100;  % lower bound (µV)
 
 baseline_window_ms = [-60, -5];        % Baseline window (ms)
-response_window_ms = [2, 15];          % Response window (ms)
+response_window_ms = [2, 25];          % Response window (ms)
 
 %% Load StimParams and decode amplitudes, stimulation sets, ISI
 fileDIR = dir(fullfile(data_folder, '*_exp_datafile_*.mat'));
@@ -280,6 +280,7 @@ end
 %     sp_clipped = sp_seq;
 % end
 
+
 %% Raster Plot Parameters
 ras_win         = [-20 100];   % ms
 bin_ms_raster   = 2;           % bin size
@@ -287,6 +288,10 @@ smooth_ms       = 3;           % smoothing window
 raster_chn_start = 1;
 raster_chn_end = 32; %nChn
 
+%% === Initialize structure to store first-spike times ===
+firstSpikeTimes = cell(raster_chn_end, 1); % each cell: vector of first-spike times per trial (ms)
+fprintf('\n===== Computing First Spike Times per Trial =====\n');
+post_spike_window_ms = [5,8];
 
 %% Raster Plot 
  edges = ras_win(1):bin_ms_raster:ras_win(2);

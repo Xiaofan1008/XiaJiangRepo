@@ -1,20 +1,26 @@
 % ============================================================
 % Compute mean ± SEM firing rate per channel and per stimulation set
-% ============================================================
+% 
 % This code calculates baseline-corrected firing rates for every channel
 % and stimulation set, performs a signed-rank test (p < 0.05) to detect
 % significantly responsive channels, prints the results (channel numbers),
 % and saves all outputs to a .mat file.
 % ============================================================
 
-clear all
+clear
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
+%% ========= Enter Parameters ==========
 % Choose Folder
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single4';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
 
+selectedAmps = [1:5];
+response_fraction_thresh = 0.15;  
+if isempty(selectedAmps)
+    error('No amplitude entered. Please specify at least one.');
+end
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
 end
@@ -217,20 +223,20 @@ end
 % fprintf('\nTotal responsive channels across all sets: %d\n', sum(responsive_counts));
 
 
-%% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test & Response freaction threshold === %%
+%% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test (Amplitude-Specific) === %%
 FR_summary = struct;
 responsive_counts = zeros(1, nSets);
 responsive_channels = cell(1, nSets);
 
-response_fraction_thresh = 0.1; 
-
-fprintf('\nPerforming signed-rank test with response fraction check (%.0f%% threshold)...\n', ...
+fprintf('\nPerforming signed-rank test with response fraction check (≥%.0f%% trials)...\n', ...
     response_fraction_thresh*100);
 
+fprintf('\nAvailable amplitudes: %s µA\n', num2str(unique(trialAmps)));
+
 for s = 1:nSets
-    stim_mask = (combClass_win == s);
-    amps_this = trialAmps(stim_mask);
-    [amps_unique,~,amp_idx] = unique(amps_this);
+    stim_mask_all = (combClass_win == s);
+    amps_this_all = trialAmps(stim_mask_all);
+    [amps_unique,~,amp_idx_all] = unique(amps_this_all);
     nAmp = numel(amps_unique);
 
     FR_summary(s).stimSet = s;
@@ -239,76 +245,82 @@ for s = 1:nSets
     FR_summary(s).sem  = nan(nChn,nAmp);
     FR_summary(s).raw  = cell(nChn,nAmp);
     FR_summary(s).stimCh = uniqueComb(s,uniqueComb(s,:)>0);
-    FR_summary(s).pval  = nan(nChn,1);
-    FR_summary(s).sig   = false(nChn,1);
-    FR_summary(s).respFrac = nan(nChn,1); % store response fraction
+    FR_summary(s).pval  = nan(nChn,nAmp);
+    FR_summary(s).sig   = false(nChn,nAmp);
+    FR_summary(s).respFrac = nan(nChn,nAmp);
 
-    for ch = 1:nChn
-        FR_base = FR_baseline(ch, stim_mask);
-        FR_resp = FR_response(ch, stim_mask);
-
-        if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
-        valid_idx = ~isnan(FR_base) & ~isnan(FR_resp);
-        FR_base = FR_base(valid_idx);
-        FR_resp = FR_resp(valid_idx);
-
-        % --- Step 1: Compute response fraction ---
-        nTrials_valid = numel(FR_base);
-        if nTrials_valid < 3
-            continue; % skip channels with too few trials
-        end
-        n_higher = sum(FR_resp > FR_base);
-        resp_fraction = n_higher / nTrials_valid;
-        FR_summary(s).respFrac(ch) = resp_fraction;
-
-        % --- Step 2: Apply fraction threshold ---
-        if resp_fraction < response_fraction_thresh
-            FR_summary(s).pval(ch) = NaN;
-            FR_summary(s).sig(ch)  = false;
-            continue;
+    for amp_i = 1:nAmp
+        amp_val = amps_unique(amp_i);
+        if ~ismember(amp_val, selectedAmps)
+            continue; % skip amplitudes not selected
         end
 
-        % --- Step 3: Wilcoxon signed-rank test (right-tailed) ---
-        try
-            p = signrank(FR_resp, FR_base, 'tail', 'right');
-        catch
-            p = NaN;
-        end
-        FR_summary(s).pval(ch) = p;
-        FR_summary(s).sig(ch)  = (p < 0.05);
+        stim_mask = stim_mask_all & (trialAmps == amp_val);
+        if sum(stim_mask) < 3, continue; end  % skip amplitudes with too few trials
 
-        % --- Step 4: Compute mean ± SEM per amplitude ---
-        for i = 1:nAmp
+        fprintf('\n--- Stim Set %d [Ch %s] | %.0f µA ---\n', ...
+            s, num2str(FR_summary(s).stimCh), amp_val);
+
+        for ch = 1:nChn
+            FR_base = FR_baseline(ch, stim_mask);
+            FR_resp = FR_response(ch, stim_mask);
+            if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
+            valid_idx = ~isnan(FR_base) & ~isnan(FR_resp);
+            FR_base = FR_base(valid_idx);
+            FR_resp = FR_resp(valid_idx);
+
+            % --- Step 1: Compute response fraction ---
+            nTrials_valid = numel(FR_base);
+            if nTrials_valid < 3, continue; end
+            n_higher = sum(FR_resp > FR_base);
+            resp_fraction = n_higher / nTrials_valid;
+            FR_summary(s).respFrac(ch,amp_i) = resp_fraction;
+
+            % --- Step 2: Compute firing rate mean ± SEM (always computed) ---
             vals = FR_corrected(ch, stim_mask);
-            vals = vals(amp_idx == i);
             vals = vals(~isnan(vals));
-            if isempty(vals), continue; end
-            FR_summary(s).mean(ch,i) = mean(vals);
-            FR_summary(s).sem(ch,i)  = std(vals)/sqrt(numel(vals));
-            FR_summary(s).raw{ch,i}  = vals;
+            if ~isempty(vals)
+                FR_summary(s).mean(ch,amp_i) = mean(vals);
+                FR_summary(s).sem(ch,amp_i)  = std(vals)/sqrt(numel(vals));
+                FR_summary(s).raw{ch,amp_i}  = vals;
+            end
+
+            % --- Step 3: Skip significance test if response fraction too low ---
+            if resp_fraction < response_fraction_thresh
+                FR_summary(s).pval(ch,amp_i) = NaN;
+                FR_summary(s).sig(ch,amp_i)  = false;
+                continue;
+            end
+
+            % --- Step 4: Signed-rank test (right-tailed) ---
+            try
+                p = signrank(FR_resp, FR_base, 'tail', 'right');
+            catch
+                p = NaN;
+            end
+            FR_summary(s).pval(ch,amp_i) = p;
+            FR_summary(s).sig(ch,amp_i)  = (p < 0.05);
         end
-    end
 
-    % --- Step 5: Report responsive channels ---
-    responsive_idx = find(FR_summary(s).sig);
-    responsive_counts(s) = numel(responsive_idx);
-    responsive_channels{s} = responsive_idx;
+        % --- Step 5: Report significant channels for this amplitude ---
+        responsive_idx = find(FR_summary(s).sig(:,amp_i));
+        responsive_counts(s) = responsive_counts(s) + numel(responsive_idx);
+        responsive_channels{s, amp_i} = responsive_idx;
 
-    if ~isempty(responsive_idx)
-        fprintf('Stim Set %d [Ch %s]: %d responsive channels (p<0.05, ≥%.0f%% resp trials)\n', ...
-            s, num2str(FR_summary(s).stimCh), responsive_counts(s), response_fraction_thresh*100);
-        fprintf('→ Responding channels: %s\n', num2str(responsive_idx(:)'));
-    else
-        fprintf('Stim Set %d [Ch %s]: 0 responsive channels.\n', ...
-            s, num2str(FR_summary(s).stimCh));
+        if ~isempty(responsive_idx)
+            fprintf('→ %.0f µA: %d responsive channels (≥%.0f%% resp trials)\n', ...
+                amp_val, numel(responsive_idx), response_fraction_thresh*100);
+            fprintf('   Channels: %s\n', num2str(responsive_idx(:)'));
+        else
+            fprintf('→ %.0f µA: 0 responsive channels.\n', amp_val);
+        end
     end
 end
 
-%% === Save Results === %%
-% save_name = sprintf('%s_FR_AllCh_AllSets_FRcheck.mat', base_name);
-% save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
-%     'uniqueComb', 'combClass_win', 'responsive_counts', 'responsive_channels', '-v7.3');
+%% === Save Results ===
+save_name = sprintf('%s_FR_SigCh_ByAmp.mat', base_name);
+save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
+    'uniqueComb', 'combClass_win', 'responsive_channels', 'selectedAmps', ...
+    '-v7.3');
 
 fprintf('\nResults saved to:\n%s\n', fullfile(data_folder, save_name));
-fprintf('\nTotal responsive channels (≥%.0f%% rule): %d\n', ...
-    response_fraction_thresh*100, sum(responsive_counts));

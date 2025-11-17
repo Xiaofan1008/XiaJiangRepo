@@ -15,10 +15,12 @@ width_max_ms = 0.4;
 spike_chn_start = 1;
 spike_chn_end = 32; %nChn
 
+selectedAmps = [5]; 
+
 %% Choose Folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim5'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single7';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single5';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -294,21 +296,29 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters
-win_ms = 300;         % total time window after each trigger (ms)
-bin_ms = 5;          % bin size (ms)
+% win_ms = 300;         % total time window after each trigger (ms)
+% bin_ms = 5;          % bin size (ms)
+
+pre_ms  = 30;     % time BEFORE trigger to include (ms)
+post_ms = 95;    % time AFTER trigger to include (ms)
+
+bin_ms = 5;       % bin size (unchanged)
 % nBins  = win_ms / bin_ms;
-nBins  = 100 / bin_ms;
-nChn   = numel(sp);
+win_ms   = pre_ms + post_ms; % total window width
+
+% New bin edges spanning BEFORE & AFTER trigger
+edges = -pre_ms : bin_ms : post_ms;
+nBins = numel(edges) - 1;
 amp_threshold = 100;  % max allowed amplitude (µV)
 
-layout_row = 4; % plot time window layout in rows
+layout_row = 5; % plot time window layout in rows
 layout_col = 5; % plot time window layout in columns
 
+
 %% Spike plotting loop
-for ich = spike_chn_start:spike_chn_end %1:nChn
-    ch = d(ich); % channel map to Intan
+for ich = spike_chn_start:spike_chn_end
+    ch = d(ich);
     if isempty(sp_clipped{ch}), continue; end
-    % fprintf('Processing Channel %d...\n', ich);
 
     % Spike data
     sp_times = sp_clipped{ch}(:,1);
@@ -317,57 +327,81 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
     sp_times = sp_times(valid_idx);
     sp_wave  = sp_wave(valid_idx,:);
     if isempty(sp_times), continue; end
-
-    t_wave = (0:size(sp_wave,2)-1) / FS * 1000;
+    t_wave   = (0:size(sp_wave,2)-1) / FS * 1000;
 
     for s = 1:nSets
-        set_id = s;
-        trial_mask = (combClass_win == set_id);
-        if ~any(trial_mask), continue; end
-
+        trial_mask = (combClass_win == s);
         trial_ids = find(trial_mask);
-        all_spikes_by_bin_amp = cell(nBins, n_AMP);
+        if isempty(trial_ids), continue; end
 
+        %% Select amplitudes
+        ampValList = Amps(:)';
+        ampIndexMap = containers.Map(ampValList, 1:n_AMP);
+
+        valid_amp_idx = [];
+        for a = selectedAmps
+            if isKey(ampIndexMap, a)
+                valid_amp_idx(end+1) = ampIndexMap(a);
+            end
+        end
+        if isempty(valid_amp_idx), continue; end
+
+        %% Allocate bins (REFINED)
+        all_spikes_by_bin_amp = cell(nBins, numel(valid_amp_idx));
+
+        %% --- Loop through trials and collect spikes ---
         for idx = 1:length(trial_ids)
             tr = trial_ids(idx);
+            amp_id_all = ampIdx(tr);
+            if ~ismember(amp_id_all, valid_amp_idx)
+                continue
+            end
+
+            amp_id_local = find(valid_amp_idx == amp_id_all);
+
             t0_ms = trig(tr) / FS * 1000;
-            amp_id = ampIdx(tr);
-            spk_mask = sp_times >= t0_ms & sp_times < (t0_ms + win_ms);
+
+            % New window: include pre-trigger + post-trigger
+            spk_mask = sp_times >= (t0_ms - pre_ms) & sp_times <= (t0_ms + post_ms);
             if ~any(spk_mask), continue; end
 
-            rel_times = sp_times(spk_mask) - t0_ms;
+            rel_times = sp_times(spk_mask) - t0_ms;    % now includes negative times
             waveforms = sp_wave(spk_mask,:);
 
-            for j = 1:length(rel_times)
-                bin_idx = floor(rel_times(j) / bin_ms) + 1;
-                if bin_idx >= 1 && bin_idx <= nBins
-                    all_spikes_by_bin_amp{bin_idx, amp_id}(end+1,:) = waveforms(j,:);
+            % Assign to bins (with negative times allowed)
+            bin_ids = discretize(rel_times, edges);
+
+            for j = 1:numel(rel_times)
+                b = bin_ids(j);
+                if ~isnan(b)
+                    all_spikes_by_bin_amp{b, amp_id_local}(end+1,:) = waveforms(j,:);
                 end
             end
         end
 
-        % Determine Y-limit
+        %% Determine y-limits
         all_waves = cell2mat(all_spikes_by_bin_amp(:));
         if isempty(all_waves), continue; end
-        y_max = max(abs(all_waves(:)));
-        y_lim = [-1 1] * ceil(y_max/50)*50;
+        y_lim = [-1 1] * ceil(max(abs(all_waves(:))) / 50) * 50;
 
-        % Plot
-        stimIdx = uniqueComb(set_id,:); stimIdx = stimIdx(stimIdx > 0);
-        stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
-        figure('Name', sprintf('Ch %d | StimSet %d (%s)', ich, set_id, stimLabel), ...
-               'Color','w','Position', [100 100 1400 800]);        
-        % tiledlayout(4, 5, 'Padding','compact', 'TileSpacing','compact');
-        tiledlayout(layout_row, layout_col, 'Padding','compact', 'TileSpacing','compact');
+        %% --- PLOT ---
+        stimIdx = uniqueComb(s,:); stimIdx = stimIdx(stimIdx > 0);
+        stimLabel = strjoin(arrayfun(@(x)sprintf('Ch%d',x), stimIdx,'UniformOutput',false), ', ');
 
+        figure('Name', sprintf('Ch %d | StimSet %d (%s)', ich, s, stimLabel), ...
+               'Color','w','Position',[100 100 1400 800]);
+        tiledlayout(layout_row, layout_col, 'Padding','compact','TileSpacing','compact');
 
         for b = 1:nBins
             nexttile; hold on;
-            for a = 1:n_AMP
-                this_bin = all_spikes_by_bin_amp{b,a};
+
+            total_spikes = 0;
+            for a_local = 1:numel(valid_amp_idx)
+                amp_global_id = valid_amp_idx(a_local);
+                this_bin = all_spikes_by_bin_amp{b, a_local};
                 if isempty(this_bin), continue; end
 
-                % Align by min
+                % Align by minimum
                 aligned_waves = zeros(size(this_bin));
                 for k = 1:size(this_bin,1)
                     [~, min_idx] = min(this_bin(k,:));
@@ -375,28 +409,21 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
                     aligned_waves(k,:) = circshift(this_bin(k,:), shift, 2);
                 end
 
-                plot(t_wave, aligned_waves', 'Color', [cmap(a,:) 0.3]);
+                plot(t_wave, aligned_waves', 'Color', [cmap(amp_global_id,:) 0.4]);
+                total_spikes = total_spikes + size(this_bin,1);
             end
 
-            % Count total spikes in this bin (across all amplitudes)
-            spike_count = 0;
-            for a = 1:n_AMP
-                spike_count = spike_count + size(all_spikes_by_bin_amp{b,a}, 1);
-            end
-            
-            % Plot title includes spike count
-            title(sprintf('%d–%d ms (%d spikes)', (b-1)*bin_ms, b*bin_ms, spike_count));
+            title(sprintf('%d–%d ms (%d spikes)', edges(b), edges(b+1), total_spikes));
             xlabel('Time (ms)');
             ylabel('Voltage (µV)');
             ylim(y_lim);
-            yticks(linspace(y_lim(1), y_lim(2), 3));
-            xticks(round(linspace(t_wave(1), t_wave(end), 3)));
-            axis square; grid on;
+            axis square;
+            box off;
         end
 
-        % Legend (global, separate)
-        legend_entries = arrayfun(@(a) sprintf('%g µA', Amps(a)), 1:n_AMP, 'UniformOutput', false);
-        legend_colors = arrayfun(@(a) plot(nan,nan,'-', 'Color', cmap(a,:), 'LineWidth',1.5), 1:n_AMP);
-        legend(legend_colors, legend_entries, 'Location','northeastoutside');
+        %% Legend
+        legend_handles = arrayfun(@(id) plot(nan,nan,'-','Color',cmap(id,:),'LineWidth',2), valid_amp_idx);
+        legend_labels  = arrayfun(@(id) sprintf('%g µA', Amps(id)), valid_amp_idx,'UniformOutput',false);
+        legend(legend_handles, legend_labels, 'Location','northeastoutside');
     end
 end

@@ -12,12 +12,12 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ========= Enter Parameters ==========
 % Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single4';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single2_251106_114943';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2_251106_120305';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms_251106_120811';
 
-selectedAmps = [1:5];
-response_fraction_thresh = 0.15;  
+selectedAmps = [4,5];
+response_fraction_thresh = 0.4;  
 if isempty(selectedAmps)
     error('No amplitude entered. Please specify at least one.');
 end
@@ -224,11 +224,126 @@ end
 
 
 %% === Compute Mean ± SEM per Channel & Set, Perform Signed-Rank Test (Amplitude-Specific) === %%
+% FR_summary = struct;
+% responsive_counts = zeros(1, nSets);
+% responsive_channels = cell(1, nSets);
+% 
+% fprintf('\nPerforming signed-rank test with response fraction check (≥%.0f%% trials)...\n', ...
+%     response_fraction_thresh*100);
+% 
+% fprintf('\nAvailable amplitudes: %s µA\n', num2str(unique(trialAmps)));
+% 
+% for s = 1:nSets
+%     stim_mask_all = (combClass_win == s);
+%     amps_this_all = trialAmps(stim_mask_all);
+%     [amps_unique,~,amp_idx_all] = unique(amps_this_all);
+%     nAmp = numel(amps_unique);
+% 
+%     FR_summary(s).stimSet = s;
+%     FR_summary(s).amps = amps_unique;
+%     FR_summary(s).mean = nan(nChn,nAmp);
+%     FR_summary(s).sem  = nan(nChn,nAmp);
+%     FR_summary(s).raw  = cell(nChn,nAmp);
+%     FR_summary(s).stimCh = uniqueComb(s,uniqueComb(s,:)>0);
+%     FR_summary(s).pval  = nan(nChn,nAmp);
+%     FR_summary(s).sig   = false(nChn,nAmp);
+%     FR_summary(s).respFrac = nan(nChn,nAmp);
+% 
+%     for amp_i = 1:nAmp
+%         amp_val = amps_unique(amp_i);
+%         if ~ismember(amp_val, selectedAmps)
+%             continue; % skip amplitudes not selected
+%         end
+% 
+%         stim_mask = stim_mask_all & (trialAmps == amp_val);
+%         if sum(stim_mask) < 3, continue; end  % skip amplitudes with too few trials
+% 
+%         fprintf('\n--- Stim Set %d [Ch %s] | %.0f µA ---\n', ...
+%             s, num2str(FR_summary(s).stimCh), amp_val);
+% 
+%         for ch = 1:nChn
+%             FR_base = FR_baseline(ch, stim_mask);
+%             FR_resp = FR_response(ch, stim_mask);
+%             if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
+%             valid_idx = ~isnan(FR_base) & ~isnan(FR_resp);
+%             FR_base = FR_base(valid_idx);
+%             FR_resp = FR_resp(valid_idx);
+% 
+%             % --- Step 1: Compute response fraction ---
+%             nTrials_valid = numel(FR_base);
+%             if nTrials_valid < 3, continue; end
+%             n_higher = sum(FR_resp > FR_base);
+%             resp_fraction = n_higher / nTrials_valid;
+%             FR_summary(s).respFrac(ch,amp_i) = resp_fraction;
+% 
+%             % --- Step 2: Compute firing rate mean ± SEM (always computed) ---
+%             vals = FR_corrected(ch, stim_mask);
+%             vals = vals(~isnan(vals));
+%             if ~isempty(vals)
+%                 FR_summary(s).mean(ch,amp_i) = mean(vals);
+%                 FR_summary(s).sem(ch,amp_i)  = std(vals)/sqrt(numel(vals));
+%                 FR_summary(s).raw{ch,amp_i}  = vals;
+%             end
+% 
+%             % --- Step 3: Skip significance test if response fraction too low ---
+%             if resp_fraction < response_fraction_thresh
+%                 FR_summary(s).pval(ch,amp_i) = NaN;
+%                 FR_summary(s).sig(ch,amp_i)  = false;
+%                 continue;
+%             end
+% 
+%             % --- Step 4: Signed-rank test (right-tailed) ---
+%             try
+%                 p = signrank(FR_resp, FR_base, 'tail', 'right');
+%             catch
+%                 p = NaN;
+%             end
+%             FR_summary(s).pval(ch,amp_i) = p;
+%             FR_summary(s).sig(ch,amp_i)  = (p < 0.05);
+% 
+% 
+%             % --- ZERO-AWARE SIGN TEST ---
+%             % diffvals = FR_resp - FR_base;
+%             % 
+%             % n_pos  = sum(diffvals > 0);
+%             % n_neg  = sum(diffvals < 0);
+%             % n_zero = sum(diffvals == 0);
+%             % 
+%             % N = n_pos + n_neg + n_zero;
+%             % 
+%             % % If all equal, no responsiveness
+%             % if N == 0 || n_pos == 0
+%             %     p = 1;
+%             % else
+%             %     p = 1 - binocdf(n_pos - 1, N, 0.5);
+%             % end
+%             % 
+%             % FR_summary(s).pval(ch,amp_i) = p;
+%             % FR_summary(s).sig(ch,amp_i)  = (p < 0.05);
+% 
+%         end
+% 
+%         % --- Step 5: Report significant channels for this amplitude ---
+%         responsive_idx = find(FR_summary(s).sig(:,amp_i));
+%         responsive_counts(s) = responsive_counts(s) + numel(responsive_idx);
+%         responsive_channels{s, amp_i} = responsive_idx;
+% 
+%         if ~isempty(responsive_idx)
+%             fprintf('→ %.0f µA: %d responsive channels (≥%.0f%% resp trials)\n', ...
+%                 amp_val, numel(responsive_idx), response_fraction_thresh*100);
+%             fprintf('   Channels: %s\n', num2str(responsive_idx(:)'));
+%         else
+%             fprintf('→ %.0f µA: 0 responsive channels.\n', amp_val);
+%         end
+%     end
+% end
+
+%% === Compute Mean ± SEM per Channel & Set, Perform Paired t-test (Amplitude-Specific) === %%
 FR_summary = struct;
 responsive_counts = zeros(1, nSets);
 responsive_channels = cell(1, nSets);
 
-fprintf('\nPerforming signed-rank test with response fraction check (≥%.0f%% trials)...\n', ...
+fprintf('\nPerforming paired t-test with response fraction check (≥%.0f%% trials)...\n', ...
     response_fraction_thresh*100);
 
 fprintf('\nAvailable amplitudes: %s µA\n', num2str(unique(trialAmps)));
@@ -251,32 +366,38 @@ for s = 1:nSets
 
     for amp_i = 1:nAmp
         amp_val = amps_unique(amp_i);
+
         if ~ismember(amp_val, selectedAmps)
-            continue; % skip amplitudes not selected
+            continue;
         end
-
         stim_mask = stim_mask_all & (trialAmps == amp_val);
-        if sum(stim_mask) < 3, continue; end  % skip amplitudes with too few trials
-
+        if sum(stim_mask) < 3
+            continue;
+        end
         fprintf('\n--- Stim Set %d [Ch %s] | %.0f µA ---\n', ...
             s, num2str(FR_summary(s).stimCh), amp_val);
-
         for ch = 1:nChn
+            
             FR_base = FR_baseline(ch, stim_mask);
             FR_resp = FR_response(ch, stim_mask);
+
             if all(isnan(FR_base)) || all(isnan(FR_resp)), continue; end
+
             valid_idx = ~isnan(FR_base) & ~isnan(FR_resp);
             FR_base = FR_base(valid_idx);
             FR_resp = FR_resp(valid_idx);
 
-            % --- Step 1: Compute response fraction ---
+            if numel(FR_base) < 3
+                continue;
+            end
+
+            %% --- Step 1: Compute response fraction ---
             nTrials_valid = numel(FR_base);
-            if nTrials_valid < 3, continue; end
             n_higher = sum(FR_resp > FR_base);
             resp_fraction = n_higher / nTrials_valid;
             FR_summary(s).respFrac(ch,amp_i) = resp_fraction;
 
-            % --- Step 2: Compute firing rate mean ± SEM (always computed) ---
+            %% --- Step 2: Always compute FR mean ± SEM ---
             vals = FR_corrected(ch, stim_mask);
             vals = vals(~isnan(vals));
             if ~isempty(vals)
@@ -285,24 +406,30 @@ for s = 1:nSets
                 FR_summary(s).raw{ch,amp_i}  = vals;
             end
 
-            % --- Step 3: Skip significance test if response fraction too low ---
+            %% --- Step 3: Require a minimum response fraction ---
             if resp_fraction < response_fraction_thresh
                 FR_summary(s).pval(ch,amp_i) = NaN;
                 FR_summary(s).sig(ch,amp_i)  = false;
                 continue;
             end
 
-            % --- Step 4: Signed-rank test (right-tailed) ---
+            % ---------------------------------------------------------
+            % --- Step 4: Paired t-test: (resp > baseline)?
+            %     H0: FR_resp - FR_base <= 0
+            %     H1: FR_resp - FR_base > 0
+            % ---------------------------------------------------------
             try
-                p = signrank(FR_resp, FR_base, 'tail', 'right');
+                [~,p] = ttest(FR_resp, FR_base, 'Tail', 'right');
             catch
                 p = NaN;
             end
+
             FR_summary(s).pval(ch,amp_i) = p;
             FR_summary(s).sig(ch,amp_i)  = (p < 0.05);
+
         end
 
-        % --- Step 5: Report significant channels for this amplitude ---
+        %% --- Step 5: Report significant channels ---
         responsive_idx = find(FR_summary(s).sig(:,amp_i));
         responsive_counts(s) = responsive_counts(s) + numel(responsive_idx);
         responsive_channels{s, amp_i} = responsive_idx;
@@ -316,6 +443,70 @@ for s = 1:nSets
         end
     end
 end
+
+%% === Compute Population Firing Rate for Selected Amplitudes & Plot Tuning Curves ===
+fprintf('\n===== Computing Population FR (Significant Channels Only) =====\n');
+
+for s = 1:nSets
+
+    amps_unique = FR_summary(s).amps;
+    nAmp        = numel(amps_unique);
+
+    % containers
+    avgFR_sig   = nan(1, nAmp);   % average FR across sig channels
+    semFR_sig   = nan(1, nAmp);   % SEM across sig channels
+    nSig_amp    = zeros(1,nAmp);  % number of sig channels
+
+    for amp_i = 1:nAmp
+
+        amp_val = amps_unique(amp_i);
+
+        % skip un-selected amplitudes
+        if ~ismember(amp_val, selectedAmps)
+            continue;
+        end
+
+        sig_channels = find(FR_summary(s).sig(:,amp_i));
+
+        if isempty(sig_channels)
+            fprintf('Set %d | %.0f µA → No sig channels, skipping.\n', s, amp_val);
+            continue;
+        end
+
+        nSig_amp(amp_i) = numel(sig_channels);
+
+        vals = FR_summary(s).mean(sig_channels, amp_i);
+        vals = vals(~isnan(vals));
+
+        avgFR_sig(amp_i) = mean(vals);
+        semFR_sig(amp_i) = std(vals) / sqrt(numel(vals));
+
+        fprintf('Set %d | %.0f µA → AVG FR = %.3f sp/s (SEM=%.3f, n=%d)\n', ...
+            s, amp_val, avgFR_sig(amp_i), semFR_sig(amp_i), nSig_amp(amp_i));
+    end
+
+    % ---- Save into FR_summary ----
+    FR_summary(s).avgSigFR  = avgFR_sig;
+    FR_summary(s).avgSigSEM = semFR_sig;
+    FR_summary(s).nSigCh    = nSig_amp;
+
+    % % ---- Plot tuning curve for this stim set ----
+    % figure('Color','w'); hold on;
+    % amp_vals_plot = amps_unique(ismember(amps_unique, selectedAmps));
+    % avg_vals_plot = avgFR_sig(ismember(amps_unique, selectedAmps));
+    % sem_vals_plot = semFR_sig(ismember(amps_unique, selectedAmps));
+    % 
+    % errorbar(amp_vals_plot, avg_vals_plot, sem_vals_plot, ...
+    %     '-o', 'LineWidth', 2, 'MarkerSize', 7);
+    % 
+    % xlabel('Amplitude (µA)', 'FontSize', 9);
+    % ylabel('Mean Firing Rate (sp/s)', 'FontSize', 9);
+    % title(sprintf('Population FR Tuning Curve — Set %d (Stim Ch %s)', ...
+    %     s, num2str(FR_summary(s).stimCh)));
+    % box off;
+
+end
+fprintf('===== Population FR finished. =====\n');
 
 %% === Save Results ===
 save_name = sprintf('%s_FR_SigCh_ByAmp.mat', base_name);

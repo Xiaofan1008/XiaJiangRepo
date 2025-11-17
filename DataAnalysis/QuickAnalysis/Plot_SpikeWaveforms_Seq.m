@@ -19,7 +19,7 @@ spike_chn_end = 32; %nChn
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq4_5ms_new_251106_161558';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');

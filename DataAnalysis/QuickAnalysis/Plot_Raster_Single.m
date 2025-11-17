@@ -6,7 +6,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %% Choose Folder
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2_251104_123934'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single2_251106_114943';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -26,8 +26,9 @@ else
 end
 
 %% Choice
-Spike_filtering = 0;
-
+Spike_filtering = 1;
+raster_chn_start = 1;
+raster_chn_end = 32; %nChn
 
 %% Pre Set
 FS=30000; % Sampling frequency
@@ -58,6 +59,11 @@ neg_limit = -100;  % lower bound (µV)
 
 baseline_window_ms = [-60, -5];        % Baseline window (ms)
 response_window_ms = [2, 15];          % Response window (ms)
+
+%% Waveform templete filtering parameters
+template_window_ms = [0 10];   % use 0–5 ms spikes after trigger to build template
+baseline_window_ms = [-60 0];    % window to filter
+corr_thresh        = 0.70;       % threshold (increase to be stricter)
 
 %% Load StimParams and decode amplitudes, stimulation sets, ISI
 fileDIR = dir(fullfile(data_folder, '*_exp_datafile_*.mat'));
@@ -195,6 +201,80 @@ if Spike_filtering == 1
     end
 
     fprintf('=====================================\n\n');
+
+    %% ============================
+    %  Waveform Correlation Template + Trial-by-Trial Baseline Filtering
+    % ============================
+
+    fprintf('\n===== Waveform Correlation Filtering (Trial-by-Trial Baseline Only) =====\n')
+
+    for ch = 1:numel(sp_clipped)
+    
+        if isempty(sp_clipped{ch}), continue; end
+    
+        waveforms = sp_clipped{ch}(:,2:end);
+        sp_times  = sp_clipped{ch}(:,1);
+        nSpikes   = size(waveforms,1);
+    
+        if nSpikes < 10
+            continue;
+        end
+    
+        %% --- 1. Extract evoked spikes to build template ---
+        evoked_mask = false(nSpikes,1);
+    
+        for tr = 1:length(trig)
+            t0 = trig(tr)/FS*1000;
+            evoked_mask = evoked_mask | ...
+                (sp_times >= t0 + template_window_ms(1) & ...
+                 sp_times <= t0 + template_window_ms(2));
+        end
+    
+        evoked_waves = waveforms(evoked_mask,:);
+        if size(evoked_waves,1) < 5
+            fprintf('Ch %d: not enough evoked spikes for template\n', ch);
+            continue;
+        end
+    
+        template = mean(evoked_waves,1);
+    
+        %% --- 2. Compute correlation of every spike vs template ---
+        corr_vals = zeros(nSpikes,1);
+        for i = 1:nSpikes
+            corr_vals(i) = corr(template(:), waveforms(i,:)');
+        end
+    
+        %% --- 3. TRIAL-BY-TRIAL FILTERING (baseline only) ---
+        final_keep = true(nSpikes,1);   % keep everything unless filtered
+    
+        for tr = 1:length(trig)
+            t0 = trig(tr)/FS*1000;
+    
+            % spikes in baseline window for this trial
+            baseline_mask = (sp_times >= t0 + baseline_window_ms(1)) & ...
+                            (sp_times <  t0 + baseline_window_ms(2));
+    
+            idx_trial = find(baseline_mask);
+    
+            if isempty(idx_trial), continue; end
+    
+            % evaluate correlation only for these spikes
+            bad_idx = idx_trial(corr_vals(idx_trial) < corr_thresh);
+    
+            % remove them
+            final_keep(bad_idx) = false;
+        end
+    
+        %% --- 4. Keep evoked spikes + good baseline spikes ---
+        beforeN = nSpikes;
+        sp_clipped{ch} = sp_clipped{ch}(final_keep,:);
+        afterN  = sum(final_keep);
+    
+        % fprintf('Ch %2d: kept %4d / %4d spikes (baseline filtered, corr >= %.2f)\n', ...
+        %     ch, afterN, beforeN, corr_thresh);
+    end
+    
+    fprintf('===== Correlation Filtering Complete =====\n');
     save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
     load([base_name '.sp_xia.mat']);
@@ -284,8 +364,8 @@ end
 ras_win         = [-20 100];   % ms
 bin_ms_raster   = 2;           % bin size
 smooth_ms       = 3;           % smoothing window
-raster_chn_start = 1;
-raster_chn_end = 32; %nChn
+% raster_chn_start = 1;
+% raster_chn_end = 32; %nChn
 
 
 %% Raster Plot 
@@ -379,8 +459,8 @@ raster_chn_end = 32; %nChn
                     % fprintf('Ch %2d | Set %s | %4d µs | %3d µA — Total spikes: %d\n', ...
                     %     ich, setLabel, pulse_val, amp_val, total_spikes_amp);
                 end
-                fprintf('Ch %2d | Set %s | %4d µs — Total spikes: %d\n', ...
-                        ich, setLabel, pulse_val, total_spikes);
+                % fprintf('Ch %2d | Set %s | %4d µs — Total spikes: %d\n', ...
+                %         ich, setLabel, pulse_val, total_spikes);
 
                 % Finalize raster plot
                 xline(ax1, 0, 'r', 'LineWidth', 1.5);

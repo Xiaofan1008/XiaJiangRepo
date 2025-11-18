@@ -3,10 +3,10 @@
 clear all;
 
 %% === USER PARAMETERS === %%
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single2_251106_114943';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms_251106_120811';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single8';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq8';
 pulse_offset_ms   = 0;        % shift injected spikes relative to the 1st sequential pulse (ms)
-fallback_win_end  = 7;        % used if first-spike time is missing/invalid (ms)
+fallback_win_end  = 5;        % used if first-spike time is missing/invalid (ms)
 use_fallback      = true;    % set true to use fallback; false to skip those trials/channels
 FS = 30000;
 
@@ -56,7 +56,7 @@ stimChPerTrial_seq = arrayfun(@(t) unique(idx_all_seq((t-1)*simultaneous_stim2 +
 % post_trigger_delay_us = cell2mat(StimParams_seq(3:simultaneous_stim2:end,6));
 
 % channel index mapping
-d = Depth_s(2);
+d = Depth_s(1);
 
 %% === LOAD FIRST SPIKE TIMES FROM THE SEQUENTIAL DATA === %%
 % Expect firstSpikeTimes to be a 1×nChn cell: firstSpikeTimes{ch}(trial) in ms (relative to seq trigger)
@@ -142,7 +142,7 @@ for a = 1:numel(unique_amps)
     total_spikes_added_all = total_spikes_added_all + total_spikes_added_amp;
 end
 
-fprintf('\n=== TOTAL SPIKES ADDED TO SEQ DATA: %d ===\n', total_spikes_added_all);
+fprintf('\nTOTAL SPIKES ADDED TO SEQ DATA: %d\n', total_spikes_added_all);
 
 %% === SAVE UPDATED SEQ FILE === %%
 new_name = strrep(dir('*sp_xia.mat').name, '.sp_xia.mat', '.sp_xia_FirstPulse.mat');

@@ -12,15 +12,15 @@ width_min_ms = 0.01;
 width_max_ms = 0.4;
 
 %% Spike waveform channel 
-spike_chn_start = 1;
-spike_chn_end = 32; %nChn
+spike_chn_start = 30;
+spike_chn_end = 30; %nChn
 
 selectedAmps = [5]; 
 
 %% Choose Folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single5';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1'; 
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single5';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)

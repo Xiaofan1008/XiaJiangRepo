@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms_251106_120811';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -27,7 +27,7 @@ end
 
 %% Choice
 Spike_filtering = 0;
-raster_chn_start = 1;
+raster_chn_start = 21;
 raster_chn_end = 32; %nChn
 
 %% Pre Set
@@ -166,7 +166,7 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 % load([base_name '.sp_xia_FirstPulse.mat']);
 % sp = sp_seq;
 if Spike_filtering == 1
-    fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
+    fprintf('\nSpike Waveform Consistency Filtering (SSD-based)\n'); 
 
     SSD_threshold_factor = 16;  % from Allison-Walker (2022)
     t_axis = (0:48) / FS * 1000;
@@ -201,10 +201,8 @@ if Spike_filtering == 1
         fprintf('Channel %2d: kept %4d / %4d spikes (%.1f%%)\n', ...
             ch, n_keep, n_total, 100*n_keep/n_total);
     end
-
-    fprintf('=====================================\n\n');
         %%  Waveform Correlation Template + Trial-by-Trial Baseline Filtering
-        fprintf('\n===== Waveform Correlation Filtering (Trial-by-Trial Baseline Only) =====\n')
+        fprintf('\nWaveform Correlation Filtering\n')
         for ch = 1:numel(sp_clipped)    
             if isempty(sp_clipped{ch}), continue; end    
             waveforms = sp_clipped{ch}(:,2:end);
@@ -262,11 +260,11 @@ if Spike_filtering == 1
             sp_clipped{ch} = sp_clipped{ch}(final_keep,:);
             afterN  = sum(final_keep);
         
-            fprintf('Ch %2d: kept %4d / %4d spikes (baseline filtered, corr >= %.2f)\n', ...
-                ch, afterN, beforeN, corr_thresh);
+            % fprintf('Ch %2d: kept %4d / %4d spikes (baseline filtered, corr >= %.2f)\n', ...
+            %     ch, afterN, beforeN, corr_thresh);
         end
         
-        fprintf('===== Correlation Filtering Complete =====\n');
+        fprintf('Correlation Filtering Complete\n');
         save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
     % load([base_name '.sp_xia.mat']);
@@ -362,7 +360,7 @@ smooth_ms       = 3;           % smoothing window
 
 %% === Initialize structure to store first-spike times ===
 firstSpikeTimes = cell(raster_chn_end, 1); % each cell: vector of first-spike times per trial (ms)
-fprintf('\n===== Computing First Spike Times per Trial =====\n');
+fprintf('\nComputing First Spike Times per Trial\n');
 post_spike_window_ms = [5,8];
 
 %% Raster Plot 

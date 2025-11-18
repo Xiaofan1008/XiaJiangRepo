@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2_251106_120305'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2_251104_122817';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -26,8 +26,8 @@ else
 end
 
 %% Choice
-Spike_filtering =1;
-raster_chn_start = 1;
+Spike_filtering =0;
+raster_chn_start = 21;
 raster_chn_end = 32; %nChn
 
 %% Pre Set
@@ -164,7 +164,7 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 % end
 
 if Spike_filtering == 1
-    fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
+    fprintf('\nSpike Waveform Consistency Filtering (SSD-based)\n'); 
 
     SSD_threshold_factor = 16;  % from Allison-Walker (2022)
     t_axis = (0:48) / FS * 1000;
@@ -201,7 +201,7 @@ if Spike_filtering == 1
     end
 
     %%  Waveform Correlation Template + Trial-by-Trial Baseline Filtering
-    fprintf('\n===== Waveform Correlation Filtering (Trial-by-Trial Baseline Only) =====\n')
+    fprintf('\nWaveform Correlation Filtering\n')
     for ch = 1:numel(sp_clipped)    
         if isempty(sp_clipped{ch}), continue; end    
         waveforms = sp_clipped{ch}(:,2:end);
@@ -263,7 +263,7 @@ if Spike_filtering == 1
         %     ch, afterN, beforeN, corr_thresh);
     end
     
-    fprintf('===== Correlation Filtering Complete =====\n');
+    fprintf('Correlation Filtering Complete\n');
     save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
     load([base_name '.sp_xia.mat']);

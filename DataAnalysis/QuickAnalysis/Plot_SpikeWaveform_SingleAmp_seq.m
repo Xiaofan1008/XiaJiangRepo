@@ -12,8 +12,8 @@ width_min_ms = 0.01;
 width_max_ms = 0.4;
 
 %% Spike waveform channel 
-spike_chn_start = 1;
-spike_chn_end = 32; %nChn
+spike_chn_start = 30;
+spike_chn_end = 30; %nChn
 
 selectedAmps = [5]; 
 
@@ -21,7 +21,7 @@ selectedAmps = [5];
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single7';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');

@@ -5,8 +5,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2_251104_123934'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single2_251106_114943';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single8_new_251106_203828'; 
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single3_251106_131759';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -164,7 +164,7 @@ d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 % end
 
 if Spike_filtering == 1
-    fprintf('\n===== Spike Waveform Consistency Filtering (SSD-based) =====\n'); 
+    fprintf('\nSpike Waveform Consistency Filtering (SSD-based)\n'); 
 
     SSD_threshold_factor = 10;  % from Allison-Walker (2022)
     t_axis = (0:48) / FS * 1000;
@@ -200,27 +200,21 @@ if Spike_filtering == 1
             ch, n_keep, n_total, 100*n_keep/n_total);
     end
 
-    fprintf('=====================================\n\n');
-
     %% ============================
     %  Waveform Correlation Template + Trial-by-Trial Baseline Filtering
     % ============================
 
-    fprintf('\n===== Waveform Correlation Filtering (Trial-by-Trial Baseline Only) =====\n')
+    fprintf('\nWaveform Correlation Filtering\n')
 
-    for ch = 1:numel(sp_clipped)
-    
-        if isempty(sp_clipped{ch}), continue; end
-    
+    for ch = 1:numel(sp_clipped)   
+        if isempty(sp_clipped{ch}), continue; end   
         waveforms = sp_clipped{ch}(:,2:end);
         sp_times  = sp_clipped{ch}(:,1);
-        nSpikes   = size(waveforms,1);
-    
+        nSpikes   = size(waveforms,1);    
         if nSpikes < 10
             continue;
-        end
-    
-        %% --- 1. Extract evoked spikes to build template ---
+        end    
+        % --- 1. Extract evoked spikes to build template ---
         evoked_mask = false(nSpikes,1);
     
         for tr = 1:length(trig)
@@ -228,23 +222,20 @@ if Spike_filtering == 1
             evoked_mask = evoked_mask | ...
                 (sp_times >= t0 + template_window_ms(1) & ...
                  sp_times <= t0 + template_window_ms(2));
-        end
-    
+        end    
         evoked_waves = waveforms(evoked_mask,:);
         if size(evoked_waves,1) < 5
             fprintf('Ch %d: not enough evoked spikes for template\n', ch);
             continue;
-        end
-    
-        template = mean(evoked_waves,1);
-    
-        %% --- 2. Compute correlation of every spike vs template ---
+        end    
+        template = mean(evoked_waves,1);    
+        % --- 2. Compute correlation of every spike vs template ---
         corr_vals = zeros(nSpikes,1);
         for i = 1:nSpikes
             corr_vals(i) = corr(template(:), waveforms(i,:)');
         end
     
-        %% --- 3. TRIAL-BY-TRIAL FILTERING (baseline only) ---
+        % --- 3. TRIAL-BY-TRIAL FILTERING (baseline only) ---
         final_keep = true(nSpikes,1);   % keep everything unless filtered
     
         for tr = 1:length(trig)
@@ -274,7 +265,7 @@ if Spike_filtering == 1
         %     ch, afterN, beforeN, corr_thresh);
     end
     
-    fprintf('===== Correlation Filtering Complete =====\n');
+    fprintf('Correlation Filtering Complete\n');
     save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
     load([base_name '.sp_xia.mat']);

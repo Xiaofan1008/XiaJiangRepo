@@ -1,11 +1,11 @@
 %% ============================================================
-% Raster + PSTH Plot for Specific Amplitudes
+% Raster + PSTH Plot for Specific Amplitudes (Sequential Stim)
 % ============================================================
 clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
-%% === Choose Folder ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1'; 
+%% Choose Folder
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -13,6 +13,7 @@ end
 cd(data_folder);
 fprintf('Changed directory to:\n%s\n', data_folder);
 
+% Extract file name
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
@@ -22,23 +23,26 @@ else
     base_name = last_folder;
 end
 
-%% === User Inputs ===
-raster_chn_start = 28;
-raster_chn_end   = 28;   % nChn
-Plot_Amps        = [5];   % µA amplitudes to plot
+%% Choice
+Spike_filtering = 0;
+raster_chn_start = 30;
+raster_chn_end   = 30; % nChn
+Plot_Amps        = [5]; % µA amplitudes to plot
 
-ras_win          = [-20 100]; % ms
-bin_ms_raster    = 2;         % ms
-smooth_ms        = 3;         % ms
-FS               = 30000;     % Hz sampling rate
+%% Pre Set
+FS = 30000; % Sampling frequency
 
-%% === Load Spike File ===
-sp_files = dir(fullfile(data_folder, '*.sp_xia.mat'));
-assert(~isempty(sp_files), 'No .sp_xia.mat file found.');
-load(sp_files(1).name, 'sp_clipped');
-fprintf('Loaded spike file: %s\n', sp_files(1).name);
+sp_files = dir(fullfile(data_folder, '*.sp_xia_FirstPulse.mat'));
+if isempty(sp_files)
+    sp_files = dir(fullfile(data_folder, '*.sp_xia.mat'));
+end
+assert(~isempty(sp_files), 'No spike file found.');
+load(sp_files(1).name, 'sp_seq', 'sp_clipped');
+if exist('sp_seq','var')
+    sp_clipped = sp_seq;
+end
+fprintf('Loaded spike data: %s\n', sp_files(1).name);
 
-%% === Load Trigger ===
 if isempty(dir(fullfile(data_folder, '*.trig.dat')))
     cur_dir = pwd; cd(data_folder);
     cleanTrig_sabquick;
@@ -46,7 +50,7 @@ if isempty(dir(fullfile(data_folder, '*.trig.dat')))
 end
 trig = loadTrig(0);
 
-%% === Load StimParams and Decode ===
+%% Load StimParams and Decode
 S = load(dir('*_exp_datafile_*.mat').name, ...
     'StimParams','simultaneous_stim','E_MAP','n_Trials');
 StimParams        = S.StimParams;
@@ -88,39 +92,46 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);
 n_PULSE = numel(PulsePeriods);
 
 % --- Electrode Map ---
-d = Depth_s(1);  % 0-single shank rigid, 1-flex, etc.
+d = Depth_s(1);
 
-%% === Raster + PSTH ===
+%% Raster Plot Parameters
+ras_win       = [-20 100]; % ms
+bin_ms_raster = 2;
+smooth_ms     = 3;
+
 edges = ras_win(1):bin_ms_raster:ras_win(2);
 ctrs  = edges(1:end-1) + diff(edges)/2;
 bin_s = bin_ms_raster / 1000;
 g = exp(-0.5 * ((0:smooth_ms-1) / (smooth_ms/2)).^2);
 g = g / sum(g);
 
+%% Plot Raster + PSTH
 for ich = raster_chn_start:raster_chn_end
     ch = d(ich);
     if isempty(sp_clipped{ch}), continue; end
 
-    for set_id = 1:nSets
-        stimIdx = uniqueComb(set_id,:); stimIdx = stimIdx(stimIdx>0);
-        setLabel = strjoin(arrayfun(@(x)sprintf('Ch%d',x),stimIdx,'UniformOutput',false), ' + ');
+    for si = 1:nSets
+        set_id = si;
+        stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ' + ');
 
         for pi = 1:n_PULSE
             pulse_val = PulsePeriods(pi);
             trials_this_period = find(pulseIdx == pi & combClass_win == set_id);
             if isempty(trials_this_period), continue; end
 
-            figure('Color','w','Name',sprintf('Ch %d | Set %s (Sim)', ich, setLabel));
+            figure('Color','w','Name',sprintf('Ch %d | Set %s (Seq)', ich, setLabel));
             tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
             ax1 = nexttile([3 1]); hold(ax1,'on'); box(ax1,'off');
             ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
 
-            maxRate = 0;
+            maxRate = 0; 
             y_cursor = 0;
             ytick_vals = [];
             ytick_labels = {};
+            total_spikes = 0;
 
-            % --- Loop through specific amplitudes only ---
+            % === Loop through specific amplitudes only ===
             for ai = 1:length(Plot_Amps)
                 amp_val = Plot_Amps(ai);
                 amp_idx_match = find(abs(Amps - amp_val) < 1e-6);
@@ -129,16 +140,15 @@ for ich = raster_chn_start:raster_chn_end
                     continue;
                 end
 
+                color = cmap(amp_idx_match,:);
                 amp_trials = find(ampIdx == amp_idx_match & pulseIdx == pi & combClass_win == set_id);
                 nTr = numel(amp_trials);
                 if nTr == 0, continue; end
 
-                color = cmap(amp_idx_match,:);
                 spkTimesPerTrial = cell(nTr,1);
-                counts = zeros(1,numel(edges)-1);
+                counts = zeros(1, numel(edges)-1);
                 total_spikes_amp = 0;
 
-                % Collect spikes
                 for t = 1:nTr
                     tr = amp_trials(t);
                     S_ch = sp_clipped{ch};
@@ -149,17 +159,18 @@ for ich = raster_chn_start:raster_chn_end
                     counts = counts + histcounts(tt, edges);
                     total_spikes_amp = total_spikes_amp + numel(tt);
                 end
+                total_spikes = total_spikes + total_spikes_amp;
 
-                % Raster plotting
+                % --- Raster ---
                 for t = 1:nTr
                     tt = spkTimesPerTrial{t};
                     y0 = y_cursor + t;
                     for k = 1:numel(tt)
-                        plot(ax1, [tt(k) tt(k)], [y0-0.4 y0+0.4], 'Color', color, 'LineWidth', 1.2);
+                        plot(ax1, [tt(k) tt(k)], [y0-0.4 y0+0.4], ...
+                             'Color', color, 'LineWidth', 1.2);
                     end
                 end
 
-                % Labels
                 ytick_vals(end+1) = y_cursor + nTr/2;
                 ytick_labels{end+1} = sprintf('%.0f µA', amp_val);
                 if nTr > 0
@@ -168,7 +179,7 @@ for ich = raster_chn_start:raster_chn_end
                 end
                 y_cursor = y_cursor + nTr;
 
-                % PSTH
+                % --- PSTH ---
                 rate = counts / (nTr * bin_s);
                 rate_s = filter(g, 1, rate);
                 maxRate = max(maxRate, max(rate_s));
@@ -176,22 +187,24 @@ for ich = raster_chn_start:raster_chn_end
                     'DisplayName', sprintf('%.0f µA (n=%d)', amp_val, nTr));
             end
 
-            % --- Finalize plots ---
+            % === Finalize Plots ===
+            % (red 0 ms line ignored in legend)
             xline(ax1, 0, 'r', 'LineWidth', 1.5, 'HandleVisibility','off');
             xlim(ax1, [ras_win(1), ras_win(2)+10]);
             ylim(ax1, [0, y_cursor]);
             yticks(ax1, ytick_vals);
             yticklabels(ax1, ytick_labels);
             ylabel(ax1, 'Amplitude');
-            title(ax1, sprintf('Raster — Ch %d | %s (Sim)', ich, setLabel), 'Interpreter','none');
+            title(ax1, sprintf('Raster — Ch %d | Set: %s (Seq)', ich, setLabel), 'Interpreter','none');
 
             xline(ax2, 0, 'r', 'LineWidth', 1.5, 'HandleVisibility','off');
             xlim(ax2, ras_win);
             ylim(ax2, [0 ceil(maxRate*1.1/10)*10]);
-            % ylim(ax2, [0 150]);
             xlabel(ax2, 'Time (ms)');
             ylabel(ax2, 'Rate (sp/s)');
-            legend(ax2, 'show', 'Box','off', 'Location','northeast');
+            legend(ax2, 'show', 'Box','off','Location','northeast');
+
+            fprintf('Ch %2d | Set %s — Total spikes: %d\n', ich, setLabel, total_spikes);
         end
     end
 end

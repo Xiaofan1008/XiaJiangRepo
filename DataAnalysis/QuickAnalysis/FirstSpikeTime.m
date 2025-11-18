@@ -11,7 +11,7 @@
 clear;
 
 %% === User Input ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms_251106_120811';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq8_251106_190122';
 response_window_ms = [5, 15];  % Time window after stim to search for first spike (ms)
 FS = 30000;  % Sampling rate (Hz)
 

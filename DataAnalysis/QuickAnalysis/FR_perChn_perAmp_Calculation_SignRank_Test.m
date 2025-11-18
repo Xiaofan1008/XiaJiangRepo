@@ -12,11 +12,11 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ========= Enter Parameters ==========
 % Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single2_251106_114943';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2_251106_120305';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms_251106_120811';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single8';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 
-selectedAmps = [4,5];
+selectedAmps = [5];
 response_fraction_thresh = 0.4;  
 if isempty(selectedAmps)
     error('No amplitude entered. Please specify at least one.');
@@ -31,7 +31,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 4
+if numel(underscores) > 4
     base_name = last_folder(1 : underscores(end-1) - 1);
 else
     base_name = last_folder;
@@ -43,6 +43,11 @@ Spike_filtering = 0;
 FS = 30000; % Sampling rate
 baseline_window_ms = [-60, -5];
 response_window_ms = [2, 15];
+
+% spike count window (ms)
+spikeCount_window_ms = [2 15];
+spikeCount_s = diff(spikeCount_window_ms) / 1000;
+
 pos_limit = 100;
 neg_limit = -100;
 
@@ -412,12 +417,9 @@ for s = 1:nSets
                 FR_summary(s).sig(ch,amp_i)  = false;
                 continue;
             end
-
-            % ---------------------------------------------------------
             % --- Step 4: Paired t-test: (resp > baseline)?
             %     H0: FR_resp - FR_base <= 0
             %     H1: FR_resp - FR_base > 0
-            % ---------------------------------------------------------
             try
                 [~,p] = ttest(FR_resp, FR_base, 'Tail', 'right');
             catch
@@ -445,7 +447,7 @@ for s = 1:nSets
 end
 
 %% === Compute Population Firing Rate for Selected Amplitudes & Plot Tuning Curves ===
-fprintf('\n===== Computing Population FR (Significant Channels Only) =====\n');
+fprintf('\nComputing Population FR (Significant Channels Only)\n');
 
 for s = 1:nSets
 
@@ -506,11 +508,117 @@ for s = 1:nSets
     % box off;
 
 end
-fprintf('===== Population FR finished. =====\n');
+fprintf('Population FR finished.\n');
+
+%% Spike Count Analysis
+for s = 1:nSets
+    amps_unique = FR_summary(s).amps;
+    nAmp = numel(amps_unique);
+
+    FR_summary(s).spikeCount = struct();   % container
+
+    for amp_i = 1:nAmp
+        amp_val = amps_unique(amp_i);
+
+        if ~ismember(amp_val, selectedAmps)
+            continue;
+        end
+
+        fprintf('\nSpike Counting: Stim ch %s | %.0f µA\n', num2str(FR_summary(s).stimCh), amp_val);
+
+        % --- identify significant channels ---
+        sigCh = find(FR_summary(s).sig(:,amp_i));
+        if isempty(sigCh)
+            fprintf('No significant channels → skipping.\n');
+            continue;
+        end
+
+        % --- identify trials belonging to this stim set & amplitude ---
+        stim_mask_all = (combClass_win == s);
+        stim_mask = stim_mask_all & (trialAmps == amp_val);
+        trial_ids = find(stim_mask);
+        nTrials_amp = numel(trial_ids);
+
+        if nTrials_amp == 0
+            fprintf('No trials for this amplitude → skipping.\n');
+            continue;
+        end
+
+        % --- containers ---
+        perCh_spikeCount = zeros(numel(sigCh),1);   % spikes per channel (summed across trials)
+        perTrial_spikeCount = zeros(nTrials_amp,1); % spikes per trial (sum across sig channels)
+
+        % === Loop through significant channels ===
+        for idx = 1:numel(sigCh)
+            ch = sigCh(idx);
+            spk = sp_clipped{d(ch)};
+            if isempty(spk), continue; end
+
+            for t = 1:nTrials_amp
+                tr = trial_ids(t);
+                t0 = trig(tr)/FS*1000;
+
+                rel_times = spk(:,1) - t0;
+
+                n_sp = sum(rel_times >= spikeCount_window_ms(1) & ...
+                               rel_times <= spikeCount_window_ms(2));
+
+                perCh_spikeCount(idx) = perCh_spikeCount(idx) + n_sp;
+                perTrial_spikeCount(t) = perTrial_spikeCount(t) + n_sp;
+            end
+        end
+
+        % === Final summary metrics ===
+        totalSpikes = sum(perCh_spikeCount);
+
+        % mean
+        avgSpikes_perCh    = mean(perCh_spikeCount);
+        avgSpikes_perTrial = mean(perTrial_spikeCount);
+
+        % SEM (standard error of the mean)
+        sem_perCh    = std(perCh_spikeCount)    / sqrt(numel(perCh_spikeCount));
+        sem_perTrial = std(perTrial_spikeCount) / sqrt(numel(perTrial_spikeCount));
+
+        % === Store into FR_summary ===
+        FR_summary(s).spikeCount(amp_i).amp = amp_val;
+        FR_summary(s).spikeCount(amp_i).sigCh = sigCh;
+
+        FR_summary(s).spikeCount(amp_i).perCh = perCh_spikeCount;
+        FR_summary(s).spikeCount(amp_i).perTrial = perTrial_spikeCount;
+
+        FR_summary(s).spikeCount(amp_i).totalSpikes = totalSpikes;
+
+        FR_summary(s).spikeCount(amp_i).avgSpikes_perCh = avgSpikes_perCh;
+        FR_summary(s).spikeCount(amp_i).avgSpikes_perTrial = avgSpikes_perTrial;
+
+        FR_summary(s).spikeCount(amp_i).sem_perCh = sem_perCh;
+        FR_summary(s).spikeCount(amp_i).sem_perTrial = sem_perTrial;
+
+        FR_summary(s).spikeCount(amp_i).window = spikeCount_window_ms;
+
+        % === Print results ===
+        fprintf('Significant channels: %s\n', num2str(sigCh(:)'));
+        fprintf('Total spikes (all sig ch): %d\n', totalSpikes);
+        fprintf('Avg spikes per channel: %.2f ± %.2f (SEM)\n', ...
+            avgSpikes_perCh, sem_perCh);
+        fprintf('Avg spikes per trial: %.2f ± %.2f (SEM)\n', ...
+            avgSpikes_perTrial, sem_perTrial);
+    end
+end
+
+fprintf('\nSpike counting finished\n');
 
 %% === Save Results ===
+% save_name = sprintf('%s_FR_SigCh_ByAmp.mat', base_name);
+% save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
+%     'uniqueComb', 'combClass_win', 'responsive_channels', 'selectedAmps', ...
+%     '-v7.3');
+% 
+% fprintf('\nResults saved to:\n%s\n', fullfile(data_folder, save_name));
+
 save_name = sprintf('%s_FR_SigCh_ByAmp.mat', base_name);
-save(fullfile(data_folder, save_name), 'FR_summary', 'Amps', 'E_MAP', ...
+save(fullfile(data_folder, save_name), ...
+    'FR_summary', 'Amps', 'E_MAP', ...
     'uniqueComb', 'combClass_win', 'responsive_channels', 'selectedAmps', ...
     '-v7.3');
 

@@ -12,15 +12,16 @@ width_min_ms = 0.01;
 width_max_ms = 0.4;
 
 %% Spike waveform channel 
-spike_chn_start = 30;
-spike_chn_end = 30; %nChn
+spike_chn_start = 22;
+spike_chn_end = 22; %nChn
 
 selectedAmps = [5]; 
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Choose Folder
 
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1'; 
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single5';
+% data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)
@@ -292,15 +293,15 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters
 % win_ms = 300;         % total time window after each trigger (ms)
 % bin_ms = 5;          % bin size (ms)
 
-pre_ms  = 30;     % time BEFORE trigger to include (ms)
-post_ms = 95;    % time AFTER trigger to include (ms)
+pre_ms  = 5;     % time BEFORE trigger to include (ms)
+post_ms = 20;    % time AFTER trigger to include (ms)
 
 bin_ms = 5;       % bin size (unchanged)
 % nBins  = win_ms / bin_ms;
@@ -311,7 +312,7 @@ edges = -pre_ms : bin_ms : post_ms;
 nBins = numel(edges) - 1;
 amp_threshold = 100;  % max allowed amplitude (µV)
 
-layout_row = 5; % plot time window layout in rows
+layout_row = 1; % plot time window layout in rows
 layout_col = 5; % plot time window layout in columns
 
 

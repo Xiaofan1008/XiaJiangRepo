@@ -14,6 +14,7 @@ width_max_ms = 0.4;
 %% Spike waveform channel 
 spike_chn_start = 1;
 spike_chn_end = 32; %nChn
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Choose Folder
 
@@ -119,7 +120,6 @@ trig = loadTrig(0);
 %     % load([base_name '.sp_xia_FirstPulse.mat']);
 %     % sp_clipped = sp_seq;
 % end
-
 
 
 % if Spike_filtering == 1
@@ -290,7 +290,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters

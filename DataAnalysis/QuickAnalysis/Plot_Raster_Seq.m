@@ -29,6 +29,7 @@ end
 Spike_filtering = 0;
 raster_chn_start = 21;
 raster_chn_end = 32; %nChn
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Pre Set
 FS=30000; % Sampling frequency
@@ -111,7 +112,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 n_PULSE = numel(PulsePeriods);
 
 % Electrode Map
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 %% Spike Amplitude Filtering (Before Plotting)
 % % sp_clipped = sp;   % copy original spike structure

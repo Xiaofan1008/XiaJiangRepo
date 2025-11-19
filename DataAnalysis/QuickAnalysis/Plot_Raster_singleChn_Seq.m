@@ -28,6 +28,7 @@ Spike_filtering = 0;
 raster_chn_start = 30;
 raster_chn_end   = 30; % nChn
 Plot_Amps        = [5]; % µA amplitudes to plot
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Pre Set
 FS = 30000; % Sampling frequency
@@ -92,7 +93,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);
 n_PULSE = numel(PulsePeriods);
 
 % --- Electrode Map ---
-d = Depth_s(1);
+d = Depth_s(Electrode_Type);
 
 %% Raster Plot Parameters
 ras_win       = [-20 100]; % ms

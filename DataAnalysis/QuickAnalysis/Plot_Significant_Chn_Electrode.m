@@ -9,7 +9,7 @@
 
 clear
 %% === User Inputs ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
 amp_to_plot = 5; % µA
 nShank = 1;
 chPerShank = 32;

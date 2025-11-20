@@ -2,11 +2,11 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single1';
-folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2';
+folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim2';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq2';
 
-target_channels = [19];      % channels to plot (recording channel index)
+target_channels = [10];      % channels to plot (recording channel index)
 plot_amps       = [5];       % amplitudes (µA) → one figure per amp
 Electrode_Type  = 1;         % 0: rigid, 1: single shank flex, 2: four shank flex
 

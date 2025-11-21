@@ -33,7 +33,7 @@ Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank fl
 
 % Parameters for plotting
 ras_win       = [-10 20];   % ms, time window to plot (you can change this)
-bin_ms_raster = 2;          % bin size for PSTH (ms)
+bin_ms_raster = 1;          % bin size for PSTH (ms)
 smooth_ms     = 3;          % smoothing window (ms)
 Plot_Amps     = [5];        % amplitudes (µA) to plot; one figure per amp & stim set
 

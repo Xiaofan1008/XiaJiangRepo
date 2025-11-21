@@ -33,9 +33,17 @@ Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank fl
 
 % Parameters for plotting
 ras_win       = [-10 20];   % ms, time window to plot (you can change this)
-bin_ms_raster = 2;          % bin size for PSTH (ms)
+bin_ms_raster = 1;          % bin size for PSTH (ms)
 smooth_ms     = 3;          % smoothing window (ms)
 Plot_Amps     = [5];        % amplitudes (µA) to plot; one figure per amp & stim set
+
+IgnoreBadTrials = 0;    % 1 = remove bad trials, 0 = keep all trials
+BadTrials = {
+    [2,13,27],      % Set 1 bad trials (e.g., [3 10])
+    [15,18,20,25,26],  % Set 2 bad trials
+    [],      % Set 3 bad trials
+    []       % Set 4 bad trials (if exists)
+};
 
 %% Pre Set
 FS=30000; % Sampling frequency
@@ -116,6 +124,19 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 
 [PulsePeriods, ~, pulseIdx] = unique(pulseTrain(:));
 n_PULSE = numel(PulsePeriods);
+
+%% Bad trial removal
+% Trim or expand list to match nSets
+if length(BadTrials) < nSets
+    BadTrials(end+1:nSets) = {[]};
+elseif length(BadTrials) > nSets
+    BadTrials = BadTrials(1:nSets);
+end
+
+fprintf('\nBad trial configuration loaded:\n');
+for si = 1:nSets
+    fprintf('  Set %d: %s\n', si, mat2str(BadTrials{si}));
+end
 
 %% Load Significant Channel File
 % File should be named:  <base_name>_FR_SigCh_ByAmp.mat
@@ -394,11 +415,18 @@ for set_id = 1:nSets
         
         % Trials for this stim set & amplitude (all pulse periods collapsed)
         trial_mask = (combClass_win == set_id) & (ampIdx == amp_idx_match);
-        trial_ids  = find(trial_mask);
-        nTr        = numel(trial_ids);
-        
+        trial_ids_all = find(trial_mask);
+        % --- Remove bad trials for THIS stim set ---
+        if IgnoreBadTrials && ~isempty(BadTrials{set_id})
+            keep_mask = true(size(trial_ids_all));
+            keep_mask(BadTrials{set_id}) = false;   % remove by ROW number
+            trial_ids = trial_ids_all(keep_mask);
+        else 
+            trial_ids = trial_ids_all;
+        end       
+        nTr = numel(trial_ids);
         if nTr == 0
-            fprintf('Set %d (%s) | %.1f µA: no trials → skipping.\n', ...
+            fprintf('Set %d (%s) | %.1f µA: no valid trials → skipping.\n', ...
                     set_id, setLabel, amp_val);
             continue;
         end

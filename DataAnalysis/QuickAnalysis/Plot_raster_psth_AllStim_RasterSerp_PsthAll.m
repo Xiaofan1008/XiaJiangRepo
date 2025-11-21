@@ -142,6 +142,7 @@ bin_s = bin_ms/1000;
 g = exp(-0.5*((0:smooth_ms-1)/(smooth_ms/2)).^2);
 g = g/sum(g);
 
+%% Electrode Map
 d = Depth_s(Electrode_Type);
 
 %% MAIN LOOP: ONE FIGURE PER AMPLITUDE
@@ -180,8 +181,25 @@ for amp_val = plot_amps
         end
     
         title(ax,labelStr,'FontSize',11,'Interpreter','none');
+        % xline(ax,0,'r--','HandleVisibility','off');
+        % xlim(ax,ras_win); ylim(ax,[0 y]);
+
         xline(ax,0,'r--','HandleVisibility','off');
-        xlim(ax,ras_win); ylim(ax,[0 y]);
+        xlim(ax,ras_win); 
+        ylim(ax,[0 y]);
+        
+        % ---- HIDE X-AXIS FOR ALL RASTER PLOTS EXCEPT THE VERY LAST ONE ----
+        % We only keep the x-axis for the PSTH (last tile)
+        % Identify tile index:
+        tileIndex = find(tl.Children == ax);  
+        
+        % Tiles are reversed in Children, so invert index:
+        tileIndex = numel(tl.Children) - tileIndex + 1;
+        
+        % If not the final tile (PSTH), hide X-axis
+        if tileIndex < 5   % you have 4 raster plots + 1 PSTH
+            set(ax,'XTick',[],'XColor','none');
+        end
     end
 
     % ============ SIMULTANEOUS RASTER =============
@@ -205,8 +223,25 @@ for amp_val = plot_amps
         y=y+1;
     end
     
+    % xline(ax,0,'r--','HandleVisibility','off');
+    % xlim(ax,ras_win); ylim(ax,[0 y]);
+
     xline(ax,0,'r--','HandleVisibility','off');
-    xlim(ax,ras_win); ylim(ax,[0 y]);
+    xlim(ax,ras_win); 
+    ylim(ax,[0 y]);
+    
+    % ---- HIDE X-AXIS FOR ALL RASTER PLOTS EXCEPT THE VERY LAST ONE ----
+    % We only keep the x-axis for the PSTH (last tile)
+    % Identify tile index:
+    tileIndex = find(tl.Children == ax);  
+    
+    % Tiles are reversed in Children, so invert index:
+    tileIndex = numel(tl.Children) - tileIndex + 1;
+    
+    % If not the final tile (PSTH), hide X-axis
+    if tileIndex < 5   % you have 4 raster plots + 1 PSTH
+        set(ax,'XTick',[],'XColor','none');
+    end
 
     % ============ SEQUENTIAL RASTER =============
     ax = nexttile(tl); set(ax,'NextPlot','add'); box(ax,'off');

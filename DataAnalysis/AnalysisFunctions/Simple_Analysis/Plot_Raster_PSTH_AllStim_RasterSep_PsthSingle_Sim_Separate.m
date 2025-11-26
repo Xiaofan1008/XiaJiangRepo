@@ -13,11 +13,11 @@ folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 target_channel = 28;         % channel to plot
-plot_amps      = [5];      % amplitudes → one figure per amp
+plot_amps      = [10];      % amplitudes → one figure per amp
 
 ras_win        = [-10 50];  % ms
-bin_ms         = 2;
-smooth_ms      = 3;
+bin_ms         = 1;
+smooth_ms      = 2;
 FS             = 30000;
 
 %% Soft pastel colors

@@ -1,17 +1,18 @@
-%% === SPIKE INJECTION: use sequential first-spike per (channel, trial);
-%                       inject ONLY single-pulse spikes from the first stim electrode ===
+%% === SPIKE INJECTION: Correct ORDER-SENSITIVE version ===
 clear all;
 
 %% === USER PARAMETERS === %%
 single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
 sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
-pulse_offset_ms   = 0;        % shift injected spikes relative to the 1st sequential pulse (ms)
-fallback_win_end  = 6;        % used if first-spike time is missing/invalid (ms)
-use_fallback      = true;    % set true to use fallback; false to skip those trials/channels
+pulse_offset_ms   = 0;     
+fallback_win_end  = 6;     
+use_fallback      = true;
 FS = 30000;
-Electrode_type = 1; % 0: 1 shank rigid; 1: 1 shank flex; 2: 4 shank flex
+Electrode_type = 1;
 
-%% === LOAD SINGLE STIM DATA (SOURCE) === %%
+%% ================================
+%  LOAD SINGLE-PULSE DATA (SOURCE)
+% ================================
 cd(single_folder);
 load(dir('*sp_xia.mat').name, 'sp_clipped'); 
 sp_single = sp_clipped;
@@ -25,15 +26,20 @@ E_MAP              = S1.E_MAP;
 n_Trials_single    = S1.n_Trials;
 simultaneous_stim1 = S1.simultaneous_stim;
 
-% single: per-trial amplitude & stim-channel mapping
 trialAmps_single = cell2mat(StimParams_single(2:end,16));
 trialAmps_single = trialAmps_single(1:simultaneous_stim1:end);
+
 stimNames_single  = StimParams_single(2:end,1);
 [~, idx_all_single] = ismember(stimNames_single, E_MAP(2:end));
-stimChPerTrial_single = arrayfun(@(t) unique(idx_all_single((t-1)*simultaneous_stim1 + (1:simultaneous_stim1))), ...
-    (1:n_Trials_single)', 'UniformOutput', false);
+stimChPerTrial_single = cell(n_Trials_single,1);
+for t = 1:n_Trials_single
+    rr = (t-1)*simultaneous_stim1 + (1:simultaneous_stim1);
+    stimChPerTrial_single{t} = unique(idx_all_single(rr)); 
+end
 
-%% === LOAD SEQUENTIAL STIM DATA (TARGET) === %%
+%% ================================
+%  LOAD SEQUENTIAL DATA (TARGET)
+% ================================
 cd(sequential_folder);
 load(dir('*sp_xia.mat').name, 'sp_clipped'); 
 sp_seq  = sp_clipped;
@@ -45,32 +51,48 @@ StimParams_seq  = S2.StimParams;
 n_Trials_seq    = S2.n_Trials;
 simultaneous_stim2 = S2.simultaneous_stim;
 
-% sequential: per-trial amplitude & stim-channel mapping
 trialAmps_seq   = cell2mat(StimParams_seq(2:end,16));
 trialAmps_seq   = trialAmps_seq(1:simultaneous_stim2:end);
+
 stimNames_seq   = StimParams_seq(2:end,1);
 [~, idx_all_seq] = ismember(stimNames_seq, E_MAP(2:end));
-stimChPerTrial_seq = arrayfun(@(t) unique(idx_all_seq((t-1)*simultaneous_stim2 + (1:simultaneous_stim2))), ...
-    (1:n_Trials_seq)', 'UniformOutput', false);
+stimChPerTrial_seq = cell(n_Trials_seq,1);
+for t = 1:n_Trials_seq
+    rr = (t-1)*simultaneous_stim2 + (1:simultaneous_stim2);
+    v  = idx_all_seq(rr);     % keep order
+    v  = v(v > 0);            % drop any zeros
+    stimChPerTrial_seq{t} = v(:).';
+end
 
-% optional: POST-TRIGGER DELAY of 2nd pulse present in column 6 (not used for 1st pulse injection)
-% post_trigger_delay_us = cell2mat(StimParams_seq(3:simultaneous_stim2:end,6));
+% Determine stimulation set ID for each sequential trial (order-sensitive)
+comb_seq = zeros(n_Trials_seq, simultaneous_stim2);
+for t = 1:n_Trials_seq
+    v = stimChPerTrial_seq{t};
+    comb_seq(t,1:numel(v)) = v;  % preserve ORDER
+end
+[uniqueComb_seq, ~, combClass_seq] = unique(comb_seq, 'rows', 'stable');
+nSeqSets = size(uniqueComb_seq,1);
 
-% channel index mapping
+%% === Extract POST-TRIGGER DELAY (PTD) for sequential pulses ===
+PTD_us_all = cell2mat(StimParams_seq(2:end, 6));   % µs for each pulse row
+PTD_us     = PTD_us_all(2:simultaneous_stim2:end); % one PTD per TRIAL (first pulse row)
+PTD_ms     = PTD_us / 1000;                        % convert to ms
+
+%% Load first-spike time file
+fst_file = dir('*FirstSpikeTimes.mat');
+assert(~isempty(fst_file), 'Missing FirstSpikeTimes.mat');
+load(fst_file(1).name, 'firstSpikeTimes');
+
+%% Channel mapping
 d = Depth_s(Electrode_type);
 
-%% === LOAD FIRST SPIKE TIMES FROM THE SEQUENTIAL DATA === %%
-% Expect firstSpikeTimes to be a 1×nChn cell: firstSpikeTimes{ch}(trial) in ms (relative to seq trigger)
-fst_file = dir('*FirstSpikeTimes.mat');
-assert(~isempty(fst_file), 'No *FirstSpikeTimes.mat found in the sequential folder.');
-load(fst_file(1).name, 'firstSpikeTimes');
-fprintf('Loaded sequential first-spike times: %s\n', fst_file(1).name);
-
-%% === MAIN INJECTION LOOP === %%
+%% ================================
+%  MAIN SPIKE INJECTION
+% ================================
 unique_amps = unique(trialAmps_seq);
 total_spikes_added_all = 0;
-
-fprintf('\n=== Injecting single-pulse spikes using seq first-spike per (ch,trial); single source = FIRST stim electrode ===\n');
+singleIdxCounter = ones(nSeqSets,1);   % 1 counter per seq stimulus set
+fprintf('\n=== ORDER-SENSITIVE SPIKE INJECTION START ===\n');
 
 for a = 1:numel(unique_amps)
     amp = unique_amps(a);
@@ -80,49 +102,58 @@ for a = 1:numel(unique_amps)
     for ti = 1:numel(trials_seq_this_amp)
         tr_seq = trials_seq_this_amp(ti);
 
-        % --- Determine first stim electrode for this sequential trial (e.g., [24,28] → 24) ---
+        % Determine FIRST electrode of sequential stimulation (ORDER)
         stimSet_seq = stimChPerTrial_seq{tr_seq};
         if isempty(stimSet_seq), continue; end
-        ch_first_stim = stimSet_seq(1);  % ALWAYS use the first electrode of the sequential pair
-
-        % --- Find matching single trials where ch_first_stim was stimulated at the same amplitude ---
+        ch_first_stim = stimSet_seq(1);   % ALWAYS first in order
+        % Find matching SINGLE trial for same amplitude + same channel
+    
         match_single = find( cellfun(@(x) ismember(ch_first_stim, x), stimChPerTrial_single) & ...
                              (trialAmps_single == amp) );
         if isempty(match_single)
-            warning('No single trial found for stim ch %d at %duA (seq trial %d).', ch_first_stim, amp, tr_seq);
+            warning('No single trial for stim %d at %duA (seq trial %d).', ...
+                     ch_first_stim, amp, tr_seq);
             continue;
         end
-
-        % safe cyclic reuse
-        tr_single = match_single( mod(ti-1, numel(match_single)) + 1 );
-
-        % anchors (ms)
-        t0_seq_ms    = trig_seq(tr_seq)   / FS * 1000;
-        t0_single_ms = trig_single(tr_single) / FS * 1000;
-
-        % For each RECORDING channel, define its OWN window end from sequential first spike time
+        % Safe cyclic reuse of single trials
+        % tr_single = match_single( mod(ti-1, numel(match_single)) + 1 );
+        % Determine which seq set this trial belongs to
+        seqSetID = combClass_seq(tr_seq);
+        % Cycle INSIDE this stim set only
+        k = singleIdxCounter(seqSetID);
+        tr_single = match_single(k);        
+        % update counter for this set only
+        k = k + 1;
+        if k > numel(match_single)
+            k = 1;
+        end
+        singleIdxCounter(seqSetID) = k;
+        
+        % Trigger times
+        t0_seq_ms    = trig_seq(tr_seq)/FS*1000;
+        t0_single_ms = trig_single(tr_single)/FS*1000;
+    
         for rec_ch = 1:nChn
-            % get channel-specific first-spike time in SEQ data for THIS trial
+            % get channel-specific first-spike time in seq
             first_ms = NaN;
             if rec_ch <= numel(firstSpikeTimes) && tr_seq <= numel(firstSpikeTimes{rec_ch})
                 first_ms = firstSpikeTimes{rec_ch}(tr_seq);
             end
-
             if ~(isfinite(first_ms) && first_ms > 1)
                 if use_fallback
-                    win_end = fallback_win_end;   % use small default window
+                    % win_end = fallback_win_end;
+                    win_end = PTD_ms(tr_seq) + 1;
                 else
-                    continue;                      % skip this channel/trial
+                    continue;
                 end
             else
-                win_end = first_ms;                % dynamic end
+                win_end = first_ms;
             end
 
-            % extract window in SINGLE data (relative to t0_single)
-            % t_start = t0_single_ms + 1;        % 1 ms
-            t_start = t0_single_ms;        % 1 ms
-            t_end   = t0_single_ms + win_end;  % channel-specific
-            % spikes_src = sp_single{d(rec_ch)};
+            % extract from SINGLE
+            t_start = t0_single_ms;
+            t_end   = t0_single_ms + win_end;
+
             spikes_src = sp_single{rec_ch};
             if isempty(spikes_src), continue; end
 
@@ -130,12 +161,11 @@ for a = 1:numel(unique_amps)
             spikes_add = spikes_src(in_win,:);
             if isempty(spikes_add), continue; end
 
-            % shift to SEQ timeline; inject at first pulse time (no PTD added)
+            % shift into seq timeline
             t_inject = t0_seq_ms + pulse_offset_ms;
             spikes_add(:,1) = spikes_add(:,1) - t0_single_ms + t_inject;
 
-            % append and keep time-ordered
-            % sp_seq{d(rec_ch)} = sortrows([sp_seq{d(rec_ch)}; spikes_add], 1);
+            % append
             sp_seq{rec_ch} = sortrows([sp_seq{rec_ch}; spikes_add], 1);
             total_spikes_added_amp = total_spikes_added_amp + size(spikes_add,1);
         end
@@ -145,9 +175,9 @@ for a = 1:numel(unique_amps)
     total_spikes_added_all = total_spikes_added_all + total_spikes_added_amp;
 end
 
-fprintf('\nTOTAL SPIKES ADDED TO SEQ DATA: %d\n', total_spikes_added_all);
+fprintf('\nTOTAL SPIKES ADDED: %d\n', total_spikes_added_all);
 
-%% === SAVE UPDATED SEQ FILE === %%
+%% save
 new_name = strrep(dir('*sp_xia.mat').name, '.sp_xia.mat', '.sp_xia_FirstPulse.mat');
 save(fullfile(sequential_folder, new_name), 'sp_seq', '-v7.3');
-fprintf('Saved updated sequential spikes as: %s\n', new_name);
+fprintf('Saved injected seq file: %s\n', new_name);

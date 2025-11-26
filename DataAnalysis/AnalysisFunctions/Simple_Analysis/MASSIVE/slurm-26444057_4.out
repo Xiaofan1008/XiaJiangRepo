@@ -1,0 +1,893 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2019 The MathWorks, Inc.
+                  R2019b (9.7.0.1190202) 64-bit (glnxa64)
+                              August 21, 2019
+
+ 
+For online documentation, see https://www.mathworks.com/support
+For product information, visit www.mathworks.com.
+ 
+>> >> >> >> >> >> >> >> >> >> >> >> S1E5_9elect_001_201203_170524
+>> Cleaning the digital lines
+There are 2320 digital lines here.
+Processing thresholds . . .
+09:16:54 Progress 0.50%
+Total recording time: 1984.1024 seconds.
+Time analysed per loop: 256 seconds.
+Processing SP . . .
+09:16:56 Progress 0.00%
+09:17:18 Progress 12.50%
+09:17:18 Progress 12.50%
+09:17:39 Progress 25.00%
+09:17:39 Progress 25.00%
+09:17:59 Progress 37.50%
+09:17:59 Progress 37.50%
+09:18:20 Progress 50.00%
+09:18:20 Progress 50.00%
+09:18:40 Progress 62.50%
+09:18:40 Progress 62.50%
+09:19:00 Progress 75.00%
+09:19:00 Progress 75.00%
+09:19:21 Progress 87.50%
+09:19:21 Progress 87.50%
+09:19:36 Progress 100.00%
+Saving spikes
+Working through trial: 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+1
+2
+Good fit 
+3
+Good fit 
+4
+5
+6
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+7
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  1.188540e-25.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+8
+9
+Good fit 
+10
+Good fit 
+11
+Good fit 
+12
+Good fit 
+13
+Good fit 
+14
+Good fit 
+15
+16
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+17
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  8.775588e-25.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+28
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  2.128493e-17.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+29
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+30
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+31
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  3.535477e-19.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+32
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+33
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  3.830514e-26.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+34
+Good fit 
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+35
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  1.097897e-25.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+36
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  1.099074e-25.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+37
+Good fit 
+38
+Good fit 
+39
+Good fit 
+40
+Good fit 
+41
+Good fit 
+42
+Good fit 
+43
+Good fit 
+[Warning: Iteration limit exceeded.  Returning results from final iteration.] 
+[> In nlinfit (line 320)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+44
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  6.191410e-27.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+45
+Good fit 
+46
+47
+Good fit 
+48
+Good fit 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+49
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  3.000920e-19.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+50
+Good fit 
+51
+52
+[Warning: Rank deficient, rank = 3, tol =  8.455969e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  9.385412e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  8.521245e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.229049e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.168061e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.168094e-13.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.168416e-13.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.171641e-13.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.203809e-13.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  5.520202e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  5.211940e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  5.235318e-13.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  3.194655e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  3.046549e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  4.408457e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  2.383695e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  2.383803e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  2.384875e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  2.395572e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  2.500028e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  3.371037e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.905783e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  7.869336e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  3.354486e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  3.816213e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  6.155667e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  5.986963e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Some columns of the Jacobian are effectively zero at the solution,
+indicating that the model is insensitive to some of its parameters.  That may
+be because those parameters are not present in the model, or otherwise do not
+affect the predicted values.  It may also be due to numerical underflow in the
+model function, which can sometimes be avoided by choosing better initial
+parameter values, or by rescaling or recentering.  Parameter estimates may be
+unreliable.] 
+[> In nlinfit (line 381)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+53
+[Warning: Matrix is singular to working precision.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+54
+55
+Good fit 
+56
+57
+58
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+59
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  1.919444e-25.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: The Jacobian at the solution is ill-conditioned, and some model
+parameters may not be estimated well (they are not identifiable).  Use caution
+in making predictions.] 
+[> In nlinfit (line 384)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+60
+[Warning: Matrix is close to singular or badly scaled. Results may be
+inaccurate. RCOND =  7.877538e-19.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  1.031981e-13.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 2, tol =  9.986682e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Some columns of the Jacobian are effectively zero at the solution,
+indicating that the model is insensitive to some of its parameters.  That may
+be because those parameters are not present in the model, or otherwise do not
+affect the predicted values.  It may also be due to numerical underflow in the
+model function, which can sometimes be avoided by choosing better initial
+parameter values, or by rescaling or recentering.  Parameter estimates may be
+unreliable.] 
+[> In nlinfit (line 381)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+61
+[Warning: Matrix is singular to working precision.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  1.902675e-15.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  4.462169e-15.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  1.352105e-14.] 
+[> In nlinfit>LMfit (line 614)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 3, tol =  8.414793e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Rank deficient, rank = 2, tol =  3.828756e-14.] 
+[> In nlinfit>LMfit (line 587)
+  In nlinfit (line 284)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+[Warning: Some columns of the Jacobian are effectively zero at the solution,
+indicating that the model is insensitive to some of its parameters.  That may
+be because those parameters are not present in the model, or otherwise do not
+affect the predicted values.  It may also be due to numerical underflow in the
+model function, which can sometimes be avoided by choosing better initial
+parameter values, or by rescaling or recentering.  Parameter estimates may be
+unreliable.] 
+[> In nlinfit (line 381)
+  In NonLinearModel/fitter (line 1127)
+  In classreg.regr/FitObject/doFit (line 94)
+  In NonLinearModel.fit (line 1434)
+  In fitnlm (line 99)
+  In BoltzmannSigmoidFit (line 94)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)] 
+62
+[Warning: Matrix is singular to working precision.] 
+[> In linhyptest (line 92)
+  In NonLinearModel/coefTest (line 774)
+  In BoltzmannSigmoidFit (line 101)
+  In ratioALLnormalise (line 3)
+  In MASSIVE_ANALYSIS_LOOP (line 110)
+] 
+63
+64
+End of Analysis for: /fs03/fs11/Sabrina/Data/Rat_013/S1E5_9elect_001_201203_170524
+>> 

@@ -1,0 +1,54 @@
+%ratioLoop
+Ratnum='Rat_005';
+D = dir; % D is a struct ... first elements are '.' and '..' used for navigation.
+folder = fileparts(which('MASSIVE_ANALYSIS_LOOP')); % Determines filepath to folder containing your .m file even if your is not stored in same dir as long as path is added
+addpath(genpath(folder)); % adds folder and all subfolders to path for all functions
+fileptochange=folder(1:end-8);%Path name minus '/MASSIVE'
+
+cd([fileptochange filesep 'Data' filesep Ratnum])%change working directory to where data is stored - currently manually input
+D_data=dir;
+electsigall=0;
+electnonsigall=0;
+electallall=0;
+electsigall75=0;
+electnonsigall75=0;
+electallall75=0;
+electsigall25=0;
+electnonsigall25=0;
+electallall25=0;
+pall=0;
+num=0;
+MSEalltrials=0;
+for k = 3:length(D_data) % avoid using the first ones
+    currD = D_data(k).name; % Get the current subdirectory name
+    if strcmp(currD,'pen1_dualvary_15_002_200904_130226')
+        continue
+    end
+    try
+        [electsig,electnonsig,electall, electsig75,electnonsig75,electall75,electsig25,electnonsig25,electall25,p]=RATIOLOOP_MASSIVE([D_data(k).folder filesep currD])
+        electsigall=electsig+electsigall;
+        electnonsigall=electnonsig+electnonsigall;
+        electallall=electallall+electall;
+        electsigall75=electsig75+electsigall75;
+        electnonsigall75=electnonsig75+electnonsigall75;
+        electallall75=electallall75+electall75;
+        electsigall25=electsig25+electsigall25;
+        electnonsigall25=electnonsig25+electnonsigall25;
+        electallall25=electallall25+electall25;
+        pall=p+pall;
+        
+       [electfit,MSEtotal]=SigmoidfunctionNoDual([D_data(k).folder filesep currD]);
+       fprintf([num2str(MSEtotal) newline])
+       MSEalltrials=MSEtotal+MSEalltrials;
+       num=num+1;
+         
+    catch
+    end
+
+    cd(folder)
+    SubDir_Path=[D_data(k).folder filesep currD];
+    fprintf(['End of Analysis for: %s ' newline], SubDir_Path)
+end
+cd([fileptochange filesep 'Data' filesep Ratnum])%change working directory to where data is stored - currently manually input
+save('Ratio_all.mat', 'electsigall', 'electnonsigall', 'electallall', 'MSEalltrials')
+

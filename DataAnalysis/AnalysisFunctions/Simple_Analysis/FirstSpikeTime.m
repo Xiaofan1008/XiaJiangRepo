@@ -9,10 +9,10 @@
 % ============================================================
 
 clear;
-
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 %% === User Input ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
-response_window_ms = [5, 15];  % Time window after stim to search for first spike (ms)
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
+response_window_ms = [25, 35];  % Time window after stim to search for first spike (ms)
 FS = 30000;  % Sampling rate (Hz)
 
 %% === Check folder and load files ===

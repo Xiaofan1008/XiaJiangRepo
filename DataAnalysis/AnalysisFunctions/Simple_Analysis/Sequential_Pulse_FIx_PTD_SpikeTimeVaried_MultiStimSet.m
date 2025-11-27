@@ -3,9 +3,9 @@ clear all;
 
 %% === USER PARAMETERS === %%
 single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
 pulse_offset_ms   = 0;     
-fallback_win_end  = 6;     
+fallback_win_end  = 26;     
 use_fallback      = true;
 FS = 30000;
 Electrode_type = 1;

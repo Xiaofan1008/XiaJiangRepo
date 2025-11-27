@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single3_251106_131759';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
 
 
 
@@ -18,7 +18,7 @@ raster_chn_end = 32; %nChn
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Parameters for plotting
-ras_win       = [-10 30];   % ms, time window to plot (you can change this)
+ras_win       = [-10 40];   % ms, time window to plot (you can change this)
 bin_ms_raster = 1;          % bin size for PSTH (ms)
 smooth_ms     = 2;          % smoothing window (ms)
 Plot_Amps     = [10];        % amplitudes (µA) to plot; one figure per amp & stim set

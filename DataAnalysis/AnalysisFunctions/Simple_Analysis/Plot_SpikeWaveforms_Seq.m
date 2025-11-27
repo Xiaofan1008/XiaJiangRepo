@@ -19,7 +19,7 @@ spike_chn_end = 32; %nChn
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -147,8 +147,9 @@ stimNames = StimParams(2:end,1);
 stimChPerTrial_all = cell(n_Trials,1);
 for t = 1:n_Trials
     rr = (t-1)*simultaneous_stim + (1:simultaneous_stim);
-    v = unique(idx_all(rr)); v = v(v > 0).';
-    stimChPerTrial_all{t} = v;
+    v = idx_all(rr);     % KEEP ORDER (critical)
+    v = v(v > 0);        % remove zeros only
+    stimChPerTrial_all{t} = v(:).';
 end
 comb = zeros(n_Trials, simultaneous_stim);
 for i = 1:n_Trials
@@ -168,7 +169,7 @@ n_PULSE = numel(PulsePeriods);
 
 % Extract post-trigger delay
 postTrigDelay_all = cell2mat(StimParams(2:end,6));
-postTrigDelay = postTrigDelay_all(1:simultaneous_stim:end);
+postTrigDelay = postTrigDelay_all(2:simultaneous_stim:end);
 [uniqueDelays, ~, delayIdx] = unique(postTrigDelay);
 n_DELAYS = numel(uniqueDelays);
 
@@ -207,7 +208,7 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
         delay_val = uniqueDelays(delay_i);
         for s = 1:nSets
         set_id = s;
-        trial_mask = (combClass_win == set_id);
+        trial_mask = (combClass_win == set_id) & (delayIdx == delay_i);
         if ~any(trial_mask), continue; end
 
         trial_ids = find(trial_mask);
@@ -240,7 +241,7 @@ for ich = spike_chn_start:spike_chn_end %1:nChn
         % Plot
         stimIdx = uniqueComb(set_id,:); stimIdx = stimIdx(stimIdx > 0);
         stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
-        figure('Name', sprintf('Ch %d | StimSet %d (%s)', ich, set_id, stimLabel), ...
+        figure('Name', sprintf('Ch %d | Set %d (%s) | PTD %.2f ms', ich, set_id, stimLabel, delay_val/1000), ...
                'Color','w','Position', [100 100 1400 800]);        
         % tiledlayout(4, 5, 'Padding','compact', 'TileSpacing','compact');
         tiledlayout(layout_row, layout_col, 'Padding','compact', 'TileSpacing','compact');

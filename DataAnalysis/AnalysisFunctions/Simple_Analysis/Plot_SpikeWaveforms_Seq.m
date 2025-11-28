@@ -6,6 +6,9 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Spike Filtering Parameters
 Spike_filtering = 0; 
+Electrode_Type = 2;
+
+
 pos_limit = 100;    % upper bound (µV)
 neg_limit = -100;  % lower bound (µV)
 width_min_ms = 0.01;
@@ -174,7 +177,7 @@ postTrigDelay = postTrigDelay_all(2:simultaneous_stim:end);
 n_DELAYS = numel(uniqueDelays);
 
 % Electrode Map
-d = Depth_s(1); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
+d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
 
 %% Spike Waveform Parameters

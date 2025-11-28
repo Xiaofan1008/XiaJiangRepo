@@ -7,13 +7,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim4_251128_150648';
 
 %% Choice
 Spike_filtering = 0;
-raster_chn_start = 1;
+raster_chn_start = 32;
 raster_chn_end = 32; %nChn
-Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 
 %% Spike Amplitude Filtering Parameters
@@ -134,7 +134,7 @@ pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
 [PulsePeriods, ~, pulseIdx] = unique(pulseTrain(:));
 n_PULSE = numel(PulsePeriods);
 
-%% === Extract POST-TRIGGER DELAY (PTD) per trial ===
+% Extract POST-TRIGGER DELAY (PTD)
 % Column 6 stores PTD for the 2nd pulse of each trial block
 % For sequential stimulation: row 2 = delayed pulse
 if simultaneous_stim > 1
@@ -145,8 +145,43 @@ end
 
 PTD_us = ptd_all(:);
 [PTD_values, ~, ptdIdx] = unique(PTD_us);
-n_PTD = numel(PTD_values);
 
+%% ============================================================
+%   BLANK SPIKES BETWEEN 0 ms AND PTD FOR EACH TRIAL
+%   This removes all spikes occurring between:
+%       trigger_time  -->  trigger_time + PTD (in ms)
+if Spike_filtering ==1
+    fprintf('\nBlanking spikes from 0 → PTD for each trial...\n');
+    
+    sp_blank = sp;   % start from raw spike timestamps
+    
+    for ch = 1:numel(sp_blank)
+        if isempty(sp_blank{ch}), continue; end
+    
+        spike_times = sp_blank{ch}(:,1);    % in ms
+    
+        % build a logical mask of spikes to keep
+        keep_mask = true(size(spike_times));
+    
+        % loop through trials
+        for tr = 1:length(trig)
+            t0_ms   = trig(tr) / FS * 1000;     % trigger time in ms
+            PTD_ms  = PTD_us(tr) / 1000;        % convert µs → ms
+    
+            % blank all spikes between [t0, t0 + PTD]
+            blank_mask = spike_times >= t0_ms & spike_times < (t0_ms + PTD_ms);
+            keep_mask(blank_mask) = false;
+        end
+    
+        % apply blanking
+        sp_blank{ch} = sp_blank{ch}(keep_mask,:);
+    end
+    
+    fprintf('Spike blanking complete.\n');
+    
+    % from here on, the pipeline uses sp_blank instead of sp or sp_clipped
+    sp = sp_blank;
+end 
 if isempty(PTD_to_plot)
     PTD_selected = PTD_values;
 else
@@ -154,7 +189,7 @@ else
 end
 fprintf('\nDetected PTDs (µs):'); disp(PTD_values');
 fprintf('PTDs selected for plotting:'); disp(PTD_selected');
-
+n_PTD = numel(PTD_selected);
 % Electrode Map
 d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four Shanks Flex
 
@@ -398,8 +433,8 @@ end
 
 %% Raster Plot Parameters
 ras_win         = [-20 100];   % ms
-bin_ms_raster   = 2;           % bin size
-smooth_ms       = 3;           % smoothing window
+bin_ms_raster   = 1;           % bin size
+smooth_ms       = 2;           % smoothing window
 % raster_chn_start = 1;
 % raster_chn_end = 32; %nChn
 
@@ -409,130 +444,123 @@ fprintf('\nComputing First Spike Times per Trial\n');
 post_spike_window_ms = [5,8];
 
 %% Raster Plot 
- edges = ras_win(1):bin_ms_raster:ras_win(2);
-    ctrs  = edges(1:end-1) + diff(edges)/2;
-    bin_s = bin_ms_raster / 1000;
-    g = exp(-0.5 * ((0:smooth_ms-1) / (smooth_ms/2)).^2);
-    g = g / sum(g);
+ %% ========================= RASTER + PSTH ========================= %%
+edges = ras_win(1):bin_ms_raster:ras_win(2);
+ctrs  = edges(1:end-1) + diff(edges)/2;
+bin_s = bin_ms_raster/1000;
+g = exp(-0.5*((0:smooth_ms-1)/(smooth_ms/2)).^2); 
+g = g / sum(g);
 
-    for ich = raster_chn_start:raster_chn_end
-        ch = d(ich);
-        if isempty(sp_clipped{ch}), continue; end
+for ich = raster_chn_start:raster_chn_end
+    ch = d(ich);
+    if isempty(sp_clipped{ch}), continue; end
 
-        for si = 1:nSets
-            set_id = si;
-            stimIdx = uniqueComb(set_id, :); stimIdx = stimIdx(stimIdx > 0);
-            setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ' + ');
+    for si = 1:nSets
+        stimVec = uniqueComb(si, :);
+        stimVec = stimVec(stimVec > 0);
+        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimVec, 'UniformOutput', false), '→');
 
-            for pi = 1:n_PULSE
-                pulse_val = PulsePeriods(pi);
-                for ptd_val = PTD_selected  
-                    trials_this_period = find( pulseIdx == pi & combClass_win == set_id & PTD_us == ptd_val );
-                    if isempty(trials_this_period), continue; end
-                    figure('Color','w','Name',sprintf('Ch %d | Set %s | PTD %d µs', ich, setLabel, ptd_val));
-                    tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');                    
-                    ax1 = nexttile([3 1]); 
-                    hold(ax1,'on'); 
-                    box(ax1,'off');                    
-                    title(ax1, sprintf('Raster — Ch %d | Set: %s | PTD %d µs', ich, setLabel, ptd_val), 'Interpreter','none');                    
-                    ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
-    
-                    psth_curves = cell(1, n_AMP);
-                    maxRate = 0;
-                    y_cursor = 0;
-                    ytick_vals = [];
-                    ytick_labels = {};
-                    total_spikes = 0;
-    
-                    for ai = 1:n_AMP
-                        amp_val = Amps(ai);
-                        color = cmap(ai,:);
-                        amp_trials = find(ampIdx == ai & pulseIdx == pi & combClass_win == set_id);
-                        nTr = numel(amp_trials);
-                        spkTimesPerTrial = cell(nTr,1);
-                        counts = zeros(1, numel(edges)-1);
-                        total_spikes_amp = 0;
-    
-                        for t = 1:nTr
-                            tr = amp_trials(t);
-                            S_ch = sp_clipped{ch};
-                            t0 = trig(tr)/FS*1000;
-                            tt = S_ch(:,1);
-                            tt = tt(tt >= t0 + ras_win(1) & tt <= t0 + ras_win(2)) - t0;
-                            spkTimesPerTrial{t} = tt;
-                            counts = counts + histcounts(tt, edges);
-                            total_spikes_amp = total_spikes_amp + numel(tt);
-                        end
-                        total_spikes = total_spikes + total_spikes_amp;
-    
-                        for t = 1:nTr
-                            tt = spkTimesPerTrial{t};
-                            y0 = y_cursor + t;
-                            for k = 1:numel(tt)
-                                plot(ax1, [tt(k) tt(k)], [y0-0.4 y0+0.4], 'Color', color, 'LineWidth', 1.2);
-                            end
-                        end
-    
-                        ytick_vals(end+1) = y_cursor + max(nTr, 1)/2;
-                        ytick_labels{end+1} = sprintf('%.0f µA', amp_val);
-    
-                        % Horizontal divider
-                        if nTr > 0
-                            plot(ax1, ras_win, [y_cursor+nTr y_cursor+nTr], 'Color', [0.8 0.8 0.8], 'LineStyle','--');
-                        end
-    
-                        % ---- Add spike count label ----
-                        if nTr > 0
-                            text(ax1, ras_win(2)+2, y_cursor + nTr/2, ...
-                                 sprintf('%d spikes', total_spikes_amp), ...
-                                 'Color', color, 'FontSize', 9, 'HorizontalAlignment','left');
-                        end
-    
-                        y_cursor = y_cursor + max(nTr,1);
-    
-                        if nTr > 0
-                            rate = counts / (nTr * bin_s);
-                            rate_s = filter(g, 1, rate);
-                            psth_curves{ai} = rate_s;
-                            maxRate = max(maxRate, max(rate_s));
-                        else
-                            psth_curves{ai} = zeros(1, numel(ctrs));
-                        end
-    
-                        % fprintf('Ch %2d | Set %s | %4d µs | %3d µA — Total spikes: %d\n', ...
-                        %     ich, setLabel, pulse_val, amp_val, total_spikes_amp);
+        for pi = 1:n_PULSE
+            pulse_val = PulsePeriods(pi);
+
+            for i_PTD = 1:n_PTD
+                ptd_val = PTD_selected(i_PTD);
+
+                % --------- FIXED: restrict to THIS PTD ---------
+                trials_this_period = find( combClass_win == si & ...
+                                           pulseIdx == pi & ...
+                                           ampIdx >= 1 & ...   % any amp
+                                           PTD_us == ptd_val );  % << FIXED
+                if isempty(trials_this_period), continue; end
+
+                % --------- FIGURE ---------
+                figName = sprintf('Ch %d | Set %s | Pulse %d µs | PTD %d µs', ...
+                                  ich, setLabel, pulse_val, ptd_val);
+                figure('Color','w','Name',figName);
+                tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+
+                ax1 = nexttile([3 1]);
+                hold(ax1,'on'); box(ax1,'off');
+                title(ax1, sprintf('Raster — Ch %d | Set %s | PTD %d µs', ...
+                                   ich, setLabel, ptd_val), 'Interpreter','none');
+
+                ax2 = nexttile; hold(ax2,'on'); box(ax2,'off');
+
+                % ===== PSTH storage =====
+                psth_curves = cell(1, n_AMP);
+                maxRate = 0;
+                y_cursor = 0;
+                ytick_vals = [];
+                ytick_labels = {};
+
+                % ================= LOOP AMPLITUDES ==================
+                for ai = 1:n_AMP
+                    amp_val = Amps(ai);
+                    color = cmap(ai,:);
+
+                    % -------- FIXED TRIAL FILTERING --------
+                    amp_trials = find( ampIdx == ai & ...
+                                       pulseIdx == pi & ...
+                                       combClass_win == si & ...
+                                       PTD_us == ptd_val );   % << FIXED
+
+                    nTr = numel(amp_trials);
+                    if nTr == 0
+                        psth_curves{ai} = zeros(1, numel(ctrs));
+                        continue;
                     end
-                    % fprintf('Ch %2d | Set %s | %4d µs — Total spikes: %d\n', ...
-                    %         ich, setLabel, pulse_val, total_spikes);
-    
-                    fprintf('Ch %2d | Set %s — Total spikes: %d\n',ich, setLabel, total_spikes);
-    
-                    % Finalize raster plot
-                    xline(ax1, 0, 'r', 'LineWidth', 1.5);
-                    xlim(ax1, [ras_win(1), ras_win(2) + 15]);  % extra space for spike count label
-                    ylim(ax1, [0, y_cursor]);
-                    yticks(ax1, ytick_vals);
-                    yticklabels(ax1, ytick_labels);
-                    ylabel(ax1, 'Amplitude');
-                    % title(ax1, sprintf('Raster — Ch %d | Set: %s | %d µs', ich, setLabel, pulse_val), 'Interpreter','none');
-                    title(ax1, sprintf('Raster — Ch %d | Set: %s', ich, setLabel), 'Interpreter','none');
-    
-                    % PSTH
-                    for ai = 1:n_AMP
-                        plot(ax2, ctrs, psth_curves{ai}, 'Color', cmap(ai,:), 'LineWidth', 1.5);
+
+                    % ======== RASTER + PSTH COUNTING ========
+                    counts = zeros(1, numel(edges)-1);
+                    for t = 1:nTr
+                        tr = amp_trials(t);
+                        t0 = trig(tr)/FS*1000;
+
+                        tt = sp_clipped{ch}(:,1);
+                        tt = tt(tt >= t0+ras_win(1) & tt <= t0+ras_win(2)) - t0;
+
+                        % ---- RASTER ----
+                        y0 = y_cursor + t;
+                        for spike_t = tt'
+                            plot(ax1, [spike_t spike_t], [y0-0.4 y0+0.4], 'Color', color, 'LineWidth', 1.1);
+                        end
+
+                        % ---- PSTH ----
+                        counts = counts + histcounts(tt, edges);
                     end
-                    xline(ax2, 0, 'r', 'LineWidth', 1.5);
-                    xlim(ax2, ras_win);
-                    if maxRate > 0
-                        ylim(ax2, [0 ceil(maxRate*1.1/10)*10]);
-                    else
-                        ylim(ax2, [0 1]);
-                    end
-                    xlabel(ax2, 'Time (ms)');
-                    ylabel(ax2, 'Rate (sp/s)');
-                    legend(ax2, arrayfun(@(a) sprintf('%.0f µA', a), Amps, 'UniformOutput', false), ...
-                        'Box','off','Location','northeast');
+
+                    % y-axis structure
+                    ytick_vals(end+1) = y_cursor + nTr/2;
+                    ytick_labels{end+1} = sprintf('%d µA', amp_val);
+                    y_cursor = y_cursor + nTr;
+
+                    % ---- Compute PSTH ----
+                    rate = filter(g, 1, counts/(nTr*bin_s));
+                    psth_curves{ai} = rate;
+                    maxRate = max(maxRate, max(rate));
                 end
-            end
-        end
-    end
+
+                % Finalize raster axis
+                xline(ax1, 0, 'r--');
+                xlim(ax1, ras_win);
+                ylim(ax1, [0 y_cursor]);
+                yticks(ax1, ytick_vals);
+                yticklabels(ax1, ytick_labels);
+                ylabel(ax1, 'Amplitude');
+
+                % Finalize PSTH
+                for ai = 1:n_AMP
+                    plot(ax2, ctrs, psth_curves{ai}, 'Color', cmap(ai,:), 'LineWidth', 1.6);
+                end
+                xline(ax2, 0, 'r--');
+                xlim(ax2, ras_win);
+                ylim(ax2, [0 max(50,ceil(maxRate*1.1/10)*10)]);
+                xlabel(ax2, 'Time (ms)');
+                ylabel(ax2, 'Rate (sp/s)');
+                legend(ax2, arrayfun(@(a) sprintf('%.0f µA',a), Amps, 'UniformOutput', false), ...
+                       'Box','off','Location','northeast');
+
+            end % PTD
+        end % Pulse
+    end % Set
+end % Channel

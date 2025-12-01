@@ -15,14 +15,14 @@ width_max_ms = 0.4;
 spike_chn_start = 22;
 spike_chn_end = 22; %nChn
 
-selectedAmps = [5]; 
+selectedAmps = [10]; 
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Choose Folder
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single7';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');
@@ -300,7 +300,7 @@ d = Depth_s(Electrode_Type); % 0-Single Shank Rigid, 1-Single Shank Flex, 2-Four
 % bin_ms = 5;          % bin size (ms)
 
 pre_ms  = 5;     % time BEFORE trigger to include (ms)
-post_ms = 20;    % time AFTER trigger to include (ms)
+post_ms = 35;    % time AFTER trigger to include (ms)
 
 bin_ms = 5;       % bin size (unchanged)
 % nBins  = win_ms / bin_ms;
@@ -311,8 +311,8 @@ edges = -pre_ms : bin_ms : post_ms;
 nBins = numel(edges) - 1;
 amp_threshold = 100;  % max allowed amplitude (µV)
 
-layout_row = 1; % plot time window layout in rows
-layout_col = 5; % plot time window layout in columns
+layout_row = 2; % plot time window layout in rows
+layout_col = 4; % plot time window layout in columns
 
 
 %% Spike plotting loop

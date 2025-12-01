@@ -11,8 +11,8 @@ data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim4_251128_150
 
 %% Choice
 Spike_filtering = 0;
-raster_chn_start = 32;
-raster_chn_end = 32; %nChn
+raster_chn_start = 10;
+raster_chn_end = 10; %nChn
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 

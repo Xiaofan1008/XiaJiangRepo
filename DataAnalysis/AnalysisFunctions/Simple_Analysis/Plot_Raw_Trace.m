@@ -3,10 +3,10 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% User settings
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1_251128_114443';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1_251202_121651';
 
 channels_to_plot = [5 12 20];             % channels to plot (Intan numbering)
-amps_to_plot     = [4 6 8];               % amplitudes to include (µA)
+amps_to_plot     = [5 6 10];               % amplitudes to include (µA)
 ptd_to_plot      = [];                    % PTDs to include (µs), empty = all
 sets_to_plot     = [];                    % stimulation sets to include, empty = all
 

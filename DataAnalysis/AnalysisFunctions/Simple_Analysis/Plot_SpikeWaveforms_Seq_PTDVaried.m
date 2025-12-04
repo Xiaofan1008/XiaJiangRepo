@@ -5,11 +5,11 @@ pos_limit = 100;
 neg_limit = -100;
 
 %% User Params
-spike_chn_start = 10;
-spike_chn_end   = 10;
-plot_amps       = [6];      % amplitudes to include
+spike_chn_start = 48;
+spike_chn_end   = 48;
+plot_amps       = [4 6];      % amplitudes to include
 Electrode_Type  = 2;
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1_251128_114443';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single1_251203_121428';
 
 %% Check folder
 if ~isfolder(data_folder), error('Invalid folder'); end
@@ -39,8 +39,10 @@ if isempty(dir('*.trig.dat')), cleanTrig_sabquick; end
 trig = loadTrig(0);
 
 %% Load clipped spike file (first pulse spikes)
-load([base_name '.sp_xia_FirstPulse.mat']);
-sp_clipped = sp_seq;
+% load([base_name '.sp_xia_FirstPulse.mat']);
+% sp_clipped = sp_seq;
+
+load([base_name '.sp_xia.mat']);
 
 %% Load stim params
 fileDIR = dir('*_exp_datafile_*.mat');

@@ -14,7 +14,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% === User Input ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim4_251128_150648';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim1_251203_121823';
 
 win_ms = 10;       % window length after PTD (ms)
 FS = 30000;        % sampling rate
@@ -51,7 +51,7 @@ n_Trials   = S.n_Trials;
 
 fprintf('Loaded StimParams: %d trials.\n', n_Trials);
 
-%%       EXTRACT PTD PER TRIAL
+%% EXTRACT PTD PER TRIAL
 
 if simN > 1
     % PTD for each trial is row 2 of every block of simN

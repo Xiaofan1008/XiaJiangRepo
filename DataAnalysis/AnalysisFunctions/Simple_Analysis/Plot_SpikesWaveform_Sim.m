@@ -12,14 +12,14 @@ width_min_ms = 0.01;
 width_max_ms = 0.4;
 
 %% Spike waveform channel 
-spike_chn_start = 1;
-spike_chn_end = 32; %nChn
-Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+spike_chn_start = 9;
+spike_chn_end = 9; %nChn
+Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Choose Folder
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim5'; 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single2_251203_125117';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 if ~isfolder(data_folder)

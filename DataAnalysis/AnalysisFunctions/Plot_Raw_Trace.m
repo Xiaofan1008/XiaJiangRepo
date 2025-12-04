@@ -3,15 +3,15 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single1_251128_113846';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single2_251203_125117';
 
 channels_to_plot = [10];              % channels to plot (Depth_s index)
 amps_to_plot     = [6];              % amplitudes to include (µA)
-ptd_to_plot      = [0];      % PTDs (ms), [] means all
+ptd_to_plot      = [];      % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
 
-nTrials_to_plot  = 10;                  % how many trials to draw per condition
-plot_window_ms   = [-5 35];             % window around trigger
+nTrials_to_plot  = 20;                  % how many trials to draw per condition
+plot_window_ms   = [-5 40];             % window around trigger
 
 Electrode_Type   = 2;                   % 0 rigid, 1 flex, 2 4-shank flex
 

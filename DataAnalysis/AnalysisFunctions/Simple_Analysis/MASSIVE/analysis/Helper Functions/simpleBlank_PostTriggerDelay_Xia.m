@@ -1,8 +1,11 @@
 function data = simpleBlank_PostTriggerDelay_Xia(data,N,T,trig,mode,FS)
-TrialParams = loadTrialParams; TrialParams = cell2mat(TrialParams(:,2))';
+TrialParams = loadTrialParams; 
+TrialParams = cell2mat(TrialParams(:,2))';
 num_elect=min(diff(find(diff(TrialParams)~=0))); % number of electrodes used per trial
 TrialParams=TrialParams(1:num_elect:end,:);
-loadStimParams;StimParams_pulseinfo=cell2mat(StimParams(2:num_elect:end,8:9));
+loadStimParams;
+StimParams_pulseinfo=cell2mat(StimParams(2:num_elect:end,8:9));
+
 if num_elect >= 2
     StimParams_PulseDelay_info=cell2mat(StimParams(3:num_elect:end,6));
 else 
@@ -10,6 +13,8 @@ else
 end
 
 nChn = size(data,1); 
+
+%% High-Pass -> Spike extraction
 if mode == 1 % for HPF
     % how many samples before the trigger time should be include in the blanking window
     BIN_b = -FS/1000; % Amount to blank in samples; at 30kHz, about 1ms
@@ -17,15 +22,18 @@ if mode == 1 % for HPF
     % find the trials might be missed if they located close to the boundary
     % of each chunk (trigger at the end of last chunk, but data in the
     % current chunk)
+    % --idnetify trials inside 
     missed_trials = TrialParams(trig > ((N-1)*T*FS)-3000 & trig < ((N-1)*T*FS)+3000); % gives the trial label
     missed_trig = trig(trig > ((N-1)*T*FS)-3000 & trig < ((N-1)*T*FS)+3000); % gives the sample index
     temp=find(trig > ((N-1)*T*FS)-3000 & trig < ((N-1)*T*FS)+3000);
     missed_trials((missed_trig==-500))=[];
     missed_trig((missed_trig==-500))=[];
     index=trig >= ((N-1)*T*FS)+3000 & trig <= (N*T*FS)-3000; % triggers inside the chunk (not close to the edge) 
+    
     trials = TrialParams(index); % trial ID 
     pulsetrain_info=StimParams_pulseinfo(index,:); % pulse information for included trials in the chunk
     trig = trig(index);
+    
     if ~isempty(missed_trig)
         missed_pulseinfo=cell2mat(StimParams(temp+1,8:9));    missed_pulseinfo((missed_trig==-500))=[];
         trials = [missed_trials trials];
@@ -37,24 +45,22 @@ if mode == 1 % for HPF
     else
         trig = trig - ((N-1)*T*FS) + FS;
     end
+    
     shifttime=min(diff(trig))-0.101*FS;
+    
     wd=dir;
     if (strcmp(wd(3).folder(end-12:end-7),'220907') || strcmp(wd(3).folder(end-12:end-7),'220908')) && strcmp(wd(3).folder(end-25:end-14),'PEN2_SIGMOID')
         pulsetrain_info(:,1)=2;
         pulsetrain_info(:,2)=10000/3;%fix bug
     end
-    
-    % fix bug for 15ms ISI
-    % pulsetrain_info(abs(pulsetrain_info(:,2) - 14925) < 1, 2) = 15000; 
 
 
+    % ---- Main Processing Loop ---- %
     for t = 1:length(trig) %used to go from 1
         % Don't blank zero trials
 %         if trials(t) == 1
 %             continue;
 %         end
-
-
         if trials(t) == 5
             pause(0.01);
         end
@@ -62,7 +68,7 @@ if mode == 1 % for HPF
         for c = 1:nChn
             %for pulsetrain=1:pulsetrain_info(t,1)
             %thisTrig=round(trig(t)+((pulsetrain-1)*(pulsetrain_info(t,2)*(FS/10^6))));
-            % Find the appropriate range
+            % ----- （1）Find the appropriate range ----- 
             if pulsetrain_info(t,1)<2 && StimParams_PulseDelay_info(t) == 0 % single pulse case without PTD
             ra = [1 46]; % window of 46 samples; around 1.5ms
             range_max = 150; % Artifact considered "gone" if within +- 150mV
@@ -85,7 +91,6 @@ if mode == 1 % for HPF
                 while range(data(c,thisTrigtemp+ra(1):thisTrigtemp+ra(2))) > range_max
                     ra = ra + 1;
                     if ra(1) > 180
-                    % if ra(1) > 600
                         ra(1) = 180;
                         break;
                     end
@@ -95,6 +100,7 @@ if mode == 1 % for HPF
                     ra(1) = 180;
                 end
                 ra=ra+(pulsetrain_info(t,1)-1)*(pulsetrain_info(t,2)*(FS/10^6));
+            
             elseif StimParams_PulseDelay_info(t) > 0 && pulsetrain_info(t,1)<2
                 thisTrigtemp = round(trig(t) + StimParams_PulseDelay_info(t) * (FS/1e6));
                 ra = [1 46];
@@ -102,7 +108,6 @@ if mode == 1 % for HPF
                 while range(data(c,thisTrigtemp+ra(1):thisTrigtemp+ra(2))) > range_max
                     ra = ra + 1;
                     if ra(1) > 180
-                    % if ra(1) > 600
                         ra(1) = 180;
                         break;
                     end
@@ -115,7 +120,8 @@ if mode == 1 % for HPF
             end
             % Shift the entire data array to minimize artefact. Convenient
             
-            %original code
+            % ----- (2) Perform artifact interpolation + Shift correction 
+            % original code
             % place to reintroduce artefact is +100 msec before next trig
             if thisTrig<length(data)-FS
                 data(c,thisTrig+BIN_b:thisTrig+ra(1)) = interpolate(data(c,thisTrig+BIN_b:thisTrig+ra(1)),1); % interpolate to remove the artifact

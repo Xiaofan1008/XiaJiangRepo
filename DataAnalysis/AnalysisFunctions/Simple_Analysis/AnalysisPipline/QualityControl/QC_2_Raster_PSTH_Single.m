@@ -16,9 +16,9 @@ bin_ms_raster   = 1;           % bin size (ms)
 smooth_ms       = 2;           % PSTH smoothing window (Gaussian)
 
 
-%% ================================================================
-%%                       PATH CHECK + BASE NAME
-%% ================================================================
+% ================================================================
+%                       PATH CHECK + BASE NAME
+% ================================================================
 if ~isfolder(data_folder)
     error('Specified folder does not exist.');
 end
@@ -35,19 +35,18 @@ else
     base_name = last_folder;
 end
 
-%% ================================================================
-%%                     LOAD FILTERED SPIKES
-%% ================================================================
-fprintf('Loading filtered spikes from sp_xia.mat...\n');
-filtered_file = [base_name '.sp_xia.mat'];
-assert(isfile(filtered_file), ...
-    'Filtered spike file %s not found. Run SpikeFiltering_Save.m first.', filtered_file);
-
-load(filtered_file, 'sp_clipped');
-
-%% ================================================================
-%%                          LOAD TRIGGERS
-%% ================================================================
+% ================================================================
+%                     LOAD FILTERED SPIKES
+% ================================================================
+fprintf('Loading filtered spikes from sp_xia_SSD.mat...\n');
+ssd_file = [base_name '.sp_xia_SSD.mat'];
+assert(isfile(ssd_file), ...
+    'SSD Filtered spike file %s not found. Run QC_SpikeFilter.m first.', ssd_file);
+S = load(ssd_file);
+sp_clipped = S.sp_corr;
+% ================================================================
+%                          LOAD TRIGGERS
+% ================================================================
 if isempty(dir('*.trig.dat'))
     cur_dir = pwd;
     cleanTrig_sabquick;
@@ -71,7 +70,7 @@ simultaneous_stim = S.simultaneous_stim;
 E_MAP             = S.E_MAP;
 n_Trials          = S.n_Trials;
 
-%% Amplitude decode
+% Amplitude decode
 trialAmps_all = cell2mat(StimParams(2:end,16));
 trialAmps     = trialAmps_all(1:simultaneous_stim:end);
 
@@ -80,7 +79,7 @@ Amps(Amps==-1) = 0;
 n_AMP = numel(Amps);
 cmap  = lines(n_AMP);
 
-%% Stim set decode
+% Stim set decode
 stimNames = StimParams(2:end,1);
 E_NAME    = E_MAP(2:end);
 [~, idx_all] = ismember(stimNames, E_NAME);
@@ -104,19 +103,19 @@ end
 combClass_win = combClass;
 nSets = size(uniqueComb,1);
 
-%% Pulse period decode
+% Pulse period decode
 pulseTrain_all = cell2mat(StimParams(2:end,9));
 pulseTrain = pulseTrain_all(1:simultaneous_stim:end);
 
 [PulsePeriods,~,pulseIdx] = unique(pulseTrain(:));
 n_PULSE = numel(PulsePeriods);
 
-%% Electrode map
+% Electrode map
 d = Depth_s(Electrode_Type);
 
-%% ================================================================
-%%                   PREPARE RASTER/PSTH VARIABLES
-%% ================================================================
+% ================================================================
+%                   PREPARE RASTER/PSTH VARIABLES
+% ================================================================
 edges = ras_win(1):bin_ms_raster:ras_win(2);
 ctrs  = edges(1:end-1) + diff(edges)/2;
 bin_s = bin_ms_raster / 1000;
@@ -124,9 +123,9 @@ bin_s = bin_ms_raster / 1000;
 g = exp(-0.5 * ((0:smooth_ms-1) / (smooth_ms/2)).^2);
 g = g / sum(g);
 
-%% ================================================================
-%%                         RASTER LOOP
-%% ================================================================
+% ================================================================
+%                         RASTER LOOP
+% ================================================================
 for ich = raster_chn_start:raster_chn_end
     ch = d(ich);
     if isempty(sp_clipped{ch}), continue; end
@@ -210,7 +209,7 @@ for ich = raster_chn_start:raster_chn_end
             yticks(ax1, yt);
             yticklabels(ax1, yticks_labels);
 
-            title(ax1, sprintf('Raster — Ch %d | Set %s | %d µs', ich, setLabel, pulse_val));
+            title(ax1, sprintf('Raster — Ch %d | Set %s', ich, setLabel));
 
             % ---------------- Finalize PSTH ----------------
             for ai = 1:n_AMP

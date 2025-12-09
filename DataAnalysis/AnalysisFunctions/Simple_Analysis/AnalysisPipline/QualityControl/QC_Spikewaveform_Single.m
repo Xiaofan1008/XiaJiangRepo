@@ -2,9 +2,9 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-spike_chn_start = 33;
-spike_chn_end   = 64;   % nChn
-Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
+spike_chn_start = 1;
+spike_chn_end   = 32;   % nChn (Depth_s index)
+Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
 
@@ -34,13 +34,40 @@ else
     base_name = last_folder;  % fallback
 end
 
-%% ================= LOAD FILTERED SPIKES =================
-fprintf('Loading filtered spikes from sp_xia.mat...\n');
-filtered_file = [base_name '.sp_xia.mat'];
-assert(isfile(filtered_file), ...
-    'Filtered spike file %s not found. Run your spike filtering script first.', filtered_file);
+%% ================= LOAD QC / FILTERED SPIKES =================
+sp_use = [];
+fprintf('Trying to load QC / filtered spikes...\n');
 
-load(filtered_file, 'sp_clipped');   % expects cell array {ch} with [time, waveform...]
+ssd_file  = [base_name '.sp_xia_SSD.mat'];
+base_file = [base_name '.sp_xia.mat'];
+if isfile(ssd_file)
+    fprintf('Found SSD file: %s\n', ssd_file);
+    S = load(ssd_file);
+    if isfield(S,'sp_corr')
+        sp_use = S.sp_corr;
+    elseif isfield(S,'sp_SSD')
+        sp_use = S.sp_SSD;
+    elseif isfield(S,'sp_in')
+        sp_use = S.sp_in;
+    else
+        error('No usable spike variable (sp_corr/sp_SSD/sp_in) in %s', ssd_file);
+    end
+
+elseif isfile(base_file)
+    fprintf('Falling back to base spike file: %s\n', base_file);
+    S = load(base_file);
+    if isfield(S,'sp_clipped')
+        sp_use = S.sp_clipped;
+    elseif isfield(S,'sp')
+        sp_use = S.sp;
+    else
+        error('No usable spike variable (sp_clipped/sp) in %s', base_file);
+    end
+else
+    error('No spike file found: %s, %s, or %s', qc_file, ssd_file, base_file);
+end
+
+nCh = numel(sp_use);
 
 %% ================= LOAD TRIGGERS =================
 if isempty(dir('*.trig.dat'))
@@ -70,7 +97,7 @@ Amps(Amps == -1) = 0;
 n_AMP = numel(Amps);
 cmap  = lines(n_AMP);
 
-%% ---- Stimulation sets (order-insensitive, as in your original) ----
+%% ---- Stimulation sets (order-insensitive, like original) ----
 E_NAME    = E_MAP(2:end);
 stimNames = StimParams(2:end,1);
 [~, idx_all] = ismember(stimNames, E_NAME);
@@ -95,23 +122,31 @@ nSets         = size(uniqueComb,1);
 %% ---- Pulse Train Period (for completeness; not directly used in plotting) ----
 pulseTrain_all = cell2mat(StimParams(2:end,9));    % col 9: pulse train period
 pulseTrain     = pulseTrain_all(1:simultaneous_stim:end);
-[PulsePeriods, ~, pulseIdx] = unique(pulseTrain(:)); %#ok<ASGLU>
-n_PULSE = numel(PulsePeriods); %#ok<NASGU>
+[PulsePeriods, ~, pulseIdx] = unique(pulseTrain(:));
+n_PULSE = numel(PulsePeriods); 
 
 %% ================= ELECTRODE MAP =================
 d = Depth_s(Electrode_Type);   % returns Intan channel index for each Depth_s index
 
 %% ================= SPIKE WAVEFORM PLOTTING =================
-t_wave = (0:48) / FS * 1000;   % assumes 49-sample waveforms, adjust if needed
+
+% We will set t_wave based on the actual waveform length in the first non-empty channel
+example_ch = find(~cellfun(@isempty, sp_use), 1, 'first');
+if isempty(example_ch)
+    error('All channels are empty in sp_use. Nothing to plot.');
+end
+wf_len = size(sp_use{example_ch}, 2) - 1;  % subtract timestamp column
+t_wave = (0:wf_len-1) / FS * 1000;        % ms
 
 for ich = spike_chn_start:spike_chn_end
-    ch = d(ich);   % map to Intan channel index
-    if ch > numel(sp_clipped) || isempty(sp_clipped{ch}), continue; end
+    ch = d(ich);   % map depth index to Intan channel index
+    % ch = ich; 
+    if ch > nCh || isempty(sp_use{ch}), continue; end
 
-    sp_times = sp_clipped{ch}(:,1);
-    sp_wave  = sp_clipped{ch}(:,2:end);
+    sp_times = sp_use{ch}(:,1);
+    sp_wave  = sp_use{ch}(:,2:end);
 
-    % Optional plotting-only amplitude limit
+    % Optional amplitude limit (for plotting only)
     valid_idx = all(abs(sp_wave) <= amp_threshold, 2);
     sp_times  = sp_times(valid_idx);
     sp_wave   = sp_wave(valid_idx,:);
@@ -156,7 +191,7 @@ for ich = spike_chn_start:spike_chn_end
         stimIdx   = stimIdx(stimIdx > 0);
         stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
 
-        figure('Name', sprintf('Ch %d | StimSet %d (%s)', ich, set_id, stimLabel), ...
+        figure('Name', sprintf('Ch %d | StimSet %d (%s)| Single Pulse', ich, set_id, stimLabel), ...
                'Color','w','Position', [100 100 1400 800]);        
         tiledlayout(layout_row, layout_col, 'Padding','compact', 'TileSpacing','compact');
 
@@ -199,7 +234,7 @@ for ich = spike_chn_start:spike_chn_end
         legend_handles = gobjects(n_AMP,1);
         legend_labels  = cell(n_AMP,1);
         for a = 1:n_AMP
-            legend_handles(a) = plot(nan,nan,'-','Color',cmap(a,:), 'LineWidth',1.5);
+            legend_handles(a) = plot(nan,nan,'-', 'Color', cmap(a,:), 'LineWidth',1.5);
             legend_labels{a}  = sprintf('%g µA', Amps(a));
         end
         legend(legend_handles, legend_labels, 'Location','northeastoutside');

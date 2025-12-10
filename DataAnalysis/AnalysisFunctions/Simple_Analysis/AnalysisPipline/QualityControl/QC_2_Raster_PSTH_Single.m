@@ -11,7 +11,7 @@ raster_chn_end   = 32;
 Electrode_Type   = 1;    % 0: rigid, 1: flex, 2: 4-shank flex
 
 % ---------------- RASTER PARAMETERS ----------------
-ras_win         = [-20 100];   % ms window for raster
+ras_win         = [-10 50];   % ms window for raster
 bin_ms_raster   = 1;           % bin size (ms)
 smooth_ms       = 2;           % PSTH smoothing window (Gaussian)
 
@@ -141,7 +141,7 @@ for ich = raster_chn_start:raster_chn_end
             trials_this = find(pulseIdx == pi & combClass_win == si);
             if isempty(trials_this), continue; end
 
-            figure('Color','w','Name',sprintf('Ch %d | %s | %d µs', ich, setLabel, pulse_val));
+            figure('Color','w','Name',sprintf('Ch %d | %s', ich, setLabel));
             tl = tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
 
             ax1 = nexttile([3 1]); hold(ax1,'on');

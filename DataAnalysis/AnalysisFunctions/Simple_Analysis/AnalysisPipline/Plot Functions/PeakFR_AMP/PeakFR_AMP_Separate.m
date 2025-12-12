@@ -1,7 +1,6 @@
 %% ============================================================
 %   Peak Firing Rate vs Amplitude — Only Responding Channels
 %   Loads both Sim & Seq responding-channel files
-%   Plots only channels responsive in EITHER modality
 % ============================================================
 
 clear;

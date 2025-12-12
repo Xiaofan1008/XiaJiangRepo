@@ -1,0 +1,177 @@
+%% ============================================================
+%   Spatial Diversity Analysis (Refined Colors)
+%   - Metric: % Responding vs. Exact Distance
+%   - Visualization: Grouped Bar Chart with Professional Colors
+% ============================================================
+clear;
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
+
+%% ================= USER SETTINGS ============================
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+
+% 1 = Single Shank (Linear 32)
+% 2 = Four Shank (4x16)
+Electrode_Type = 1; 
+
+target_amp = 6; 
+target_ptd_seq = 5; 
+
+%% =================== LOAD DATA ====================
+cd(folder_sim); 
+Rsim=load(dir('*RespondingChannels.mat').name).Responding; 
+Ssim=load(dir('*_exp_datafile_*.mat').name); 
+amps_all_sim=cell2mat(Ssim.StimParams(2:end,16)); 
+trialAmps_sim=amps_all_sim(1:Ssim.simultaneous_stim:end); 
+[Amps_sim,~,ampIdx_sim]=unique(trialAmps_sim); 
+Amps_sim(Amps_sim==-1)=0;
+
+cd(folder_seq); 
+Rseq=load(dir('*RespondingChannels.mat').name).Responding; 
+Sseq=load(dir('*_exp_datafile_*.mat').name); 
+simN_seq=Sseq.simultaneous_stim; 
+amps_all_seq=cell2mat(Sseq.StimParams(2:end,16)); 
+trialAmps_seq=amps_all_seq(1:simN_seq:end); 
+[Amps_seq,~,ampIdx_seq]=unique(trialAmps_seq); 
+Amps_seq(Amps_seq==-1)=0;
+PTD_all_us=cell2mat(Sseq.StimParams(3:simN_seq:end,6)); PTDs_ms=unique(PTD_all_us/1000); stimNames=Sseq.StimParams(2:end,1); [~,idx_all]=ismember(stimNames,Sseq.E_MAP(2:end)); if isfield(Sseq,'n_Trials'), nTr_seq=Sseq.n_Trials; else, nTr_seq=(size(Sseq.StimParams,1)-1)/simN_seq; end; comb_seq=zeros(nTr_seq,simN_seq); for t=1:nTr_seq, rr=(t-1)*simN_seq+(1:simN_seq); v=idx_all(rr); v=v(v>0); comb_seq(t,1:numel(v))=v(:).'; end; [uniqueComb_seq,~,combClass_seq]=unique(comb_seq,'rows','stable'); nSets_seq=size(uniqueComb_seq,1);
+
+%% ================= GEOMETRY & TARGETS =================
+Coords = get_electrode_coordinates(Electrode_Type);
+if Electrode_Type == 1, valid_channels = 1:32; else, valid_channels = [1:16, 33:48, 49:64, 17:32]; end
+
+idx_sim_amp = find(Amps_sim == target_amp, 1);
+idx_seq_amp = find(Amps_seq == target_amp, 1);
+idx_ptd = find(abs(PTDs_ms - target_ptd_seq) < 0.1, 1);
+if isempty(idx_ptd), idx_ptd = 1; end
+
+%% ================= STEP 1: CALCULATE EXACT DISTANCES =================
+% A. SIMULTANEOUS
+stim_chans_sim = Rsim.set(1).stimChannels;
+stim_locs_sim  = Coords(stim_chans_sim, :); 
+
+Sim_Results = []; % [Distance, IsResponsive]
+chan_structs = Rsim.set(1).amp(idx_sim_amp).ptd(1).channel;
+
+for ch = valid_channels
+    rec_loc = Coords(ch, :);
+    dists = sqrt(sum((stim_locs_sim - rec_loc).^2, 2));
+    min_dist = round(min(dists));
+    
+    if min_dist < 1, continue; end 
+    
+    is_resp = 0;
+    if isfield(chan_structs(ch), 'is_responsive') && chan_structs(ch).is_responsive
+        is_resp = 1;
+    end
+    Sim_Results = [Sim_Results; min_dist, is_resp];
+end
+
+% B. SEQUENTIAL
+Seq_Results = cell(nSets_seq, 1);
+for ss = 1:nSets_seq
+    stim_chans_seq = uniqueComb_seq(ss, :); stim_chans_seq = stim_chans_seq(stim_chans_seq>0);
+    stim_locs_seq  = Coords(stim_chans_seq, :);
+    chan_structs = Rseq.set(ss).amp(idx_seq_amp).ptd(idx_ptd).channel;
+    
+    for ch = valid_channels
+        rec_loc = Coords(ch, :);
+        dists = sqrt(sum((stim_locs_seq - rec_loc).^2, 2));
+        min_dist = round(min(dists));
+        
+        if min_dist < 1, continue; end
+        
+        is_resp = 0;
+        if isfield(chan_structs(ch), 'is_responsive') && chan_structs(ch).is_responsive
+            is_resp = 1;
+        end
+        Seq_Results{ss} = [Seq_Results{ss}; min_dist, is_resp];
+    end
+end
+
+%% ================= STEP 2: GROUP BY UNIQUE DISTANCE =================
+all_dists = Sim_Results(:, 1);
+for ss=1:nSets_seq, all_dists = [all_dists; Seq_Results{ss}(:,1)]; end
+Unique_Dists = unique(all_dists);
+Unique_Dists = Unique_Dists(Unique_Dists <= 600); % Cap distance
+
+Plot_Data = zeros(length(Unique_Dists), 1 + nSets_seq);
+
+% Fill Sim
+for i = 1:length(Unique_Dists)
+    d = Unique_Dists(i);
+    mask = (Sim_Results(:,1) == d);
+    if sum(mask) > 0
+        Plot_Data(i, 1) = mean(Sim_Results(mask, 2)) * 100;
+    end
+end
+
+% Fill Seq
+for ss = 1:nSets_seq
+    dat = Seq_Results{ss};
+    for i = 1:length(Unique_Dists)
+        d = Unique_Dists(i);
+        mask = (dat(:,1) == d);
+        if sum(mask) > 0
+            Plot_Data(i, 1+ss) = mean(dat(mask, 2)) * 100;
+        end
+    end
+end
+
+%% ================= STEP 3: PLOT GROUPED BARS =================
+figure('Color','w', 'Position',[200 200 800 500]); hold on;
+
+% --- DEFINE PROFESSIONAL COLORS (Muted/Pastel) ---
+% Color 1: Soft Blue (Simultaneous)
+% Color 2: Soft Orange (Seq Set 1)
+% Color 3: Soft Purple (Seq Set 2)
+prof_colors = [ ...
+    0.25, 0.45, 0.65;  ... % Blue
+    0.80, 0.45, 0.30;  ... % Orange/Red
+    0.55, 0.40, 0.65];     % Purple
+
+% Labels
+leg_names = {'Simultaneous'};
+for ss = 1:nSets_seq
+    stimCh = uniqueComb_seq(ss,:); stimCh = stimCh(stimCh>0);
+    leg_names{end+1} = sprintf('Seq Set %d (Ch:%s)', ss, num2str(stimCh));
+end
+
+% Plot
+b = bar(Unique_Dists, Plot_Data, 'grouped');
+
+% Apply Colors & Aesthetics
+for i = 1:length(b)
+    if i <= size(prof_colors,1)
+        b(i).FaceColor = prof_colors(i,:);
+    end
+    b(i).EdgeColor = 'none'; % Remove black outline for cleaner look
+    b(i).FaceAlpha = 0.85;   % Slight transparency
+end
+
+ylabel('% of Responding Channels', 'FontSize', 10, 'FontWeight', 'bold');
+xlabel('Distance from Stimulation Site (µm)', 'FontSize', 10, 'FontWeight', 'bold');
+title(sprintf('Spatial Spread (at %.0f µA)', target_amp), 'FontSize', 14);
+ax.Box = 'off';
+
+% Ticks
+xticks(Unique_Dists);
+xtickangle(0);
+ylim([0 105]);
+
+legend(leg_names, 'Location', 'northeast', 'Box', 'off');
+
+%% ==================== GEOMETRY MAPPING FUNCTION ====================
+function Coords = get_electrode_coordinates(type)
+    Coords = zeros(64, 2); 
+    if type == 1 
+        % Single Shank: Ch1=0, Ch2=50...
+        for ch = 1:32, Coords(ch, 1) = 0; Coords(ch, 2) = (ch-1)*50; end
+    elseif type == 2
+        % Four Shank map
+        for i = 1:16, ch=i; Coords(ch,1)=0; Coords(ch,2)=(i-1)*50; end
+        for i = 1:16, ch=32+i; Coords(ch,1)=200; Coords(ch,2)=(i-1)*50; end
+        for i = 1:16, ch=48+i; Coords(ch,1)=400; Coords(ch,2)=(i-1)*50; end
+        for i = 1:16, ch=16+i; Coords(ch,1)=600; Coords(ch,2)=(i-1)*50; end
+    end
+end

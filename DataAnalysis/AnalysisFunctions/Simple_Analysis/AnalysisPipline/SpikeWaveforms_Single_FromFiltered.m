@@ -2,11 +2,11 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-spike_chn_start = 33;
-spike_chn_end   = 64;   % nChn
-Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
+spike_chn_start = 1;
+spike_chn_end   = 32;   % nChn
+Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single4_251125_153356';
 
 FS = 30000;            % Sampling frequency
 win_ms       = 300;    % total window after trigger (ms)

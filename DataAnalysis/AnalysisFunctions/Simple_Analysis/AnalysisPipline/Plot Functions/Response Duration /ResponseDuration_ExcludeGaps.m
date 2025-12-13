@@ -21,13 +21,15 @@ FS = 30000;
 target_amp = 10;
 % Smoothing
 bin_ms     = 1;
-sigma_ms   = 2;        
+sigma_ms   = 3;        
 sigma_bins = sigma_ms / bin_ms;
 
 % Thresholds
 baseline_win_ms = [-90 -10];
 baseDur_s       = (baseline_win_ms(2) - baseline_win_ms(1)) / 1000;
 z_threshold     = 3.0; % Bins above this are counted
+z_detect   = 3.0; % Peak must reach this to be "Significant"
+z_boundary = 1.5; % Onset/Offset measured at this lower level
 
 % Plotting
 jitter_width  = 0.2;     
@@ -84,8 +86,16 @@ for ci = 1:length(resp_channels)
         tr_ids = find(ampIdx_sim == ai);
         if isempty(tr_ids), continue; end
         
-        Dur_sim(ci,ai) = get_duration_sum(tr_ids, trig_sim, S_ch, ...
-            baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_threshold, FS);
+        % Dur_sim(ci,ai) = get_duration_sum(tr_ids, trig_sim, S_ch, ...
+        %     baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_threshold, FS);
+        
+        [dur, t_on, t_off] = get_duration_dual(tr_ids, trig_sim, S_ch, ...
+            baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_detect, z_boundary, FS);
+            
+        Dur_sim(ci,ai)    = dur;
+        Onset_sim(ci,ai)  = t_on;
+        Offset_sim(ci,ai) = t_off;
+    
     end
     
     % --- 2. SEQUENTIAL ---
@@ -96,8 +106,16 @@ for ci = 1:length(resp_channels)
                 tr_ids = find(combClass_seq==ss & ptdIdx_seq==p & ampIdx_seq==ai);
                 if isempty(tr_ids), continue; end
                 
-                Dur_seq(ci,ai,ss,p) = get_duration_sum(tr_ids, trig_seq, S_ch, ...
-                    baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_threshold, FS);
+                % Dur_seq(ci,ai,ss,p) = get_duration_sum(tr_ids, trig_seq, S_ch, ...
+                %     baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_threshold, FS);
+                
+                [dur, t_on, t_off] = get_duration_dual(tr_ids, trig_seq, S_ch, ...
+                    baseline_win_ms, baseDur_s, search_win_ms, bin_ms, g, z_detect, z_boundary, FS);
+                
+                Dur_seq(ci,ai,ss,p)    = dur;
+                Onset_seq(ci,ai,ss,p)  = t_on;
+                Offset_seq(ci,ai,ss,p) = t_off;
+                     
             end
         end
     end
@@ -211,6 +229,77 @@ fprintf('P-value for StimType (Sim vs Seq): %.5f\n', p(1));
 fprintf('P-value for Amplitude:           %.5f\n', p(2));
 
 %% ==================== HELPER FUNCTION (SUM OF BINS) ====================
+function [duration_ms, onset_ms, offset_ms] = get_duration_dual(tr_ids, trig, sp_data, ...
+    base_win, base_dur, search_win, bin_ms, kern, z_detect, z_boundary, FS)
+    
+    nTr = numel(tr_ids);
+    all_spikes_base = []; all_spikes_post = [];
+    
+    for k = 1:nTr
+        tr = tr_ids(k);
+        t0 = trig(tr)/FS*1000;
+        tt = sp_data(:,1) - t0;
+        all_spikes_base = [all_spikes_base; tt(tt >= base_win(1) & tt < base_win(2))];
+        all_spikes_post = [all_spikes_post; tt(tt >= -20 & tt <= 80)];
+    end
+    
+    if nTr == 0
+        duration_ms = NaN; onset_ms = NaN; offset_ms = NaN; return; 
+    end
+    
+    % Compute Smoothed PSTH
+    bin_s = bin_ms/1000;
+    base_rate_avg = numel(all_spikes_base) / (nTr * base_dur);
+    edges_psth = -20 : bin_ms : 80;
+    t_centers  = edges_psth(1:end-1) + bin_ms/2;
+    h = histcounts(all_spikes_post, edges_psth);
+    rate_raw = h / (nTr * bin_s);
+    rate_smooth = conv(rate_raw, kern, 'same');
+    rate_smooth(t_centers < 0) = base_rate_avg; 
+    
+    % Thresholds
+    baseline_part = rate_smooth(t_centers >= base_win(1) & t_centers < base_win(2));
+    if isempty(baseline_part), sigma_base = 5; else, sigma_base = std(baseline_part); end
+    sigma_base = max(sigma_base, 2.0); 
+    
+    thresh_high = base_rate_avg + z_detect * sigma_base;   % Detection (3.0)
+    thresh_low  = base_rate_avg + z_boundary * sigma_base; % Measurement (1.5)
+    
+    % --- DUAL THRESHOLD LOGIC ---
+    
+    % 1. CHECK VALIDITY (Does peak reach 3.0 SD?)
+    valid_idx = find(t_centers >= search_win(1) & t_centers <= search_win(2));
+    if isempty(valid_idx), duration_ms = 0; onset_ms = NaN; offset_ms = NaN; return; end
+    
+    peak_in_window = max(rate_smooth(valid_idx));
+    
+    if peak_in_window < thresh_high
+        duration_ms = 0; onset_ms = NaN; offset_ms = NaN;
+        return; % Not a significant response
+    end
+    
+    % 2. MEASURE WIDTH (At 1.5 SD)
+    % We find bins crossing the LOWER threshold within the search window
+    sig_bins = valid_idx(rate_smooth(valid_idx) > thresh_low);
+    
+    if isempty(sig_bins)
+        duration_ms = 0; onset_ms = NaN; offset_ms = NaN;
+    else
+        % Find the continuous block around the peak (optional refinement) or take min/max
+        % Simple method: Take first and last crossing in the window
+        t_start = t_centers(sig_bins(1));
+        t_end   = t_centers(sig_bins(end));
+        
+        duration_ms = t_end - t_start;
+        onset_ms    = t_start;
+        offset_ms   = t_end;
+        
+        if duration_ms < 2
+            duration_ms = 0; onset_ms = NaN; offset_ms = NaN;
+        end
+    end
+end
+
 function duration_ms = get_duration_sum(tr_ids, trig, sp_data, ...
     base_win, base_dur, search_win, bin_ms, kern, z_thresh, FS)
     

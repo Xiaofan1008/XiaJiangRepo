@@ -18,7 +18,7 @@ FS = 30000;            % Hz
 
 % PSTH parameters
 bin_ms     = 1;
-sigma_bins = 2;        % Gaussian smoothing kernel (in bins)
+sigma_bins = 3;        % Gaussian smoothing kernel (in bins)
 
 % Baseline window (relative to pulse 1 trigger, ms)
 baseline_win_ms = [-90 -10];

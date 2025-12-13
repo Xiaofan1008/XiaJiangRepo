@@ -18,7 +18,7 @@ Electrode_Type   = 1;                   % 0 rigid, 1 flex, 2 4-shank flex
 % 'raw'  = amplifier.dat
 % 'dn'   = amplifier_dn_sab.dat   (denoised)
 % 'mu'   = <base_name>.mu_sab.dat (filtered / MUA)
-trace_type = 'raw';    % raw trace
+% trace_type = 'raw';    % raw trace
 % trace_type = 'dn';    % artifact blanked trace
 % trace_type = 'mu';    % bandpass filtered trace
 

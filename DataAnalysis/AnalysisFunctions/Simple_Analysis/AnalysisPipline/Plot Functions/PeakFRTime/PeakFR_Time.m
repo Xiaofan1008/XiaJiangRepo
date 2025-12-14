@@ -7,11 +7,11 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 
 Electrode_Type = 1;
-search_win_ms = [0 20];  
+search_win_ms = [2 20];  
 FS = 30000;            
 
 % Smoothing (SYMMETRIC Gaussian)
@@ -140,8 +140,8 @@ for i = 2:length(group_names)
         'Color', group_colors{i}, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
 end
 
-ylabel('% of Channels', 'FontSize', 12, 'FontWeight', 'bold'); 
-xlabel('Peak Latency (ms)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('% of Channels', 'FontSize', 10, 'FontWeight', 'bold'); 
+xlabel('Peak Latency (ms)', 'FontSize', 10, 'FontWeight', 'bold');
 title(sprintf('Latency Distribution at %.0f µA', target_amp), 'FontSize', 14);
 legend(b, group_names, 'Location','northeast'); % Legend only shows bars to keep it clean
 box off; xlim([0 20]);
@@ -188,14 +188,75 @@ legend('Location','best'); box off;
 
 
 %% ============================================================
-%   STATISTICS: Two-Way ANOVA for Peak Latency
-%   Factors: Stimulation Type (Sim vs Seq) & Amplitude
+% %   STATISTICS: Two-Way ANOVA for Peak Latency
+% %   Factors: Stimulation Type (Sim vs Seq) & Amplitude
+% % ============================================================
+% 
+% % 1. Prepare Variables for ANOVA Table
+% % We need to flatten the data into long columns:
+% % Y (Latency) | Group (Sim/Seq1/Seq2) | Amp (3,5,6,10)
+% 
+% y_values = [];
+% g_stim   = []; % Grouping variable for Stim Type
+% g_amp    = []; % Grouping variable for Amplitude
+% 
+% % --- A. Collect Simultaneous Data ---
+% for ai = 1:length(Amps_sim)
+%     % Extract latencies for this amplitude (remove NaNs)
+%     lats = LatAmp_sim(:, ai);
+%     lats = lats(~isnan(lats));
+% 
+%     % Append to master lists
+%     y_values = [y_values; lats];
+%     g_stim   = [g_stim; repmat({'Simultaneous'}, length(lats), 1)];
+%     g_amp    = [g_amp;  repmat(Amps_sim(ai), length(lats), 1)];
+% end
+% 
+% % --- B. Collect Sequential Data (Loop Sets) ---
+% % Note: Uses the same 'p_idx_trend' (PTD) defined in the Trend Plot section
+% for ss = 1:nSets_seq
+%     group_name = sprintf('Seq Set %d', ss);
+% 
+%     for ai = 1:length(Amps_seq)
+%         % Extract latencies
+%         lats = squeeze(LatAmp_seq(:, ai, ss));
+%         lats = lats(~isnan(lats));
+% 
+%         % Append
+%         y_values = [y_values; lats];
+%         g_stim   = [g_stim; repmat({group_name}, length(lats), 1)];
+%         g_amp    = [g_amp;  repmat(Amps_seq(ai), length(lats), 1)];
+%     end
+% end
+% 
+% % 2. Run N-Way ANOVA
+% % 'varnames' labels the axes in the output figure
+% [p_vals, tbl, stats] = anovan(y_values, {g_stim, g_amp}, ...
+%     'model', 'interaction', ...
+%     'varnames', {'StimType', 'Amplitude'}, ...
+%     'display', 'on');
+% 
+% % 3. Display P-Values in Command Window
+% fprintf('\n--- ANOVA P-VALUES ---\n');
+% fprintf('Stimulation Type:  %.5f  (Is Seq different from Sim?)\n', p_vals(1));
+% fprintf('Amplitude:         %.5f  (Does Amp affect Latency?)\n', p_vals(2));
+% fprintf('Interaction:       %.5f  (Does the gap change with Amp?)\n', p_vals(3));
+% 
+% % 4. Post-Hoc Pairwise Comparison (The "Proof" Plot)
+% % This figure shows exactly which groups are significantly different.
+% % Non-overlapping lines = Significant difference.
+% figure('Color','w', 'Name', 'Pairwise Comparison');
+% results = multcompare(stats, 'Dimension', 1);
+% title('Pairwise Comparison: Mean Latency by Group');
+% ylabel('Group Name'); xlabel('Mean Latency (ms)');
+
+
+%% ============================================================
+%   STATISTICS: Two-Way ANOVA for Peak Latency (POOLED)
+%   Factors: Stimulation Type (Sim vs Seq Combined) & Amplitude
 % ============================================================
 
 % 1. Prepare Variables for ANOVA Table
-% We need to flatten the data into long columns:
-% Y (Latency) | Group (Sim/Seq1/Seq2) | Amp (3,5,6,10)
-
 y_values = [];
 g_stim   = []; % Grouping variable for Stim Type
 g_amp    = []; % Grouping variable for Amplitude
@@ -206,21 +267,26 @@ for ai = 1:length(Amps_sim)
     lats = LatAmp_sim(:, ai);
     lats = lats(~isnan(lats));
     
+    if isempty(lats), continue; end
+    
     % Append to master lists
     y_values = [y_values; lats];
     g_stim   = [g_stim; repmat({'Simultaneous'}, length(lats), 1)];
     g_amp    = [g_amp;  repmat(Amps_sim(ai), length(lats), 1)];
 end
 
-% --- B. Collect Sequential Data (Loop Sets) ---
-% Note: Uses the same 'p_idx_trend' (PTD) defined in the Trend Plot section
+% --- B. Collect Sequential Data (POOLED) ---
 for ss = 1:nSets_seq
-    group_name = sprintf('Seq Set %d', ss);
+    % === CHANGE: Use a static name to merge all sets ===
+    group_name = 'Sequential'; 
+    % ===================================================
     
     for ai = 1:length(Amps_seq)
         % Extract latencies
         lats = squeeze(LatAmp_seq(:, ai, ss));
         lats = lats(~isnan(lats));
+        
+        if isempty(lats), continue; end
         
         % Append
         y_values = [y_values; lats];
@@ -230,26 +296,30 @@ for ss = 1:nSets_seq
 end
 
 % 2. Run N-Way ANOVA
-% 'varnames' labels the axes in the output figure
-[p_vals, tbl, stats] = anovan(y_values, {g_stim, g_amp}, ...
-    'model', 'interaction', ...
-    'varnames', {'StimType', 'Amplitude'}, ...
-    'display', 'on');
+% 'display','on' -> Opens the standard ANOVA Table figure
+if ~isempty(y_values)
+    [p_vals, tbl, stats] = anovan(y_values, {g_stim, g_amp}, ...
+        'model', 'interaction', ...
+        'varnames', {'StimType', 'Amplitude'}, ...
+        'display', 'on');
 
-% 3. Display P-Values in Command Window
-fprintf('\n--- ANOVA P-VALUES ---\n');
-fprintf('Stimulation Type:  %.5f  (Is Seq different from Sim?)\n', p_vals(1));
-fprintf('Amplitude:         %.5f  (Does Amp affect Latency?)\n', p_vals(2));
-fprintf('Interaction:       %.5f  (Does the gap change with Amp?)\n', p_vals(3));
+    % 3. Display P-Values in Command Window
+    fprintf('\n--- ANOVA P-VALUES ---\n');
+    fprintf('Stimulation Type:  %.5f  (Is Seq different from Sim?)\n', p_vals(1));
+    fprintf('Amplitude:         %.5f  (Does Amp affect Latency?)\n', p_vals(2));
+    fprintf('Interaction:       %.5f  (Does the gap change with Amp?)\n', p_vals(3));
 
-% 4. Post-Hoc Pairwise Comparison (The "Proof" Plot)
-% This figure shows exactly which groups are significantly different.
-% Non-overlapping lines = Significant difference.
-figure('Color','w', 'Name', 'Pairwise Comparison');
-results = multcompare(stats, 'Dimension', 1);
-title('Pairwise Comparison: Mean Latency by Group');
-ylabel('Group Name'); xlabel('Mean Latency (ms)');
-
+    % 4. Post-Hoc Pairwise Comparison (The "Proof" Plot)
+    % This generates the comparison plot with error bars
+    figure('Color','w', 'Name', 'Pairwise Comparison');
+    results = multcompare(stats, 'Dimension', 1);
+    
+    title('Pooled Comparison: Simultaneous vs Sequential');
+    ylabel('Group Name'); 
+    xlabel('Mean Latency (ms)');
+else
+    fprintf('Error: No valid latency data found for statistics.\n');
+end
 %% ==================== HELPER ====================
 function peak_time_ms = get_peak_latency(tr_ids, trig, sp_data, search_win, bin_ms, kern, FS)
     nTr = numel(tr_ids); if nTr == 0, peak_time_ms = NaN; return; end

@@ -6,7 +6,7 @@
 %   - Does NOT remove bad trials; they are only noted in the title
 % =============================================================
 
-clear; clc;
+clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================

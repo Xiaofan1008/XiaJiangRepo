@@ -8,8 +8,8 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% =============== USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim1_251203_121823';
-Electrode_Type = 2;
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+Electrode_Type = 1;
 FS = 30000;
 
 % Filtering parameters

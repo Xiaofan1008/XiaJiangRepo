@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %%                     USER SETTINGS
 %% ================================================================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single4_251125_153356';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
 raster_chn_start = 1;
 raster_chn_end   = 32;
 Electrode_Type   = 1;    % 0: rigid, 1: flex, 2: 4-shank flex

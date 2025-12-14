@@ -9,16 +9,16 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2_251128_130309';
-Electrode_Type = 2;  % 0 rigid, 1 flex, 2 4-shank flex
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+Electrode_Type = 1;  % 0 rigid, 1 flex, 2 4-shank flex
 FS = 30000;
 
-raster_chn_start = 28;
-raster_chn_end   = 30;
+raster_chn_start = 1;
+raster_chn_end   = 32;
 
 ras_win       = [-20 100];
 bin_ms        = 1;
-smooth_ms     = 2;
+smooth_ms     = 3;
 
 %% ================= LOAD FILTERED SPIKES =================
 cd(data_folder);

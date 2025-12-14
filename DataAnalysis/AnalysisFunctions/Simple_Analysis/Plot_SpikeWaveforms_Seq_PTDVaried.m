@@ -5,11 +5,11 @@ pos_limit = 100;
 neg_limit = -100;
 
 %% User Params
-spike_chn_start = 48;
-spike_chn_end   = 48;
-plot_amps       = [4 6];      % amplitudes to include
-Electrode_Type  = 2;
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single1_251203_121428';
+spike_chn_start = 1;
+spike_chn_end   = 32;
+plot_amps       = [];      % amplitudes to include
+Electrode_Type  = 1;
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 
 %% Check folder
 if ~isfolder(data_folder), error('Invalid folder'); end
@@ -62,6 +62,10 @@ trialAmps     = trialAmps_all(1:simultaneous_stim:end);
 Amps(Amps==-1) = 0;
 n_AMP = numel(Amps);
 cmap = lines(n_AMP);
+
+if numel(plot_amps) == 0
+    plot_amps = Amps;
+end
 
 ampMask = ismember(trialAmps, plot_amps);   % apply amplitude filtering
 

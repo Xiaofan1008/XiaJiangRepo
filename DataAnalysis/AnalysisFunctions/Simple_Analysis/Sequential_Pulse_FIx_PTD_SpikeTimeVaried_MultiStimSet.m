@@ -2,10 +2,10 @@
 clear all;
 
 %% === USER PARAMETERS === %%
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single4_251125_153356';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 pulse_offset_ms   = 0;     
-fallback_win_end  = 26;     
+fallback_win_end  = 7;     
 use_fallback      = true;
 FS = 30000;
 Electrode_type = 1;
@@ -92,8 +92,6 @@ d = Depth_s(Electrode_type);
 unique_amps = unique(trialAmps_seq);
 total_spikes_added_all = 0;
 singleIdxCounter = ones(nSeqSets,1);   % 1 counter per seq stimulus set
-fprintf('\n=== ORDER-SENSITIVE SPIKE INJECTION START ===\n');
-
 for a = 1:numel(unique_amps)
     amp = unique_amps(a);
     trials_seq_this_amp = find(trialAmps_seq == amp);

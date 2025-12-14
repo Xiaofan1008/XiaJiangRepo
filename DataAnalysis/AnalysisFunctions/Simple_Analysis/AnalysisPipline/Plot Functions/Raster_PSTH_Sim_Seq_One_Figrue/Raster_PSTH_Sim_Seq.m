@@ -7,8 +7,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% =============== USER SETTINGS ==============================
 
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 
 Electrode_Type   = 1;
 target_channels  = [1:32];
@@ -17,9 +17,9 @@ plot_PTD_ms      = 5;      % ms
 stim_set_id_Sim = 1;      % stimulation set
 stim_set_id_Seq = 1;
 
-ras_win   = [-20 20];
+ras_win   = [-5 20];
 bin_ms    = 1;
-smooth_ms = 2;
+smooth_ms = 5;
 FS        = 30000;
 
 % Softer colours for paper

@@ -15,7 +15,7 @@ spike_chn_end   = 30;
 plot_amps       = [6];     % amplitudes to include
 Electrode_Type  = 2;
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2_251128_130309';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 
 win_ms      = 300;     % window after stimulus to search spikes
 bin_ms      = 5;       % time bin for grouping waveforms

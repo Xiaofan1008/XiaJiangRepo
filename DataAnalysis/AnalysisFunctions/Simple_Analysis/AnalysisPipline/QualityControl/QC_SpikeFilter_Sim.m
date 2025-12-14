@@ -9,7 +9,7 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
 
 FS = 30000;                 % sampling frequency
 SSD_threshold_factor = 16;  % SSD threshold (Allison-Walker style)
@@ -19,7 +19,7 @@ corr_thresh          = 0.7;      % keep spikes with corr >= this in baseline
 
 % filter choice
 do_SSD_filter        = 1;
-do_corr_filter       = 0;
+do_corr_filter       = 1;
 
 %% ================= FOLDER & BASE NAME =================
 if ~isfolder(data_folder)

@@ -2,8 +2,8 @@
 clear all;
 
 %% === USER PARAMETERS === %%
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single4_251125_153356';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single6_251125_180744';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
 pulse_offset_ms   = 0;     
 fallback_win_end  = 7;     
 use_fallback      = true;

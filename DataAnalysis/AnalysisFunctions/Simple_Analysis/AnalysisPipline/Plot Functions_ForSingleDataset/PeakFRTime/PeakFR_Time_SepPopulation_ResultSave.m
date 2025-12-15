@@ -1,16 +1,19 @@
 %% ============================================================
 %   Peak Latency Analysis (Refined: Only Responsive Channels)
-%   - Metric: Time of Peak Firing Rate
+%   - Metric: Time of Peak Firing Rate (ms)
 %   - Logic: Latency is ONLY calculated if the channel is 
 %            responsive to that SPECIFIC condition.
-%   - Output: Saves to 'Result_Latency_... .mat'
+%   - Figures:
+%       1. Grouped Histograms (Distribution at Target Amp)
+%       2. Average Latency vs Amplitude (Curves)
+%   - Output: Saves Result & Prints Summary for Excel
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
 Electrode_Type = 1;
 
 % Analysis
@@ -50,7 +53,6 @@ PTD_all_us = cell2mat(Stim_seq(3:simN_seq:end,6)); PTD_all_ms = PTD_all_us / 100
 stimNames = Stim_seq(2:end,1); [~, idx_all] = ismember(stimNames, E_MAP_seq(2:end));
 comb_seq = zeros(nTr_seq, simN_seq); for t = 1:nTr_seq, rr = (t-1)*simN_seq + (1:simN_seq); v  = idx_all(rr); v = v(v>0); comb_seq(t,1:numel(v)) = v(:).'; end
 [uniqueComb_seq,~,combClass_seq] = unique(comb_seq,'rows','stable'); nSets_seq = size(uniqueComb_seq,1);
-
 stim_chans_sim = Rsim.set(1).stimChannels; 
 d = Depth_s(Electrode_Type); 
 nCh_Total = length(d);
@@ -61,7 +63,7 @@ resp_sim = false(nCh_Total, 1); for si=1:numel(Rsim.set), for ai=1:numel(Rsim.se
 resp_seq = false(nCh_Total, 1); for si=1:numel(Rseq.set), for ai=1:numel(Rseq.set(si).amp), for pi=1:numel(Rseq.set(si).amp(ai).ptd), this=Rseq.set(si).amp(ai).ptd(pi).channel; for ch=1:min(length(this),nCh_Total), if isfield(this(ch),'is_responsive')&&this(ch).is_responsive, resp_seq(ch)=true; end; end; end; end; end
 resp_channels = find(resp_sim | resp_seq); 
 
-%% =================== 3. COMPUTE LATENCY (STRICT FILTERING) =================
+%% =================== 3. COMPUTE LATENCY (SEPARATE POPULATIONS) =================
 LatAmp_sim = nan(length(resp_channels), length(Amps_sim));
 LatAmp_seq = nan(length(resp_channels), length(Amps_seq), nSets_seq); 
 
@@ -73,8 +75,7 @@ for ai = 1:length(Amps_sim)
     for ci = 1:length(resp_channels)
         ch_idx = resp_channels(ci); recCh = d(ch_idx);
         
-        % 1. CHECK RESPONSIVENESS
-        % Only calculate if this specific channel responded to Sim at this Amp
+        % 1. CHECK RESPONSIVENESS (Condition Specific)
         try 
             is_resp = Rsim.set(1).amp(ai).ptd(1).channel(ch_idx).is_responsive;
         catch
@@ -82,7 +83,7 @@ for ai = 1:length(Amps_sim)
         end
         
         if ~is_resp
-            LatAmp_sim(ci, ai) = NaN; % Explicitly ignore non-responders
+            LatAmp_sim(ci, ai) = NaN; % Explicitly exclude non-responders
             continue; 
         end
         
@@ -105,7 +106,7 @@ for ss = 1:nSets_seq
         for ci = 1:length(resp_channels)
             ch_idx = resp_channels(ci); recCh = d(ch_idx);
             
-            % 1. CHECK RESPONSIVENESS
+            % 1. CHECK RESPONSIVENESS (Condition Specific)
             try
                 is_resp = Rseq.set(ss).amp(ai).ptd(p_idx_trend).channel(ch_idx).is_responsive;
             catch
@@ -113,7 +114,7 @@ for ss = 1:nSets_seq
             end
             
             if ~is_resp
-                LatAmp_seq(ci, ai, ss) = NaN; % Explicitly ignore non-responders
+                LatAmp_seq(ci, ai, ss) = NaN; % Explicitly exclude non-responders
                 continue;
             end
             
@@ -134,9 +135,13 @@ idx_seq_t = find(Amps_seq == target_amp, 1);
 % Prepare Data (NaNs are already filtered out above)
 Lat_sim_dist = LatAmp_sim(:, idx_sim_t); Lat_sim_dist = Lat_sim_dist(~isnan(Lat_sim_dist));
 Lat_seq_dist = cell(nSets_seq, 1);
+Lat_seq_all = []; % Storage for combined Seq data
+
 for ss=1:nSets_seq
     temp = squeeze(LatAmp_seq(:, idx_seq_t, ss));
-    Lat_seq_dist{ss} = temp(~isnan(temp));
+    temp = temp(~isnan(temp));
+    Lat_seq_dist{ss} = temp;
+    Lat_seq_all = [Lat_seq_all; temp];
 end
 
 figure('Color','w', 'Position',[100 100 900 600]); hold on;
@@ -144,7 +149,7 @@ bar_data = []; group_names = {}; group_colors = {};
 
 % Sim Data
 if isempty(Lat_sim_dist)
-    bar_data(:, 1) = zeros(length(hist_edges)-1, 1); % Handle case with 0 responders
+    bar_data(:, 1) = zeros(length(hist_edges)-1, 1);
 else
     [counts_sim, ~] = histcounts(Lat_sim_dist, hist_edges);
     bar_data(:, 1) = counts_sim(:) / length(Lat_sim_dist) * 100;
@@ -163,7 +168,7 @@ for ss = 1:nSets_seq
         bar_data(:, col_idx) = counts_seq(:) / length(data) * 100;
     end
     stimCh = uniqueComb_seq(ss,:); stimCh = stimCh(stimCh>0);
-    group_names{col_idx} = sprintf('Seq Set %d (Ch:%s)', ss, num2str(stimCh));
+    group_names{col_idx} = sprintf('Seq Set %d', ss);
     group_colors{col_idx} = cols_seq(mod(ss-1,3)+1, :);
     col_idx = col_idx + 1;
 end
@@ -172,12 +177,11 @@ end
 b = bar(hist_edges(1:end-1)+diff(hist_edges)/2, bar_data, 'grouped');
 for i = 1:length(b), b(i).FaceColor = group_colors{i}; b(i).EdgeColor = 'none'; b(i).FaceAlpha = 0.3; end
 
-% --- FIX APPLIED HERE ---
-% Define scale globally before checking data length
+% Define scale globally
 scale = 100 * (hist_edges(2)-hist_edges(1)); 
 
 % Plot Smooth Curves & Medians (Sim)
-if length(Lat_sim_dist) > 1 % Need >1 point for KDE
+if length(Lat_sim_dist) > 1 
     [f_sim, xi_sim] = ksdensity(Lat_sim_dist, 'Bandwidth', 1.5);
     plot(xi_sim, f_sim*scale, 'Color', group_colors{1}, 'LineWidth', 2.5);
     xline(median(Lat_sim_dist), '--', 'Color', group_colors{1}, 'LineWidth', 2);
@@ -192,133 +196,43 @@ for i = 2:length(group_names)
         xline(median(data), '--', 'Color', group_colors{i}, 'LineWidth', 2);
     end
 end
-
 ylabel('% of Channels', 'FontSize', 12, 'FontWeight', 'bold'); 
 xlabel('Peak Latency (ms)', 'FontSize', 12, 'FontWeight', 'bold');
 title(sprintf('Latency Distribution at %.0f µA', target_amp), 'FontSize', 14);
 legend(b, group_names, 'Location','northeast'); box off; xlim([0 20]);
 
-%% ===================== FIGURE 2: GROUPED HISTOGRAMS ======================
-idx_sim_t = find(Amps_sim == target_amp, 1);
-idx_seq_t = find(Amps_seq == target_amp, 1);
-
-% --- 1. PREPARE DATA ---
-% Sim Data
-Lat_sim_dist = LatAmp_sim(:, idx_sim_t); 
-Lat_sim_dist = Lat_sim_dist(~isnan(Lat_sim_dist));
-
-% Seq Data (Individual Sets)
-Lat_seq_dist = cell(nSets_seq, 1);
-Lat_seq_all = []; % Storage for combined Seq data
-for ss=1:nSets_seq
-    temp = squeeze(LatAmp_seq(:, idx_seq_t, ss));
-    temp = temp(~isnan(temp));
-    Lat_seq_dist{ss} = temp;
-    Lat_seq_all = [Lat_seq_all; temp]; % Accumulate all Seq data
-end
-
-figure('Color','w', 'Position',[100 100 1000 600]); hold on; % Made figure slightly wider
-bar_data = []; group_names = {}; group_colors = {};
-
-% --- 2. BUILD BAR DATA ---
-% A) Simultaneous
-if isempty(Lat_sim_dist)
-    bar_data(:, 1) = zeros(length(hist_edges)-1, 1);
-else
-    [counts, ~] = histcounts(Lat_sim_dist, hist_edges);
-    bar_data(:, 1) = counts(:) / length(Lat_sim_dist) * 100;
-end
-group_names{1} = 'Simultaneous'; 
-group_colors{1} = [0 0.3 0.8]; % Blue
-
-% B) Individual Sequential Sets
-cols_seq = [0.85 0.33 0.10; 0.60 0.20 0.60; 0.20 0.60 0.20]; 
-col_idx = 2;
-for ss = 1:nSets_seq
-    data = Lat_seq_dist{ss}; 
-    if isempty(data)
-        bar_data(:, col_idx) = zeros(length(hist_edges)-1, 1);
-    else
-        [counts, ~] = histcounts(data, hist_edges);
-        bar_data(:, col_idx) = counts(:) / length(data) * 100;
-    end
-    stimCh = uniqueComb_seq(ss,:); stimCh = stimCh(stimCh>0);
-    group_names{col_idx} = sprintf('Seq Set %d', ss); % Shortened name to fit
-    group_colors{col_idx} = cols_seq(mod(ss-1,3)+1, :);
-    col_idx = col_idx + 1;
-end
-
-% C) Combined Sequential (Average/Pooled)
-if isempty(Lat_seq_all)
-    bar_data(:, col_idx) = zeros(length(hist_edges)-1, 1);
-else
-    [counts, ~] = histcounts(Lat_seq_all, hist_edges);
-    bar_data(:, col_idx) = counts(:) / length(Lat_seq_all) * 100;
-end
-group_names{col_idx} = 'Seq (All)';
-group_colors{col_idx} = [0.2 0.2 0.2]; % Dark Gray/Black
-
-% --- 3. PLOT BARS ---
-b = bar(hist_edges(1:end-1)+diff(hist_edges)/2, bar_data, 'grouped');
-for i = 1:length(b)
-    b(i).FaceColor = group_colors{i}; 
-    b(i).EdgeColor = 'none'; 
-    b(i).FaceAlpha = 0.3; 
-end
-
-% --- 4. PLOT CURVES ---
-% Define scale globally (Fix for your previous error)
-scale = 100 * (hist_edges(2)-hist_edges(1)); 
-
-% A) Sim Curve
-if length(Lat_sim_dist) > 1 
-    [f, xi] = ksdensity(Lat_sim_dist, 'Bandwidth', 1.5);
-    plot(xi, f*scale, 'Color', group_colors{1}, 'LineWidth', 2.5);
-    xline(median(Lat_sim_dist), '--', 'Color', group_colors{1}, 'LineWidth', 1.5);
-end
-
-% B) Individual Seq Curves
-for ss = 1:nSets_seq
-    data = Lat_seq_dist{ss};
-    % Note: group_colors index is offset by 1 because index 1 is Sim
-    idx_color = ss + 1; 
-    if length(data) > 1
-        [f, xi] = ksdensity(data, 'Bandwidth', 1.5);
-        plot(xi, f*scale, 'Color', group_colors{idx_color}, 'LineWidth', 2.0, 'LineStyle', ':'); % Dotted for individual
-    end
-end
-
-% C) Combined Seq Curve
-if length(Lat_seq_all) > 1
-    idx_color = length(group_names); % Last one
-    [f, xi] = ksdensity(Lat_seq_all, 'Bandwidth', 1.5);
-    plot(xi, f*scale, 'Color', group_colors{idx_color}, 'LineWidth', 3.0); % Thicker line
-    xline(median(Lat_seq_all), '--', 'Color', group_colors{idx_color}, 'LineWidth', 1.5);
-end
-
-ylabel('% of Channels', 'FontSize', 12, 'FontWeight', 'bold'); 
-xlabel('Peak Latency (ms)', 'FontSize', 12, 'FontWeight', 'bold');
-title(sprintf('Latency Distribution at %.0f µA', target_amp), 'FontSize', 14);
-legend(b, group_names, 'Location','northeast'); box off; xlim([0 20]);
-
-%% ===================== FIGURE 3: TREND PLOT ======================
+%% ===================== FIGURE 2: AVERAGE LATENCY VS AMPLITUDE ======================
 figure('Color','w', 'Position',[900 100 600 500]); hold on;
-% 1. Sim
-mu = mean(LatAmp_sim, 1, 'omitnan'); err = std(LatAmp_sim,0,1,'omitnan')./sqrt(sum(~isnan(LatAmp_sim),1));
-errorbar(Amps_sim, mu, err, '-o', 'Color', group_colors{1}, 'LineWidth', 2, 'MarkerFaceColor', group_colors{1}, 'CapSize', 0, 'DisplayName', 'Simultaneous');
-% 2. Seq
+
+% 1. Simultaneous Curve
+mu_sim = mean(LatAmp_sim, 1, 'omitnan'); 
+err_sim = std(LatAmp_sim,0,1,'omitnan') ./ sqrt(sum(~isnan(LatAmp_sim),1));
+
+errorbar(Amps_sim, mu_sim, err_sim, '-o', 'Color', group_colors{1}, ...
+    'LineWidth', 2, 'MarkerFaceColor', group_colors{1}, 'CapSize', 0, ...
+    'DisplayName', 'Simultaneous');
+
+% 2. Sequential Curves (Per Set)
 for ss = 1:nSets_seq
     data = squeeze(LatAmp_seq(:, :, ss));
-    mu = mean(data, 1, 'omitnan'); err = std(data,0,1,'omitnan')./sqrt(sum(~isnan(data),1));
+    mu_seq = mean(data, 1, 'omitnan'); 
+    err_seq = std(data,0,1,'omitnan') ./ sqrt(sum(~isnan(data),1));
+    
     col = cols_seq(mod(ss-1,3)+1, :);
     stimCh = uniqueComb_seq(ss,:); stimCh = stimCh(stimCh>0);
     lbl = sprintf('Seq Set %d (Ch:%s)', ss, num2str(stimCh));
-    errorbar(Amps_seq, mu, err, '-s', 'Color', col, 'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 0, 'DisplayName', lbl);
+    
+    errorbar(Amps_seq, mu_seq, err_seq, '-s', 'Color', col, ...
+        'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 0, ...
+        'DisplayName', lbl);
 end
-xlabel('Amplitude (µA)', 'FontWeight','bold'); ylabel('Mean Peak Latency (ms)', 'FontWeight','bold');
-title('Latency vs. Amplitude', 'FontWeight','bold'); legend('Location','best'); box off;
 
-%% ===================== STATS: TWO-WAY ANOVA ======================
+xlabel('Amplitude (µA)', 'FontWeight','bold'); 
+ylabel('Mean Peak Latency (ms)', 'FontWeight','bold');
+title('Average Peak Firing Rate Time vs. Amplitude', 'FontWeight','bold'); 
+legend('Location','best'); box off; grid on;
+
+%% ===================== STATS: TWO-WAY ANOVA (POOLED) ======================
 y_values = []; g_stim = []; g_amp = [];
 
 % 1. Sim
@@ -332,9 +246,9 @@ end
 
 % 2. Seq (MERGED)
 for ss = 1:nSets_seq
-    % --- CHANGE IS HERE ---
-    group_name = 'Sequential'; % Now every set gets the SAME name
-    % ----------------------
+    % --- POOLED GROUP NAME ---
+    group_name = 'Sequential'; 
+    % -------------------------
     
     for ai = 1:length(Amps_seq)
         lats = squeeze(LatAmp_seq(:, ai, ss)); lats = lats(~isnan(lats));
@@ -345,9 +259,9 @@ for ss = 1:nSets_seq
     end
 end
 
-fprintf('\n--- ANOVA RESULTS ---\n');
+fprintf('\n--- ANOVA RESULTS (POOLED) ---\n');
 if length(unique(g_stim)) > 1
-    [p_vals, ~, stats] = anovan(y_values, {g_stim, g_amp}, 'model', 'interaction', 'varnames', {'StimType', 'Amplitude'}, 'display', 'off');
+    [p_vals, ~, stats] = anovan(y_values, {g_stim, g_amp}, 'model', 'interaction', 'varnames', {'StimType', 'Amplitude'}, 'display', 'on');
     fprintf('StimType P: %.5f\nAmp P: %.5f\nInteraction P: %.5f\n', p_vals(1), p_vals(2), p_vals(3));
     figure('Color','w', 'Name', 'Post-Hoc Comparison'); multcompare(stats, 'Dimension', 1);
 else
@@ -361,7 +275,7 @@ fprintf('\n--- SAVING RESULTS ---\n');
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set1_Latency_RespondingChnSeparate_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_Set4_Latency_SepPop_5ms_' exp_id '.mat']);
 
 ResultLat = struct();
 ResultLat.Metadata.Created = datestr(now);
@@ -371,17 +285,51 @@ ResultLat.Metadata.StimGroups.Sim = stim_chans_sim;
 ResultLat.Metadata.StimGroups.Seq = uniqueComb_seq(:, uniqueComb_seq(1,:) > 0);
 ResultLat.Metadata.Amps = Amps_sim;
 ResultLat.Metadata.RespChannels = resp_channels;
-
 % Store Latency Data
 ResultLat.Latency.Sim = LatAmp_sim; 
 ResultLat.Latency.Seq = LatAmp_seq; 
-
 % Store QC Data
 ResultLat.QC.Sim = QC_Sim;
 ResultLat.QC.Seq = QC_Seq;
-
 save(out_filename, 'ResultLat');
 fprintf('Success! Latency Results saved to:\n  %s\n', out_filename);
+
+%% ================= PRINT SUMMARY STATISTICS (EXCEL READY) =================
+fprintf('\n\n========================================================================\n');
+fprintf('       SUMMARY STATISTICS: PEAK LATENCY          \n');
+fprintf('========================================================================\n');
+
+% 1. Print Header Row
+fprintf('Condition      \t');
+for ai = 1:length(Amps_sim)
+    fprintf('Amp_%.0fuA_Mean   SEM\t', Amps_sim(ai), Amps_sim(ai));
+end
+fprintf('\n');
+
+% 2. Simultaneous Row
+fprintf('Simultaneous\t');
+for ai = 1:length(Amps_sim)
+    d = LatAmp_sim(:, ai);
+    mu = mean(d, 'omitnan');
+    sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
+    if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f\t%.4f\t', mu, sem); end
+end
+fprintf('\n');
+
+% 3. Sequential Rows (Per Set)
+for ss = 1:nSets_seq
+    stimCh_List = uniqueComb_seq(ss, :); stimCh_List = stimCh_List(stimCh_List > 0);
+    fprintf('Seq_Set%d(Ch%s)\t', ss, num2str(stimCh_List));
+    
+    for ai = 1:length(Amps_seq)
+        d = squeeze(LatAmp_seq(:, ai, ss)); 
+        mu = mean(d, 'omitnan');
+        sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
+        if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f\t%.4f\t', mu, sem); end
+    end
+    fprintf('\n');
+end
+fprintf('========================================================================\n');
 
 %% ==================== HELPER FUNCTIONS ====================
 function peak_time_ms = get_peak_latency(tr_ids, trig, sp_data, search_win, bin_ms, kern, FS)
@@ -399,7 +347,6 @@ function peak_time_ms = get_peak_latency(tr_ids, trig, sp_data, search_win, bin_
         [~, max_idx] = max(valid_rate); peak_time_ms = valid_time(max_idx);
     end
 end
-
 function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
     f = dir('*RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end

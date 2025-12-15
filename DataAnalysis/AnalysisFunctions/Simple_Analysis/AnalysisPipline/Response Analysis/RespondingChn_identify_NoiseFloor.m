@@ -4,12 +4,12 @@
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= USER INPUT =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
 Electrode_Type = 1;    % 0 = rigid, 1 = single-shank flex, 2 = four-shank flex
 % ---- Choose detection mode ----
 Detection_Mode = 1;     % 1 = FR rule, 2 = statistical test
 % ---- Window definitions ----
-baseline_win_ms = [-90 -10];        % baseline always this window
+baseline_win_ms = [-60 -10];        % baseline always this window
 post_win_ms     = [2 15];           % Mode 1 post-stim window
 baseDur_s = (baseline_win_ms(2) - baseline_win_ms(1)) / 1000;
 postDur_s = (post_win_ms(2)      - post_win_ms(1))      / 1000;
@@ -21,8 +21,8 @@ k_SD = 3;                            % ≥ μ + k·σ
 noise_floor_hz = 2.0;               % Minimum assumed noise level (Hz)
 % Extra robustness thresholds (for BOTH baseline=0 and noisy cases)
 min_total_baseline_spikes   = 0;    % across all trials
-min_total_post_spikes       = 6;    % across all trials
-min_frac_trials_with_spikes = 0.3;  % % trials must have ≥1 spike
+min_total_post_spikes       = 2;    % across all trials
+min_frac_trials_with_spikes = 0.13;  % % trials must have ≥1 spike
 min_abs_post_FR             = 5;    % mean post FR must be ≥ 5 sp/s
 % Mode 2 filters
 min_FR_post = 2;                     % minimum post FR to call responsive

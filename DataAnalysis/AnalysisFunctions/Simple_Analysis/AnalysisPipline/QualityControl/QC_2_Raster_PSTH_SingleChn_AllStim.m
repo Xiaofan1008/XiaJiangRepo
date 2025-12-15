@@ -7,17 +7,17 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single4_251125_153356';
-folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single6_251125_180744';
+folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
 
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % --- List of channels to plot ---
-target_channels = [18:32]; 
+target_channels = [1:32]; 
 
 plot_amps      = [10];      % amplitudes → one figure per amp
-ras_win        = [-10 50];  % ms
+ras_win        = [-10 30];  % ms
 bin_ms         = 1;
 smooth_ms      = 3;
 FS             = 30000;

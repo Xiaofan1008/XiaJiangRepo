@@ -9,7 +9,7 @@ clear; clc;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
 Electrode_Type = 1;    % 0 rigid, 1 single-shank flex, 2 four-shank flex
 
 %% ================= CHECK FOLDER =================

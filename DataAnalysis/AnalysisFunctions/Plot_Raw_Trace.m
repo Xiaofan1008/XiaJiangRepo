@@ -3,10 +3,10 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim2_251125_131654';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
 
 channels_to_plot = 1:32;                % channels to plot (Depth_s index)
-amps_to_plot     = [10];                 % amplitudes to include (µA)
+amps_to_plot     = [5,6];                 % amplitudes to include (µA)
 ptd_to_plot      = [];                  % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
 

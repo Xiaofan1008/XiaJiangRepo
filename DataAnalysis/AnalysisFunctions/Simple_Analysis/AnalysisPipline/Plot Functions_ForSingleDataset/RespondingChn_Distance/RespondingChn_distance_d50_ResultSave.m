@@ -1,12 +1,8 @@
 %% ============================================================
-%   Spatial Diversity Analysis (Updated)
+%   Spatial Diversity Analysis (Refined Output)
 %   - Metric: Spatial Probability of Response (N_resp / N_total)
-%   - Figures:
-%       1. Grouped Bar Chart (Binned Data at Target Amp)
-%       2. Logistic Regression Curves (Probability at Target Amp)
-%   - Analysis:
-%       1. d50 Extraction: Activation Radius for EVERY amplitude
-%       2. Pooled ANOVA: Sim vs Seq (Combined Sets)
+%   - Figures: Grouped Bar Chart & Logistic Fit
+%   - Analysis: d50 Radius (Individual Sets + Mean + SEM) & Pooled ANOVA
 %   - Output: Saves Results & Prints Detailed Excel Tables
 % ============================================================
 clear;
@@ -17,7 +13,7 @@ folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
 folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
 Electrode_Type = 1; 
 
-target_amp = 10; % For the plots
+target_amp = 10; % For the figures
 target_ptd_seq = 5; 
 
 %% =================== LOAD DATA ====================
@@ -83,21 +79,14 @@ for ss = 1:nSets_seq
 end
 
 %% ================= STEP 2: CALCULATE d50 (RADIUS) FOR ALL AMPS =================
-fprintf('\n======================================================\n');
-fprintf('       ACTIVATION RADIUS (d50) vs AMPLITUDE          \n');
-fprintf('======================================================\n');
-fprintf('Amp(uA)\tSim_d50\tSeq_d50_Avg\n');
-
+% We calculate this first to save the results, printout comes later in Step 5.
 d50_Results = []; 
-
-% Turn off the "perfect separation" warning to keep command window clean
-warning('off', 'stats:glmfit:PerfectSeparation');
-warning('off', 'stats:glmfit:IterationLimit');
+warning('off', 'stats:glmfit:PerfectSeparation'); warning('off', 'stats:glmfit:IterationLimit');
 
 for ai = 1:length(Amps_sim)
     amp_val = Amps_sim(ai);
     
-    % --- 1. Fit Sim ---
+    % --- Fit Sim ---
     chan_structs = Rsim.set(1).amp(ai).ptd(1).channel;
     X = []; Y = [];
     for ch = valid_channels
@@ -108,19 +97,18 @@ for ai = 1:length(Amps_sim)
         is_resp = 0; if isfield(chan_structs(ch), 'is_responsive') && chan_structs(ch).is_responsive, is_resp=1; end
         X = [X; min_dist]; Y = [Y; is_resp];
     end
-    
     sim_d50 = NaN;
     if sum(Y) > 0 && length(unique(Y)) > 1
         try
-            % Added 'LikelihoodPenalty' to handle perfect separation
-            b = glmfit(X, Y, 'binomial', 'link', 'logit'); 
+            b = glmfit(X, Y, 'binomial', 'link', 'logit');
             sim_d50 = -b(1) / b(2);
             if sim_d50 < 0 || sim_d50 > 1000, sim_d50 = NaN; end 
         catch; end
     end
     
-    % --- 2. Fit Seq (Pooled Average) ---
-    seq_d50_list = [];
+    % --- Fit Seq (Individual Sets) ---
+    seq_d50_list = nan(1, nSets_seq); % Store individual results
+    
     for ss = 1:nSets_seq
         ai_seq = find(Amps_seq == amp_val);
         if isempty(ai_seq), continue; end
@@ -143,37 +131,35 @@ for ai = 1:length(Amps_sim)
             if sum(Y) > 0 && length(unique(Y)) > 1
                 b = glmfit(X, Y, 'binomial', 'link', 'logit');
                 val = -b(1) / b(2);
-                if val > 0 && val < 1000, seq_d50_list = [seq_d50_list; val]; end
+                if val > 0 && val < 1000, seq_d50_list(ss) = val; end
             end
         catch; end
     end
-    seq_d50_avg = mean(seq_d50_list);
     
-    % Print
-    fprintf('%.0f\t%.2f\t%.2f\n', amp_val, sim_d50, seq_d50_avg);
+    % Statistics for Seq
+    valid_seq = seq_d50_list(~isnan(seq_d50_list));
+    if ~isempty(valid_seq)
+        seq_avg = mean(valid_seq);
+        seq_sem = std(valid_seq) / sqrt(length(valid_seq));
+    else
+        seq_avg = NaN; seq_sem = NaN;
+    end
     
-    % --- FIX: Define row_data before using it ---
-    row_data = [amp_val, sim_d50, seq_d50_avg];
+    % Store [Amp, Sim_d50, Seq_Mean, Seq_SEM, Set1, Set2...]
+    row_data = [amp_val, sim_d50, seq_avg, seq_sem, seq_d50_list];
     d50_Results = [d50_Results; row_data];
 end
-
-% Turn warnings back on
-warning('on', 'stats:glmfit:PerfectSeparation');
-warning('on', 'stats:glmfit:IterationLimit');
-fprintf('======================================================\n');
-
+warning('on', 'stats:glmfit:PerfectSeparation'); warning('on', 'stats:glmfit:IterationLimit');
 
 %% ================= STEP 3: POOLED LOGISTIC ANOVA =================
 Y_binary = []; X_dist = []; Group_Type = {}; 
-
-% Add Sim Data (Target Amp)
+% Add Sim
 for i = 1:size(Sim_Results_Plot, 1)
     Y_binary = [Y_binary; Sim_Results_Plot(i,2)];
     X_dist   = [X_dist;   Sim_Results_Plot(i,1)];
     Group_Type = [Group_Type; {'Simultaneous'}];
 end
-
-% Add Seq Data (Target Amp - POOLED)
+% Add Seq (Pooled)
 for ss = 1:nSets_seq
     dat = Seq_Results_Plot{ss};
     for i = 1:size(dat, 1)
@@ -183,11 +169,11 @@ for ss = 1:nSets_seq
     end
 end
 
-fprintf('\n--- POOLED SPATIAL STATS (Logistic Regression) ---\n');
+anova_stats = [];
 if ~isempty(Y_binary)
     ds = table(X_dist, Group_Type, Y_binary, 'VariableNames', {'Distance', 'StimType', 'Response'});
     glme = fitglme(ds, 'Response ~ Distance + StimType + Distance:StimType', 'Distribution', 'Binomial', 'Link', 'Logit');
-    disp(glme);
+    anova_stats = anova(glme); 
 end
 
 %% ================= STEP 4: PLOTTING (Target Amp) =================
@@ -217,7 +203,6 @@ prof_colors = [0.25 0.45 0.65; 0.80 0.45 0.30; 0.55 0.40 0.65];
 figure('Color','w', 'Position',[200 600 800 500]); hold on;
 leg_names = {'Simultaneous'};
 for ss = 1:nSets_seq, stimCh=uniqueComb_seq(ss,:); stimCh=stimCh(stimCh>0); leg_names{end+1}=sprintf('Seq Set %d', ss); end
-
 b = bar(Unique_Dists, Plot_Data, 'grouped');
 for i = 1:length(b)
     if i <= size(prof_colors,1), b(i).FaceColor = prof_colors(i,:); end
@@ -248,44 +233,55 @@ for ss = 1:nSets_seq
         plot(x_fit, p_seq, '-', 'Color', col, 'LineWidth', 3, 'DisplayName', leg_names{col_idx});
     catch; end
 end
-ylabel('Probability', 'FontSize', 12, 'FontWeight', 'bold');
-xlabel('Distance (µm)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Probability', 'FontSize', 10, 'FontWeight', 'bold');
+xlabel('Distance (µm)', 'FontSize', 10, 'FontWeight', 'bold');
 title(sprintf('Spatial Probability Fit at %.0f µA', target_amp), 'FontSize', 14);
 yline(0.5, '--k', 'd50', 'HandleVisibility','off'); legend('Location','northeast','Box','off'); box off;
 
 %% ============================================================
-%   5. SAVE RESULTS
+%   5. OUTPUT & SAVE (FINAL PRINTOUT)
 % ============================================================
-fprintf('\n--- SAVING RESULTS ---\n');
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
-if ~exist(save_dir, 'dir'), mkdir(save_dir); end
-parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set1_Spatial_d50_Stats_5ms_' exp_id '.mat']);
+fprintf('\n\n===================================\n');
+fprintf('   FINAL RESULT\n');
 
-ResultSpatial = struct();
-ResultSpatial.Metadata.Created = datestr(now);
-ResultSpatial.Metadata.Source_Sim = folder_sim;
-ResultSpatial.Metadata.Source_Seq = folder_seq;
-ResultSpatial.d50_Table = d50_Results; 
-ResultSpatial.Stats.GLM = glme; 
-ResultSpatial.Raw.Sim = Sim_Results_Plot;
-ResultSpatial.Raw.Seq = Seq_Results_Plot;
-save(out_filename, 'ResultSpatial');
-fprintf('Success! Saved to:\n  %s\n', out_filename);
+% --- 1. d50 TABLE (EXPANDED) ---
+fprintf('--- PART 1: ACTIVATION RADIUS (d50) ---\n');
+% Header
+fprintf('Amp(uA)\tSim_d50\tSeq_Mean\tSeq_SEM');
+for ss = 1:nSets_seq, fprintf('\tSet%d', ss); end
+fprintf('\n');
+% Data
+for i = 1:size(d50_Results, 1)
+    fprintf('%.0f\t%.2f\t%.2f\t%.2f', d50_Results(i,1), d50_Results(i,2), d50_Results(i,3), d50_Results(i,4));
+    % Print individual sets (cols 5 onwards)
+    for k = 5:size(d50_Results, 2)
+        fprintf('\t%.2f', d50_Results(i,k));
+    end
+    fprintf('\n');
+end
+fprintf('\n');
 
-%% ================= PRINT EXCEL TABLE (PERCENTAGE vs DISTANCE) =================
-fprintf('\n\n=================================================================================\n');
-fprintf('       DETAILED SPATIAL PERCENTAGE TABLE           \n');
-fprintf('=================================================================================\n');
+% --- 2. ANOVA P-VALUES ---
+fprintf('--- PART 2: POOLED ANOVA P-VALUES ---\n');
+if ~isempty(anova_stats)
+    fprintf('Factor\tP_Value\n');
+    row_names = anova_stats.Term;
+    p_values  = anova_stats.pValue;
+    for i = 1:length(row_names)
+        fprintf('%s\t%.5e\n', row_names{i}, p_values(i));
+    end
+else
+    fprintf('ANOVA could not be run (insufficient data).\n');
+end
+fprintf('\n');
 
-% 1. Identify all unique distances from the geometry
+% --- 3. PERCENTAGE MATRIX (BAR PLOT DATA) ---
+fprintf('--- PART 3: SPATIAL PERCENTAGE (Resp/Total) ---\n');
+% Identify all unique distances
 dist_scan = [];
 for ch = valid_channels
-    % Sim Dist
-    stim_locs = Coords(stim_chans_sim, :);
-    rec_loc = Coords(ch, :);
+    stim_locs = Coords(stim_chans_sim, :); rec_loc = Coords(ch, :);
     dist_scan = [dist_scan; round(min(sqrt(sum((stim_locs - rec_loc).^2, 2))))];
-    % Seq Dist
     for ss=1:nSets_seq
         stim_locs = Coords(uniqueComb_seq(ss, uniqueComb_seq(ss,:)>0), :);
         dist_scan = [dist_scan; round(min(sqrt(sum((stim_locs - rec_loc).^2, 2))))];
@@ -294,73 +290,68 @@ end
 Unique_Dists_All = unique(dist_scan);
 Unique_Dists_All = Unique_Dists_All(Unique_Dists_All >= 0 & Unique_Dists_All <= 800);
 
-% --- BLOCK 1: SIMULTANEOUS ---
-fprintf('SIMULTANEOUS\nDistance_um');
+% Header Row
+fprintf('StimType\tDistance_um');
 for ai = 1:length(Amps_sim), fprintf('\tAmp_%.0fuA', Amps_sim(ai)); end
 fprintf('\n');
 
+% A. SIMULTANEOUS ROWS
 for i = 1:length(Unique_Dists_All)
     d = Unique_Dists_All(i);
-    fprintf('%d', d);
+    fprintf('Simultaneous\t%d', d);
     for ai = 1:length(Amps_sim)
-        % Recalculate % for this specific Amp and Distance
         chan_structs = Rsim.set(1).amp(ai).ptd(1).channel;
         stim_locs = Coords(stim_chans_sim, :);
-        
-        n_total = 0; n_resp = 0;
+        n_total=0; n_resp=0;
         for ch = valid_channels
             rec_loc = Coords(ch, :);
             this_d = round(min(sqrt(sum((stim_locs - rec_loc).^2, 2))));
             if this_d == d
-                n_total = n_total + 1;
-                if isfield(chan_structs(ch),'is_responsive') && chan_structs(ch).is_responsive, n_resp=n_resp+1; end
+                n_total=n_total+1; if isfield(chan_structs(ch),'is_responsive') && chan_structs(ch).is_responsive, n_resp=n_resp+1; end
             end
         end
-        
-        if n_total > 0
-            fprintf('\t%.2f', (n_resp/n_total)*100);
-        else
-            fprintf('\tNaN');
-        end
+        if n_total>0, fprintf('\t%.2f', (n_resp/n_total)*100); else, fprintf('\tNaN'); end
     end
     fprintf('\n');
 end
 
-% --- BLOCK 2: SEQUENTIAL (Loop Sets) ---
+% B. SEQUENTIAL ROWS (Loop Sets)
 for ss = 1:nSets_seq
     stimCh = uniqueComb_seq(ss,:); stimCh = stimCh(stimCh>0);
-    fprintf('\nSEQUENTIAL_SET_%d (Ch %s)\nDistance_um', ss, num2str(stimCh));
-    for ai = 1:length(Amps_seq), fprintf('\tAmp_%.0fuA', Amps_seq(ai)); end
-    fprintf('\n');
-    
     for i = 1:length(Unique_Dists_All)
         d = Unique_Dists_All(i);
-        fprintf('%d', d);
+        fprintf('Seq_Set%d\t%d', ss, d); 
         for ai = 1:length(Amps_seq)
             chan_structs = Rseq.set(ss).amp(ai).ptd(idx_ptd).channel;
             stim_locs = Coords(stimCh, :);
-            
-            n_total = 0; n_resp = 0;
+            n_total=0; n_resp=0;
             for ch = valid_channels
                 rec_loc = Coords(ch, :);
                 this_d = round(min(sqrt(sum((stim_locs - rec_loc).^2, 2))));
                 if this_d == d
-                    n_total = n_total + 1;
-                    if isfield(chan_structs(ch),'is_responsive') && chan_structs(ch).is_responsive, n_resp=n_resp+1; end
+                    n_total=n_total+1; if isfield(chan_structs(ch),'is_responsive') && chan_structs(ch).is_responsive, n_resp=n_resp+1; end
                 end
             end
-            
-            if n_total > 0
-                fprintf('\t%.2f', (n_resp/n_total)*100);
-            else
-                fprintf('\tNaN');
-            end
+            if n_total>0, fprintf('\t%.2f', (n_resp/n_total)*100); else, fprintf('\tNaN'); end
         end
         fprintf('\n');
     end
 end
 fprintf('=================================================================================\n');
 
+% SAVE
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
+if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+parts = split(folder_sim, filesep); exp_id = parts{end};
+out_filename = fullfile(save_dir, ['Result_Set1_Spatial_d50_Stats_5ms_' exp_id '.mat']);
+ResultSpatial = struct();
+ResultSpatial.d50_Table = d50_Results; 
+ResultSpatial.Stats.ANOVA = anova_stats;
+ResultSpatial.BarData.Distances = Unique_Dists;
+ResultSpatial.BarData.Probs = Plot_Data; % [Dist x (1+nSets)]
+ResultSpatial.BarData.TargetAmp = target_amp;
+save(out_filename, 'ResultSpatial');
+fprintf('Results saved to %s.mat file.\n',out_filename);
 
 %% ==================== HELPER FUNCTION ====================
 function Coords = get_electrode_coordinates(type)

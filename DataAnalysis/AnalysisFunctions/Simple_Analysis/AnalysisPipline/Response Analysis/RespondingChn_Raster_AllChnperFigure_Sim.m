@@ -11,16 +11,16 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ========================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
 
 Electrode_Type   = 1;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
 raster_chn_start = 1;          % Depth_s index
 raster_chn_end   = 32;
 
 % ---- plotting windows ----
-ras_win       = [-10 50];      % ms, time relative to first pulse
+ras_win       = [-20 40];      % ms, time relative to first pulse
 bin_ms_raster = 1;             % ms, PSTH bin size
-smooth_ms     = 10;             % ms, Gaussian smoothing width
+smooth_ms     = 5;             % ms, Gaussian smoothing width
 
 % Which amplitudes to plot (µA). If empty → plot ALL amplitudes.
 Plot_Amps = [];     % e.g. [4 6 8];  [] = all

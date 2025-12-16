@@ -12,8 +12,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
 Electrode_Type = 1;
 
 % Analysis
@@ -196,8 +196,8 @@ for i = 2:length(group_names)
         xline(median(data), '--', 'Color', group_colors{i}, 'LineWidth', 2);
     end
 end
-ylabel('% of Channels', 'FontSize', 12, 'FontWeight', 'bold'); 
-xlabel('Peak Latency (ms)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('% of Channels', 'FontSize', 10, 'FontWeight', 'bold'); 
+xlabel('Peak Latency (ms)', 'FontSize', 10, 'FontWeight', 'bold');
 title(sprintf('Latency Distribution at %.0f µA', target_amp), 'FontSize', 14);
 legend(b, group_names, 'Location','northeast'); box off; xlim([0 20]);
 
@@ -230,7 +230,7 @@ end
 xlabel('Amplitude (µA)', 'FontWeight','bold'); 
 ylabel('Mean Peak Latency (ms)', 'FontWeight','bold');
 title('Average Peak Firing Rate Time vs. Amplitude', 'FontWeight','bold'); 
-legend('Location','best'); box off; grid on;
+legend('Location','best'); box off;
 
 %% ===================== STATS: TWO-WAY ANOVA (POOLED) ======================
 y_values = []; g_stim = []; g_amp = [];
@@ -275,7 +275,7 @@ fprintf('\n--- SAVING RESULTS ---\n');
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set4_Latency_SepPop_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_Set6_Latency_SepPop_5ms_' exp_id '.mat']);
 
 ResultLat = struct();
 ResultLat.Metadata.Created = datestr(now);
@@ -292,7 +292,7 @@ ResultLat.Latency.Seq = LatAmp_seq;
 ResultLat.QC.Sim = QC_Sim;
 ResultLat.QC.Seq = QC_Seq;
 save(out_filename, 'ResultLat');
-fprintf('Success! Latency Results saved to:\n  %s\n', out_filename);
+fprintf('Latency Results saved to:\n  %s\n', out_filename);
 
 %% ================= PRINT SUMMARY STATISTICS (EXCEL READY) =================
 fprintf('\n\n========================================================================\n');

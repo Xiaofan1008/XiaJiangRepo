@@ -6,7 +6,7 @@ spike_chn_start = 1;
 spike_chn_end   = 32;   % nChn (Depth_s index)
 Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
 
 FS = 30000;            % Sampling frequency
 win_ms       = 300;    % total window after trigger (ms)

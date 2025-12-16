@@ -9,11 +9,11 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
 Electrode_Type = 1; 
 
-target_amp = 10; % For the figures
+target_amp = 6; % For the figures
 target_ptd_seq = 5; 
 
 %% =================== LOAD DATA ====================
@@ -343,7 +343,7 @@ fprintf('=======================================================================
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set1_Spatial_d50_Stats_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_Set6_Spatial_d50_Stats_5ms_' exp_id '.mat']);
 ResultSpatial = struct();
 ResultSpatial.d50_Table = d50_Results; 
 ResultSpatial.Stats.ANOVA = anova_stats;

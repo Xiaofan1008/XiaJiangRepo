@@ -7,16 +7,16 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single6_251125_180744';
-folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single1';
+folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % --- List of channels to plot ---
 target_channels = [1:32]; 
 
-plot_amps      = [10];      % amplitudes → one figure per amp
+plot_amps      = [5];      % amplitudes → one figure per amp
 ras_win        = [-10 30];  % ms
 bin_ms         = 1;
 smooth_ms      = 3;
@@ -80,13 +80,22 @@ for t = 1:D_sim.nTrials, rr = (t-1)*simN + (1:simN); v = unique(idx(rr)); v = v(
 [D_sim.uniqueComb,~,D_sim.combClass] = unique(comb,'rows');
 
 % ---------- Load Sequential ----------
+% cd(folder_seq)
+% f = dir('*sp_xia_SSD.mat');
+% if isempty(f), error('No SSD file in Seq folder'); end
+% tmp = load(f(1).name);
+% if isfield(tmp, 'sp_corr'), D_seq.sp = tmp.sp_corr; 
+% elseif isfield(tmp, 'sp_SSD'), D_seq.sp = tmp.sp_SSD; 
+% else, D_seq.sp = tmp.sp_in; end
+
 cd(folder_seq)
-f = dir('*sp_xia_SSD.mat');
+f = dir('*sp_xia_FirstPulse.mat');
 if isempty(f), error('No SSD file in Seq folder'); end
 tmp = load(f(1).name);
-if isfield(tmp, 'sp_corr'), D_seq.sp = tmp.sp_corr; 
+if isfield(tmp, 'sp_seq'), D_seq.sp = tmp.sp_seq; 
 elseif isfield(tmp, 'sp_SSD'), D_seq.sp = tmp.sp_SSD; 
 else, D_seq.sp = tmp.sp_in; end
+
 if isempty(dir('*.trig.dat')); cleanTrig_sabquick; end
 D_seq.trig = loadTrig(0);
 S_seq = load(dir('*_exp_datafile_*.mat').name,'StimParams','simultaneous_stim','E_MAP','n_Trials');

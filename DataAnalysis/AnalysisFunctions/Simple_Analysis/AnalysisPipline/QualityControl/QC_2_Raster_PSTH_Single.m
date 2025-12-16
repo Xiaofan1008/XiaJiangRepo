@@ -5,13 +5,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %%                     USER SETTINGS
 %% ================================================================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single6_251125_180744';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single1';
 raster_chn_start = 1;
 raster_chn_end   = 32;
 Electrode_Type   = 1;    % 0: rigid, 1: flex, 2: 4-shank flex
 
 % ---------------- RASTER PARAMETERS ----------------
-ras_win         = [-10 50];   % ms window for raster
+ras_win         = [-20 50];   % ms window for raster
 bin_ms_raster   = 1;           % bin size (ms)
 smooth_ms       = 3;           % PSTH smoothing window (Gaussian)
 

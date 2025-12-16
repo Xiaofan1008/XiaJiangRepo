@@ -10,14 +10,14 @@ use_fallback      = true;       % if no first spike, use PTD + 2 ms
 FS                = 30000;
 Electrode_type    = 1;
 
-win_start_ms      = 2;          % injection window always starts at 2 ms
+win_start_ms      = 0;          % injection window always starts at 2 ms
 
 %% Load single-pulse data (source spikes)
 cd(single_folder);
-single_sp_file = dir('*sp_xia.mat');
+single_sp_file = dir('*sp_xia_SSD.mat');
 assert(~isempty(single_sp_file),'No single sp_xia file found');
-load(single_sp_file(1).name, 'sp_clipped');
-sp_single   = sp_clipped;
+load(single_sp_file(1).name, 'sp_corr');
+sp_single   = sp_corr;
 nChn        = numel(sp_single);
 trig_single = loadTrig(0);
 

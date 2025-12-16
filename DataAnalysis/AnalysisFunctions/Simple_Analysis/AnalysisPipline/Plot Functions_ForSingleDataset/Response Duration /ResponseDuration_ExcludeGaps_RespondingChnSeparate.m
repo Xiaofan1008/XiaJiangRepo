@@ -8,8 +8,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim4_251125_152849';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq4_5ms_251125_154235';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
 Electrode_Type = 1;
 
 % Analysis window
@@ -28,7 +28,7 @@ sigma_bins = sigma_ms / bin_ms;
 baseline_win_ms = [-90 -10];
 baseDur_s       = (baseline_win_ms(2) - baseline_win_ms(1)) / 1000;
 z_detect   = 3.0; % Peak must reach this to be "Significant"
-z_boundary = 1.5; % Onset/Offset measured at this lower level
+z_boundary = 1; % Onset/Offset measured at this lower level
 
 % Plotting
 jitter_width  = 0.2;     
@@ -273,7 +273,7 @@ fprintf('\n--- SAVING RESULTS ---\n');
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set4_Duration_SpecificPopulation_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_Set6_Duration_SpecificPopulation_5ms_' exp_id '.mat']);
 
 ResultDur = struct();
 ResultDur.Metadata.Created = datestr(now);
@@ -299,12 +299,12 @@ fprintf('=======================================================================
 % 1. Print Header Row
 fprintf('Condition\t');
 for ai = 1:length(Amps_sim)
-    fprintf('Amp_%.0fuA_Mean\tAmp_%.0fuA_SEM\t', Amps_sim(ai), Amps_sim(ai));
+    fprintf('Amp_%.0fuA_Mean\tAmp SEM\t', Amps_sim(ai));
 end
 fprintf('\n');
 
 % 2. Simultaneous Row
-fprintf('Simultaneous\t');
+fprintf('Simultaneous   \t');
 for ai = 1:length(Amps_sim)
     d = Dur_sim(:, ai);
     mu = mean(d, 'omitnan');

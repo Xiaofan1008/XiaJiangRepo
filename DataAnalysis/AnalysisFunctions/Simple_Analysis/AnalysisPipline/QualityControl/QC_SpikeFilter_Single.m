@@ -9,13 +9,13 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single6_251125_180744';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single1';
 
 FS = 30000;                 % sampling frequency
 SSD_threshold_factor = 16;  % SSD threshold (Allison-Walker style)
 template_window_ms   = [2 50];   % window after trigger to build template
-baseline_window_ms   = [-60 -5];  % baseline window for correlation filtering
-corr_thresh          = 0.7;      % keep spikes with corr >= this in baseline
+baseline_window_ms   = [-100 -5];  % baseline window for correlation filtering
+corr_thresh          = 0.8;      % keep spikes with corr >= this in baseline
 
 % filter choice
 do_SSD_filter        = 1;

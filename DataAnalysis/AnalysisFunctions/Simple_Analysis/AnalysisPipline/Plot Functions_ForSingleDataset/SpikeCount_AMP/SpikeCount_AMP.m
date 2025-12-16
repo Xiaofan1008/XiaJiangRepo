@@ -1,8 +1,8 @@
 %% ============================================================
-%   Peak Firing Rate Analysis (FIXED POPULATION / UNION)
-%   - Metric: Normalized Peak Rate (Z-score)
-%   - Logic: Calculates Z-score for ALL channels in the Union list.
-%            (Non-responders naturally contribute low Z-scores).
+%   Spike Count Analysis (FIXED POPULATION / UNION)
+%   - Metric: Mean Spike Count per Trial (Raw)
+%   - Logic: Counts spikes in window [2 20]ms, averaged over trials.
+%            NO Normalization applied.
 %   - Statistics: Pooled ANOVA (Sim vs Seq)
 %   - Output: Excel-ready tables & .mat file
 % ============================================================
@@ -10,26 +10,22 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms_251125_182437';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
 Electrode_Type = 1;
 
-% 1. Analysis Window (Peak Detection)
+% 1. Analysis Window (Spike Counting)
 post_win_ms = [2 20]; 
-% 2. PSTH Storage Window
+
+% 2. PSTH Storage Window (Visuals only)
 psth_win_ms = [-50 100]; 
 FS = 30000;            
 
-% Smoothing
+% Smoothing (Only for PSTH Plotting, not for counting)
 bin_ms     = 1;
 sigma_bins = 3;        
 baseline_win_ms = [-90 -10];
 baselineDur_s   = (baseline_win_ms(2) - baseline_win_ms(1)) / 1000;
-
-% Normalization
-k_MAD   = 1.4826;              
-epsilon = 1 / baselineDur_s;    
-MAX_Z   = 50;                  
 
 % Plotting
 jitter_width = 0.2; scatter_alpha = 0.4; dot_size = 20;          
@@ -38,11 +34,8 @@ jitter_width = 0.2; scatter_alpha = 0.4; dot_size = 20;
 edges_peak = post_win_ms(1):bin_ms:post_win_ms(2);
 bin_s = bin_ms/1000;
 kernel_size = 2 * ceil(2*sigma_bins) + 1;
-g_peak = gausswin(kernel_size); g_peak = g_peak / sum(g_peak);
-
-edges_psth = psth_win_ms(1):bin_ms:psth_win_ms(2);
-time_vector_psth = edges_psth(1:end-1) + bin_ms/2;
 g_sym = gausswin(kernel_size); g_sym = g_sym / sum(g_sym);
+edges_psth = psth_win_ms(1):bin_ms:psth_win_ms(2);
 
 %% =================== 1. LOAD DATA ====================
 [Rsim, sp_sim, trig_sim, Ssim, QC_Sim] = load_experiment_data(folder_sim);
@@ -78,10 +71,10 @@ for si=1:numel(Rseq.set), for ai=1:numel(Rseq.set(si).amp), for pi=1:numel(Rseq.
 resp_channels = find(resp_sim | resp_seq); 
 fprintf('Analyzing Fixed Population (Union): %d Channels\n', length(resp_channels));
 
-%% =================== 3. COMPUTE PEAK FR (FIXED POPULATION) =================
+%% =================== 3. COMPUTE SPIKE COUNTS (FIXED POPULATION) =================
 % Init Output Arrays
-NormPeakFR_sim = nan(length(resp_channels), length(Amps_sim));
-NormPeakFR_seq = nan(length(resp_channels), length(Amps_seq), nSets_seq, numel(PTDs_ms));
+SpikeCount_sim = nan(length(resp_channels), length(Amps_sim));
+SpikeCount_seq = nan(length(resp_channels), length(Amps_seq), nSets_seq, numel(PTDs_ms));
 nBins = length(edges_psth)-1;
 PSTH_Sim = nan(length(resp_channels), nBins, length(Amps_sim));
 PSTH_Seq = nan(length(resp_channels), nBins, length(Amps_seq), nSets_seq, numel(PTDs_ms));
@@ -98,13 +91,10 @@ for ci = 1:length(resp_channels)
         tr_ids = setdiff(tr_ids, bad_trs); 
         if isempty(tr_ids), continue; end
         
-        % NOTE: No "is_responsive" check here. We calculate for EVERYONE.
-        
-        [peak_val, FR_baseline, psth_curve] = get_trial_metrics(tr_ids, trig_sim, S_ch, ...
-            baseline_win_ms, baselineDur_s, post_win_ms, edges_peak, ...
-            edges_psth, g_peak, g_sym, bin_s, FS);
+        [count_val, psth_curve] = get_spike_count(tr_ids, trig_sim, S_ch, ...
+            post_win_ms, edges_psth, g_sym, bin_s, FS);
             
-        NormPeakFR_sim(ci,ai) = normalize_data(peak_val, FR_baseline, k_MAD, epsilon, MAX_Z);
+        SpikeCount_sim(ci,ai) = count_val; % Raw count (mean per trial)
         PSTH_Sim(ci, :, ai)   = psth_curve;
     end
     
@@ -119,13 +109,10 @@ for ci = 1:length(resp_channels)
                 tr_ids = setdiff(tr_ids, bad_trs); 
                 if isempty(tr_ids), continue; end
                 
-                % NOTE: No "is_responsive" check here.
+                [count_val, psth_curve] = get_spike_count(tr_ids, trig_seq, S_ch, ...
+                    post_win_ms, edges_psth, g_sym, bin_s, FS);
                 
-                [peak_val, FR_baseline, psth_curve] = get_trial_metrics(tr_ids, trig_seq, S_ch, ...
-                    baseline_win_ms, baselineDur_s, post_win_ms, edges_peak, ...
-                    edges_psth, g_peak, g_sym, bin_s, FS);
-                
-                NormPeakFR_seq(ci,ai,ss,p) = normalize_data(peak_val, FR_baseline, k_MAD, epsilon, MAX_Z);
+                SpikeCount_seq(ci,ai,ss,p) = count_val; % Raw count (mean per trial)
                 PSTH_Seq(ci, :, ai, ss, p) = psth_curve;
             end
         end
@@ -136,16 +123,16 @@ end
 figure('Color','w', 'Position',[100 100 800 600]); hold on;
 
 % --- Plot Simultaneous ---
-AvgSim = mean(NormPeakFR_sim, 1, 'omitnan');
-SEMSim = std(NormPeakFR_sim, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(NormPeakFR_sim), 1));
+AvgSim = mean(SpikeCount_sim, 1, 'omitnan');
+SEMSim = std(SpikeCount_sim, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(SpikeCount_sim), 1));
 sim_col = [0 0.3 0.8];
 
 if any(~isnan(AvgSim))
     for i = 1:length(Amps_sim)
-        valid = ~isnan(NormPeakFR_sim(:,i));
+        valid = ~isnan(SpikeCount_sim(:,i));
         if any(valid)
             x_jit = (rand(sum(valid),1) - 0.5) * jitter_width + Amps_sim(i);
-            scatter(x_jit, NormPeakFR_sim(valid,i), dot_size, sim_col, 'filled', ...
+            scatter(x_jit, SpikeCount_sim(valid,i), dot_size, sim_col, 'filled', ...
                 'MarkerFaceAlpha', scatter_alpha, 'HandleVisibility','off');
         end
     end
@@ -158,7 +145,7 @@ end
 set_colors = [0.85 0.33 0.10; 0.60 0.20 0.60; 0.20 0.60 0.20]; 
 for p = 1:numel(PTDs_ms)
     for ss = 1:nSets_seq
-        data_set = squeeze(NormPeakFR_seq(:, :, ss, p));
+        data_set = squeeze(SpikeCount_seq(:, :, ss, p));
         AvgSeq = mean(data_set, 1, 'omitnan');
         SEMSeq = std(data_set, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data_set), 1));
         col = set_colors(mod(ss-1,3)+1, :);
@@ -181,42 +168,41 @@ for p = 1:numel(PTDs_ms)
         end
     end
 end
-xlabel('Amplitude (uA)', 'FontWeight','bold'); ylabel('Norm Peak Firing Rate', 'FontWeight','bold');
-title('Peak Firing Rate', 'FontWeight','bold');
+
+xlabel('Amplitude (uA)', 'FontWeight','bold'); 
+ylabel('Mean Spike Count (2-20 ms)', 'FontWeight','bold');
+title('Response Magnitude (Total Spike Count)', 'FontWeight','bold');
 legend('Location','best','Box','off'); box off;
 
 %% ============================================================
 %   5. STATISTICS: POOLED ANOVA (Sim vs All Seq)
 % ============================================================
 y_val  = []; g_stim = []; g_amp  = [];
-
 % Sim
 for ai = 1:length(Amps_sim)
-    d = NormPeakFR_sim(:, ai); d = d(~isnan(d));
+    d = SpikeCount_sim(:, ai); d = d(~isnan(d));
     if isempty(d), continue; end
     y_val  = [y_val; d];
     g_stim = [g_stim; repmat({'Simultaneous'}, length(d), 1)];
     g_amp  = [g_amp;  repmat(Amps_sim(ai), length(d), 1)];
 end
-
 % Seq (Pooled)
 for ss = 1:nSets_seq
     for ai = 1:length(Amps_seq)
-        d = squeeze(NormPeakFR_seq(:, ai, ss, 1)); d = d(~isnan(d));
+        d = squeeze(SpikeCount_seq(:, ai, ss, 1)); d = d(~isnan(d));
         if isempty(d), continue; end
         y_val  = [y_val; d];
         g_stim = [g_stim; repmat({'Sequential'}, length(d), 1)];
         g_amp  = [g_amp;  repmat(Amps_seq(ai), length(d), 1)];
     end
 end
-
 if ~isempty(y_val)
     fprintf('\n=== ANOVA RESULTS (Pooled) ===\n');
     [p, tbl, stats] = anovan(y_val, {g_stim, g_amp}, ...
         'model', 'interaction', 'varnames', {'StimType', 'Amplitude'}, 'display', 'on');
     fprintf('StimType P: %.5f\nAmplitude P: %.5f\nInteract P: %.5f\n', p(1), p(2), p(3));
     
-    figure('Color','w','Name','PeakFR Comparison');
+    figure('Color','w','Name','SpikeCount Comparison');
     multcompare(stats, 'Dimension', 1);
 end
 
@@ -226,52 +212,47 @@ end
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set6_PeakFiringRate_FixedPop_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_Set1_SpikeCount_FixedPop_5ms_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
-ResultFR.Metadata.Source_Sim = folder_sim;
-ResultFR.Metadata.Source_Seq = folder_seq;
-ResultFR.Metadata.StimGroups.Sim = stim_chans_sim;
-ResultFR.Metadata.StimGroups.Seq = uniqueComb_seq(:, uniqueComb_seq(1,:) > 0);
+ResultFR.Metadata.Metric = 'Mean Spike Count per Trial';
+ResultFR.Metadata.Window = post_win_ms;
 ResultFR.Metadata.Amps = Amps_sim;
-ResultFR.PeakFR.Sim_Z = NormPeakFR_sim;
-ResultFR.PeakFR.Seq_Z = NormPeakFR_seq;
+ResultFR.PeakFR.Sim_Z = SpikeCount_sim; % Storing Count in the same structure slot for compatibility
+ResultFR.PeakFR.Seq_Z = SpikeCount_seq;
 ResultFR.PSTH.Sim = PSTH_Sim;
 ResultFR.PSTH.Seq = PSTH_Seq;
+
 save(out_filename, 'ResultFR');
 fprintf('\n>>> Results Saved to: %s\n', out_filename);
 
 %% ================= PRINT SUMMARY STATISTICS (EXCEL READY) =================
 fprintf('\n\n========================================================================\n');
-fprintf('       SUMMARY STATISTICS: PEAK FR         \n');
+fprintf('       SUMMARY STATISTICS: SPIKE COUNT         \n');
 fprintf('========================================================================\n');
-
 % 1. Print Header Row
 fprintf('Condition      \t');
 for ai = 1:length(Amps_sim)
-    % fprintf('Amp_%.0fuA_Mean\tSEM\t', Amps_sim(ai), Amps_sim(ai));
     fprintf('Amp_%.0fuA_Mean\tSEM\t', Amps_sim(ai));
 end
 fprintf('\n');
-
 % 2. Simultaneous Row
 fprintf('Simultaneous       \t');
 for ai = 1:length(Amps_sim)
-    d = NormPeakFR_sim(:, ai);
+    d = SpikeCount_sim(:, ai);
     mu = mean(d, 'omitnan');
     sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
     if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f\t%.4f\t', mu, sem); end
 end
 fprintf('\n');
-
 % 3. Sequential Rows (Per Set)
 for ss = 1:nSets_seq
     stimCh_List = uniqueComb_seq(ss, :); stimCh_List = stimCh_List(stimCh_List > 0);
     fprintf('Seq_Set%d(Ch%s)\t', ss, num2str(stimCh_List));
     
     for ai = 1:length(Amps_seq)
-        d = squeeze(NormPeakFR_seq(:, ai, ss, 1)); 
+        d = squeeze(SpikeCount_seq(:, ai, ss, 1)); 
         mu = mean(d, 'omitnan');
         sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
         if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f\t%.4f\t', mu, sem); end
@@ -281,52 +262,45 @@ end
 fprintf('========================================================================\n');
 
 %% ==================== HELPER FUNCTIONS =========================
-function [peak_val, baseline_rates, psth_trace] = get_trial_metrics(tr_ids, trig, sp_data, ...
-    base_win, base_dur, peak_win, peak_edges, psth_edges, g_peak, g_sym, bin_s, FS)
+function [count_val, psth_trace] = get_spike_count(tr_ids, trig, sp_data, ...
+    count_win, psth_edges, g_sym, bin_s, FS)
     
     nTr = numel(tr_ids);
-    baseline_rates = zeros(nTr, 1);
-    all_peak_spikes = [];
     all_psth_spikes = [];
+    total_spikes_in_window = 0;
     
     for k = 1:nTr
         tr = tr_ids(k);
         t0 = trig(tr)/FS*1000;
         tt = sp_data(:,1) - t0;
         
-        mask_b = tt >= base_win(1) & tt < base_win(2);
-        baseline_rates(k) = sum(mask_b) / base_dur;
+        % 1. Count spikes for Metric
+        mask_count = tt >= count_win(1) & tt <= count_win(2);
+        total_spikes_in_window = total_spikes_in_window + sum(mask_count);
         
-        all_peak_spikes = [all_peak_spikes; tt(tt >= peak_win(1) & tt <= peak_win(2))]; 
+        % 2. Collect spikes for PSTH Visual
         all_psth_spikes = [all_psth_spikes; tt(tt >= psth_edges(1) & tt <= psth_edges(end))];
     end
     
-    if isempty(all_peak_spikes)
-        peak_val = 0;
+    if nTr > 0
+        count_val = total_spikes_in_window / nTr; % Mean spikes per trial
     else
-        h = histcounts(all_peak_spikes, peak_edges);
-        rate = h / (nTr * bin_s);
-        smooth = conv(rate, g_peak, 'same');
-        peak_val = max(smooth);
+        count_val = NaN;
     end
     
+    % Compute PSTH for plotting
     h_psth = histcounts(all_psth_spikes, psth_edges);
     rate_psth = h_psth / (nTr * bin_s);
     psth_trace = conv(rate_psth, g_sym, 'same');
 end
-function Z_val = normalize_data(peak_val, baseline_rates, k_MAD, epsilon, max_z)
-    medB = median(baseline_rates);
-    MADB = median(abs(baseline_rates - medB));
-    denom = k_MAD * MADB + epsilon;
-    Z_val = (peak_val - medB) / denom;
-    if abs(Z_val) > max_z, Z_val = NaN; end
-end
+
 function plot_shaded_error(x, y, se, col)
     if numel(x) < 2, return; end
     x=x(:)'; y=y(:)'; se=se(:)'; valid = ~isnan(y); x=x(valid); y=y(valid); se=se(valid);
     if isempty(x), return; end
     fill([x fliplr(x)], [y+se fliplr(y-se)], col, 'FaceAlpha', 0.15, 'EdgeColor', 'none', 'HandleVisibility', 'off');
 end
+
 function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
     f = dir('*RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end

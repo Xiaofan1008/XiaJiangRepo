@@ -106,8 +106,8 @@ total_bad = 0;   % count all bad trials across channels
 for ich = 1:nCh
     ch = d(ich);
     if isempty(sp_use{ch})
-        BadTrials{ch}  = [];
-        GoodTrials{ch} = 1:nTrials;
+        BadTrials{ich}  = [];
+        GoodTrials{ich} = 1:nTrials;
         fprintf('Ch %2d: EMPTY → 0 bad / %d total trials\n', ch, nTrials);
         continue;
     end
@@ -156,11 +156,11 @@ for ich = 1:nCh
         end
     end
 
-    BadTrials{ch}  = unique(bad_list);
-    GoodTrials{ch} = setdiff(1:nTrials, BadTrials{ch});
+    BadTrials{ich}  = unique(bad_list);
+    GoodTrials{ich} = setdiff(1:nTrials, BadTrials{ich});
 
-    fprintf('Ch %2d: %d bad / %d total trials\n', ch, numel(BadTrials{ch}), nTrials);
-    total_bad = total_bad + numel(BadTrials{ch});
+    fprintf('Ch %2d: %d bad / %d total trials\n', ich, numel(BadTrials{ich}), nTrials);
+    total_bad = total_bad + numel(BadTrials{ich});
 end
 
 %% ---------------- SUMMARY ----------------

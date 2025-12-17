@@ -6,7 +6,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER INPUT =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms';
 
 Electrode_Type = 1;    % 0 = rigid, 1 = single-shank flex, 2 = four-shank flex
 
@@ -15,7 +15,7 @@ Detection_Mode = 1;     % 1 = FR rule, 2 = statistical test
 
 % ---- Window definitions ----
 baseline_win_ms = [-90 -10];        % baseline always this window
-post_win_ms     = [2 15];           % Mode 1 post-stim window
+post_win_ms     = [2 20];           % Mode 1 post-stim window
 baseDur_s = (baseline_win_ms(2) - baseline_win_ms(1)) / 1000;
 postDur_s = (post_win_ms(2)      - post_win_ms(1))      / 1000;
 

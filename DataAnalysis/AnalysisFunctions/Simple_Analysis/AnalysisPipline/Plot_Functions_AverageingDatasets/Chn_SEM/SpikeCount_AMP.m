@@ -4,13 +4,14 @@
 %   - Metric: Mean +/- SEM across ALL recorded neurons
 %   - Added: Scatter points to visualize distribution
 % ============================================================
-clear; clc;
+clear;
 
 %% ================= 1. DEFINE FILES =================
 file_list = {
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/Result_Set1_SpikeNormSimMax_Zeroed_5ms_Xia_Exp1_Sim1_251125_112055.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/Result_Set6_SpikeNormSimMax_Zeroed_5ms_Xia_Exp1_Sim6_251125_181554.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/DX012/Result_Set4_SpikeNormSimMax_Zeroed_5ms_Xia_Exp1_Sim4_251125_152849.mat'
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX012/Result_Set1_SpikeNormRef_5uA_Zeroed_5ms_Xia_Exp1_Sim1_251125_112055.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX012/Result_Set4_SpikeNormRef_5uA_Zeroed_5ms_Xia_Exp1_Sim4_251125_152849.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX012/Result_Set6_SpikeNormRef_5uA_Zeroed_5ms_Xia_Exp1_Sim6_251125_181554.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX011/Result_Set1_SpikeNormRef_5uA_Zeroed_5ms_Xia_Exp1_Sim1.mat'
 };
 
 %% ================= 2. SCAN FOR AMPLITUDES =================
@@ -130,7 +131,7 @@ plot(Master_Amps, Grand_Mean_Seq, '-s', 'Color', col_seq, 'LineWidth', 2, ...
 
 xlabel('Amplitude (\muA)', 'FontWeight', 'bold');
 ylabel('Normalized Spike Count per Trial', 'FontWeight', 'bold');
-title(['Normalized Spike Count (Pooled)'], 'FontWeight', 'bold');
+title(['Normalized Spike Count'], 'FontWeight', 'bold');
 legend('Location', 'best', 'Box', 'off'); box off;
 
 %% ================= 6. PRINT TABLE =================

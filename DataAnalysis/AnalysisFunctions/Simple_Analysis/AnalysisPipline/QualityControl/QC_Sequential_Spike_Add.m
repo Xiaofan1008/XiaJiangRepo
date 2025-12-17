@@ -2,8 +2,8 @@
 clear all;
 
 %% User parameters
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single1';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single9_251106_194057';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq9_251106_200009';
 
 pulse_offset_ms   = 0;          % shift for injection in sequential data
 use_fallback      = true;       % if no first spike, use PTD + 2 ms
@@ -47,6 +47,8 @@ seq_sp_file = dir('*sp_xia.mat');
 assert(~isempty(seq_sp_file),'No sequential sp_xia file found');
 load(seq_sp_file(1).name, 'sp_clipped');
 sp_seq   = sp_clipped;
+% load(seq_sp_file(1).name, 'sp');
+% sp_seq   = sp;
 trig_seq = loadTrig(0);
 
 S2 = load(dir('*_exp_datafile_*.mat').name, ...

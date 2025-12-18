@@ -7,17 +7,17 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% =============== USER SETTINGS ==============================
 
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1_251125_112055';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms_251125_112735';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms';
 
 Electrode_Type   = 1;
-target_channels  = [26];
-plot_amp         = 10;     % µA
+target_channels  = [1:32];
+plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;      % ms
 stim_set_id_Sim = 1;      % stimulation set
 stim_set_id_Seq = 1;
 
-ras_win   = [-5 20];
+ras_win   = [-50 50];
 bin_ms    = 1;
 smooth_ms = 3;
 FS        = 30000;
@@ -357,8 +357,6 @@ for ch_idx = 1:length(target_channels)
     
     % Stimulus Line (Zero line)
     xline(0, 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
-    
-    % --- FINAL TOUCHES ---
     title(sprintf('Ch %d | %.0f µA | Inter-Stimulus Interval %.0f ms', ...
         target_channel, plot_amp, plot_PTD_ms));
     xlabel('Time (ms)');

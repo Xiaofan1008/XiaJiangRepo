@@ -7,7 +7,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq3';
 Electrode_Type = 1;       
 FS = 30000;               
 

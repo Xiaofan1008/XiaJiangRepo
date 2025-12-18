@@ -10,8 +10,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim3';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq3';
 Electrode_Type = 1;
 
 % 1. Analysis Window
@@ -172,10 +172,10 @@ legend('Location','best','Box','off'); box off;
 ylim([0 3.0]);
 
 %% ================= SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX012/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX011/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_Set4_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);
 ResultNorm = struct();
 ResultNorm.Raw_Sim = Raw_Sim_All; ResultNorm.Raw_Seq = Raw_Seq_All; 
 ResultNorm.Norm_Sim = Norm_Sim; ResultNorm.Norm_Seq = Norm_Seq; ResultNorm.Amps = Amps_seq;

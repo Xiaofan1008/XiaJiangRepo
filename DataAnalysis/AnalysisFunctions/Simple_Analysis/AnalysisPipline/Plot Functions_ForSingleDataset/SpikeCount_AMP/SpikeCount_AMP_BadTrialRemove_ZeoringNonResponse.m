@@ -10,8 +10,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim3';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq3';
 Electrode_Type = 1;
 
 % 1. Analysis Window (Spike Counting)

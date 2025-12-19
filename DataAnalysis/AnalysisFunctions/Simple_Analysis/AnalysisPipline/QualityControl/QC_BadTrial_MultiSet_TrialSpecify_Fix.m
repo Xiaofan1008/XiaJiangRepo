@@ -1,0 +1,243 @@
+%% ============================================
+%   MANUAL BAD TRIAL ENTRY (Channel-Specific) - FIXED
+%   - Purpose: Flag trials as "Bad" for SPECIFIC CHANNELS.
+%   - Input Format: Cell Array {Set, Amp, Rel_Idx, [Channels]}
+%   - Logic: Maps (Set + Amp) -> Absolute Trial ID -> Applies to Listed Channels
+%   - Safety: Appends to existing file.
+% ============================================
+clear;
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+
+%% ---------------- USER SETTINGS ----------------
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim3';
+Electrode_Type = 1;       
+
+% --- MANUAL BAD TRIALS LIST (CELL ARRAY) ---
+% Format: { Stim_Set_ID,  Amplitude_uA,  Relative_Trial_Index,  [List_of_Bad_Channels] }
+% Note: Use curly braces {} and brackets [] for the channel list.
+
+manual_additions = {
+    % Example: Set 2, 6uA, 6th trial is bad on Ch 25 and 26
+    % {2, 6, 6, [25, 26]};
+    
+    % Example: Set 2, 6uA, 8th trial is bad on ALL channels (1 to 32)
+    % {2, 6, 8, [1:32]};
+    
+    % --- ENTER DATA HERE ---
+    % {2, 6, 6,  [25 26]};      % Specific channels
+    % {2, 6, 8,  [1:32]};       % All channels
+    % {2, 6, 10, [19]};         % Single channel
+    % {2, 6, 24, [20 21 22]};   % Multiple specific channels
+    
+    {1,10,25, [19,20,21,25,26,27,28,29,30,31,32]};
+    {1,10,19,[19,20,21,22]};
+    {1,8,30,[19,20,21,22,23,24,25,26,27,28]};
+    {1,8,14,[20,21,22,24,25,26,27,28,29]};
+    {1,6,22,[9]};
+    {1,6,21,[9]};
+    {1,6,13,[21,24,25,26,27]};
+    {1,6,4,[21,25,26,27,28]};
+    {1,6,2,[21,25,26,27,28,29]};
+
+    {1,5,20,[8,9,17,26,27,28,29,30]};
+    {1,5,8,[14,15,17,20,21,26,27,28,30,31]};
+    {1,5,6,[17,19,20,21,25,26,27,28,29,30,31,32]};
+    {1,5,3,[21,26,27,28,29,30]};
+    {1,5,25,[21,24,31]};
+    {1,5,29,[26,27,28]};
+    {1,5,18,[29,30]};
+
+    {1,4,14,[21,26,28,29]};
+    {1,4,16,[27]};
+    {1,4,17,[18,20,21,23,25,26,27,28,29]};
+    {1,4,19,[17,18,21,22,25,27,28,29]};
+    {1,4,20,[14,11,17,21]};
+    {1,4,29,[17,18,19,21,22,23,25,26,27,28]};
+    {1,4,30,[18,21,27]};
+    {1,4,6,[19,20,21,22,25,26,27,28,29]};
+    {1,4,15,[26]};
+    {1,4,28,[26,28]};
+
+    {1,3,1,[21,26,27,28]};
+    {1,3,2,[21,25,26,27,29,30]};
+    {1,3,5,[21,26]};
+    {1,3,13,[9,18,21,26,27]};
+    {1,3,14,[26,27,28]};
+    {1,3,17,[21,22,26,27]};
+    {1,3,19,[20,21,22,26,27,28,29,32]};
+    {1,3,20,[27,28]};
+    {1,3,21,[19,20,25,26,27,28]};
+    {1,3,22,[8,21,25,26,27,28,29,32]};
+    {1,3,26,[8,25,26,27,28]};
+    {1,3,29,[8,9,21,25,26,27,28]};
+    {1,3,7,[25,26,29,30]};
+
+    {1,2,1,[21,22,23,24,25,26,27,28,29]};
+    {1,2,2,[21,22,23,24,25,26,27]};
+    {1,2,5,[21,22,23,24,25,26,27,28]};
+    {1,2,6,[21,24,25,26,27,28]};
+    {1,2,10,[21,24,25,26,27,28,29,30]};
+    {1,2,8,[10]};
+    {1,2,13,[17,18,19,21,22,23,24,25,26,27,28,29]};
+    {1,2,14,[25]};
+    {1,2,16,[23,24,26]};
+    {1,2,19,[25,26,27,28]};
+    {1,2,23,[21,22,23,24,25,26,27,28]};
+    {1,2,25,[9,21,26]};
+    {1,2,27,[21,25,26,27,29]};
+    {1,2,28,[26,27,28]};
+    {1,2,29,[21,23,24,27,26]};
+    {1,2,30,[26,27]};
+    {1,2,15,[9]};
+    {1,2,4,[21,27,28,29]};
+    {1,2,12,[24]};
+
+    {1,1,1,[25,26]};
+    {1,1,12,[21,23,24]};
+    {1,1,15,[27,28]};
+    {1,1,17,[21,26,27,29]};
+    {1,1,20,[21,23,24,25,26,27,28]};
+    {1,1,27,[21,23,24,25,26,27]};
+    {1,1,29,[29]};
+    {1,1,16,[9,25,26,29,30]};
+    {1,1,13,[21]};
+    {1,1,30,[24]};
+    {1,1,6,[24]};
+    {1,1,2,[26]};
+    {1,1,11,[27]};
+
+
+};
+
+% ---------------- SETUP & CHECKS ----------------
+if ~isfolder(data_folder), error('Folder not found'); end
+cd(data_folder);
+fprintf('\nRunning Channel-Specific Manual Bad Trial Entry in:\n%s\n\n', data_folder);
+
+parts = split(data_folder, filesep);
+last_folder = parts{end};
+u = strfind(last_folder, '_');
+if numel(u) >= 4, base_name = last_folder(1 : u(end-1)-1);
+else, base_name = last_folder; end
+
+% ---------------- LOAD METADATA & PARSE SETS ----------------
+d = Depth_s(Electrode_Type); 
+nCh_Total = length(d);
+
+f_exp = dir('*_exp_datafile_*.mat');
+if isempty(f_exp), error('No exp_datafile found.'); end
+S_exp = load(f_exp(1).name);
+
+% 1. Extract Amplitudes
+StimParams = S_exp.StimParams;
+simN       = S_exp.simultaneous_stim;
+trialAmps_all = cell2mat(StimParams(2:end,16));
+trialAmps     = trialAmps_all(1:simN:end); 
+nTrials       = numel(trialAmps);
+
+% 2. Extract Stimulation Sets (CombClass)
+E_MAP = S_exp.E_MAP;
+stimNames = StimParams(2:end,1); 
+[~, idx_all] = ismember(stimNames, E_MAP(2:end));
+
+% Reconstruct trial combinations
+comb_seq = zeros(nTrials, simN);
+for t = 1:nTrials
+    rr = (t-1)*simN + (1:simN); 
+    v = idx_all(rr); v = v(v>0); 
+    comb_seq(t,1:numel(v)) = v(:).'; 
+end
+[~,~,combClass] = unique(comb_seq,'rows','stable');
+
+% ---------------- LOAD OR CREATE BAD TRIALS FILE ----------------
+save_file = sprintf('%s.BadTrials.mat', base_name);
+
+if isfile(save_file)
+    fprintf('Found existing file: %s\nLoading previous bad trials...\n', save_file);
+    tmp = load(save_file);
+    if isfield(tmp, 'BadTrials'), BadTrials = tmp.BadTrials;
+    else, BadTrials = cell(nCh_Total, 1); end
+else
+    fprintf('Creating new BadTrials file.\n');
+    BadTrials = cell(nCh_Total, 1);
+end
+if numel(BadTrials) < nCh_Total, BadTrials{nCh_Total} = []; end
+
+%% ---------------- PROCESS MANUAL ADDITIONS ----------------
+if isempty(manual_additions)
+    fprintf('\nNo entries. Done.\n');
+else
+    fprintf('\nProcessing %d manual entries...\n', size(manual_additions, 1));
+    count_added = 0;
+    
+    for i = 1:size(manual_additions, 1)
+        % --- FIX: Unpack the inner cell array correctly ---
+        current_row = manual_additions{i}; 
+        
+        tgt_set  = current_row{1}; 
+        tgt_amp  = current_row{2}; 
+        tgt_idx  = current_row{3}; 
+        tgt_chs  = current_row{4}; % This is a vector of channels
+        
+        % Find Absolute Trials matching BOTH Set ID AND Amplitude
+        matching_trials = find(combClass == tgt_set & abs(trialAmps - tgt_amp) < 0.01);
+        
+        if isempty(matching_trials)
+            fprintf('  [SKIP] Set %d, Amp %.1f not found.\n', tgt_set, tgt_amp);
+            continue;
+        end
+        
+        if tgt_idx > numel(matching_trials)
+            fprintf('  [SKIP] Set %d, Amp %.1f: Req #%d, but only %d trials exist.\n', ...
+                tgt_set, tgt_amp, tgt_idx, numel(matching_trials));
+            continue;
+        end
+        
+        % Convert to Absolute ID
+        abs_trial = matching_trials(tgt_idx);
+        
+        % --- APPLY TO SPECIFIED CHANNELS ---
+        is_new_entry = false;
+        
+        for k = 1:length(tgt_chs)
+            ch = tgt_chs(k);
+            
+            % Safety check for channel range
+            if ch < 1 || ch > nCh_Total
+                fprintf('    Warning: Channel %d out of range (1-%d). Skipped.\n', ch, nCh_Total);
+                continue;
+            end
+            
+            current_list = BadTrials{ch};
+            new_list = unique([current_list(:); abs_trial(:)]);
+            
+            if numel(new_list) > numel(current_list)
+                BadTrials{ch} = new_list;
+                is_new_entry = true;
+            end
+        end
+        
+        if is_new_entry
+            fprintf('  -> Added Bad Trial: Set %d | %.1f uA | Trial #%d (Abs: %d) -> applied to %d channels\n', ...
+                tgt_set, tgt_amp, tgt_idx, abs_trial, length(tgt_chs));
+            count_added = count_added + 1;
+        end
+    end
+    fprintf('\nDone. Processed entries.\n');
+end
+
+%% ---------------- SAVE ----------------
+GoodTrials = cell(nCh_Total, 1);
+for ich = 1:nCh_Total
+    GoodTrials{ich} = setdiff(1:nTrials, BadTrials{ich});
+end
+
+fprintf('\nSaving to: %s ...\n', save_file);
+if isfile(save_file)
+    save(save_file, 'BadTrials', 'GoodTrials', '-append');
+else
+    detect_win_ms=[0 0]; slide_win_size_ms=0; max_spikes_in_slide=0;
+    save(save_file, 'BadTrials', 'GoodTrials', 'detect_win_ms', ...
+        'slide_win_size_ms', 'max_spikes_in_slide');
+end
+fprintf('Save Complete.\n');

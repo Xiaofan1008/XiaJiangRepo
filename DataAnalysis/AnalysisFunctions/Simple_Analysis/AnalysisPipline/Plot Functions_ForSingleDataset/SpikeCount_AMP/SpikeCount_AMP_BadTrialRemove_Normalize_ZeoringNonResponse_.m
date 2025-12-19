@@ -10,15 +10,15 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim3';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq3';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim5';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq5_5ms';
 Electrode_Type = 1;
 
 % 1. Analysis Window
 post_win_ms = [2 20]; 
 
 % 2. NORMALIZATION SETTINGS
-Ref_Amp = 5;            % Look at this amplitude (uA)
+Ref_Amp = 10;            % Look at this amplitude (uA)
 min_ref_response = 0.1; % Floor to avoid dividing by noise
 
 % 3. Plotting

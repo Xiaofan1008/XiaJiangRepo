@@ -6,15 +6,15 @@ spike_chn_start = 1;
 spike_chn_end   = 32;   % nChn (Depth_s index)
 Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim3';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim5';
 
 FS = 30000;            % Sampling frequency
-win_ms       = 300;    % total window after trigger (ms)
-bin_ms       = 5;      % bin size (ms)
-nBins        = 100/bin_ms;   % we only use first 100 ms
+win_ms       = 100;    % total window after trigger (ms)
+bin_ms       = 2;      % bin size (ms)
+nBins        = 30/bin_ms;   % we only use first 100 ms
 amp_threshold = 100;   % optional plotting limit (set Inf to disable)
 
-layout_row = 4;        % subplot layout
+layout_row = 3;        % subplot layout
 layout_col = 5;
 
 %% ================= CHECK FOLDER =================

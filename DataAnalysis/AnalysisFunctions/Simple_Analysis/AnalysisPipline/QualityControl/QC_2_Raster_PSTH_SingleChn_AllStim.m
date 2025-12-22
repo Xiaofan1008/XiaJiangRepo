@@ -7,9 +7,9 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single5';
-folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim5';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq5_5ms';
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single7';
+folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim7';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq7';
 
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 

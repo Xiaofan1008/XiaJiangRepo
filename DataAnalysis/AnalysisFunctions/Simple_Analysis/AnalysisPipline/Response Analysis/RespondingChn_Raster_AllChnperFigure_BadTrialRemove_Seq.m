@@ -5,7 +5,7 @@
 clear; 
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq5_5ms';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq7';
 Electrode_Type   = 1;          
 raster_chn_start = 1;          
 raster_chn_end   = 32;

@@ -5,9 +5,9 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %%                     USER SETTINGS
 %% ================================================================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single7';
-raster_chn_start = 14;
-raster_chn_end   = 14;
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single9';
+raster_chn_start = 1;
+raster_chn_end   = 32;
 Electrode_Type   = 1;    % 0: rigid, 1: flex, 2: 4-shank flex
 
 % ---------------- RASTER PARAMETERS ----------------

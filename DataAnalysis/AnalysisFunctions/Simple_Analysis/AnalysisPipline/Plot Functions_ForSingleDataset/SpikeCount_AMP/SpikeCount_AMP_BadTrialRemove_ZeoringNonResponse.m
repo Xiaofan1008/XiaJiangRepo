@@ -10,8 +10,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim7';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq7';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim2';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq2_5ms';
 Electrode_Type = 1;
 
 % 1. Analysis Window (Spike Counting)
@@ -226,7 +226,7 @@ end
 
 xlabel('Amplitude (uA)', 'FontWeight','bold'); 
 ylabel('Mean Spike Count (2-20 ms)', 'FontWeight','bold');
-title('Response Magnitude (Total Spike Count - Cleaned)', 'FontWeight','bold');
+title('Response Magnitude (Total Spike Count)', 'FontWeight','bold');
 legend('Location','best','Box','off'); box off;
 
 %% ============================================================

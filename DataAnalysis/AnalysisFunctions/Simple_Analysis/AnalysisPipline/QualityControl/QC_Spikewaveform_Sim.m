@@ -6,7 +6,7 @@ spike_chn_start = 1;
 spike_chn_end   = 32;   % nChn (Depth_s index)
 Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim9';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim5';
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)
@@ -24,7 +24,7 @@ end
 cd(data_folder);
 fprintf('Changed directory to:\n%s\n', data_folder);
 
-%% ================= BASE NAME (your preferred way) =================
+%% ================= BASE NAME  =================
 parts       = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');

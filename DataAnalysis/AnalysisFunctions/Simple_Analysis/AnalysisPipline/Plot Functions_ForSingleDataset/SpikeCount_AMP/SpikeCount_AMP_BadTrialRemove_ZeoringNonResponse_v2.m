@@ -5,13 +5,14 @@
 %   - REFINEMENT 1: Non-responsive channels -> Count = 0
 %   - REFINEMENT 2: Bad Channels -> Count = NaN (Excluded from mean)
 %   - REFINEMENT 3: Bad Trials -> Removed from trial average
+%   - REFINEMENT 4: Supports Multiple Simultaneous Sets
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim4';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq4_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
 Electrode_Type = 1;
 
 % 1. Analysis Window (Spike Counting)
@@ -35,12 +36,19 @@ edges_psth = psth_win_ms(1):bin_ms:psth_win_ms(2);
 [Rsim, sp_sim, trig_sim, Ssim, QC_Sim] = load_experiment_data(folder_sim);
 [Rseq, sp_seq, trig_seq, Sseq, QC_Seq] = load_experiment_data(folder_seq);
 
-% Extract Stim Params (Sim)
-Stim_sim = Ssim.StimParams; simN_sim = Ssim.simultaneous_stim;
+% --- Extract Stim Params (Sim) ---
+Stim_sim = Ssim.StimParams; simN_sim = Ssim.simultaneous_stim; E_MAP_sim = Ssim.E_MAP;
+if isfield(Ssim, 'n_Trials'), nTr_sim = Ssim.n_Trials; else, nTr_sim = (size(Stim_sim, 1) - 1) / simN_sim; end
 amps_all_sim  = cell2mat(Stim_sim(2:end,16)); trialAmps_sim = amps_all_sim(1:simN_sim:end);
 [Amps_sim,~,ampIdx_sim] = unique(trialAmps_sim); Amps_sim(Amps_sim==-1) = 0;
 
-% Extract Stim Params (Seq)
+% Parse Sim Sets (NEW LOGIC)
+stimNames_sim = Stim_sim(2:end,1); [~, idx_all_sim] = ismember(stimNames_sim, E_MAP_sim(2:end));
+comb_sim = zeros(nTr_sim, simN_sim);
+for t = 1:nTr_sim, rr = (t-1)*simN_sim + (1:simN_sim); v = idx_all_sim(rr); v = v(v>0); comb_sim(t,1:numel(v)) = v(:).'; end
+[uniqueComb_sim,~,combClass_sim] = unique(comb_sim,'rows','stable'); nSets_sim = size(uniqueComb_sim,1);
+
+% --- Extract Stim Params (Seq) ---
 Stim_seq = Sseq.StimParams; simN_seq = Sseq.simultaneous_stim; E_MAP_seq = Sseq.E_MAP;
 if isfield(Sseq, 'n_Trials'), nTr_seq = Sseq.n_Trials; else, nTr_seq = (size(Stim_seq, 1) - 1) / simN_seq; end
 amps_all_seq  = cell2mat(Stim_seq(2:end,16)); trialAmps_seq = amps_all_seq(1:simN_seq:end);
@@ -48,9 +56,9 @@ amps_all_seq  = cell2mat(Stim_seq(2:end,16)); trialAmps_seq = amps_all_seq(1:sim
 PTD_all_us = cell2mat(Stim_seq(3:simN_seq:end,6)); PTD_all_ms = PTD_all_us / 1000; [PTDs_ms,~,ptdIdx_seq] = unique(PTD_all_ms);
 
 % Parse Seq Sets
-stimNames = Stim_seq(2:end,1); [~, idx_all] = ismember(stimNames, E_MAP_seq(2:end));
+stimNames_seq = Stim_seq(2:end,1); [~, idx_all_seq] = ismember(stimNames_seq, E_MAP_seq(2:end));
 comb_seq = zeros(nTr_seq, simN_seq);
-for t = 1:nTr_seq, rr = (t-1)*simN_seq + (1:simN_seq); v = idx_all(rr); v = v(v>0); comb_seq(t,1:numel(v)) = v(:).'; end
+for t = 1:nTr_seq, rr = (t-1)*simN_seq + (1:simN_seq); v = idx_all_seq(rr); v = v(v>0); comb_seq(t,1:numel(v)) = v(:).'; end
 [uniqueComb_seq,~,combClass_seq] = unique(comb_seq,'rows','stable'); nSets_seq = size(uniqueComb_seq,1);
 
 %% ================= 2. IDENTIFY UNION POPULATION =============
@@ -59,98 +67,88 @@ resp_sim = false(nCh_Total, 1);
 for si=1:numel(Rsim.set), for ai=1:numel(Rsim.set(si).amp), for pi=1:numel(Rsim.set(si).amp(ai).ptd), this=Rsim.set(si).amp(ai).ptd(pi).channel; for ch=1:min(length(this),nCh_Total), if isfield(this(ch),'is_responsive') && this(ch).is_responsive, resp_sim(ch)=true; end; end; end; end; end
 resp_seq = false(nCh_Total, 1);
 for si=1:numel(Rseq.set), for ai=1:numel(Rseq.set(si).amp), for pi=1:numel(Rseq.set(si).amp(ai).ptd), this=Rseq.set(si).amp(ai).ptd(pi).channel; for ch=1:min(length(this),nCh_Total), if isfield(this(ch),'is_responsive') && this(ch).is_responsive, resp_seq(ch)=true; end; end; end; end; end
-
 resp_channels = find(resp_sim | resp_seq); 
 fprintf('Analyzing Fixed Population (Union): %d Channels\n', length(resp_channels));
 
-%% =================== 3. COMPUTE SPIKE COUNTS (FIXED POPULATION) =================
-% Init Output Arrays
-SpikeCount_sim = nan(length(resp_channels), length(Amps_sim));
+%% =================== 3. COMPUTE SPIKE COUNTS =================
+% Init Output Arrays (Added Dimension for Sim Sets)
+SpikeCount_sim = nan(length(resp_channels), length(Amps_sim), nSets_sim);
 SpikeCount_seq = nan(length(resp_channels), length(Amps_seq), nSets_seq, numel(PTDs_ms));
 nBins = length(edges_psth)-1;
-PSTH_Sim = nan(length(resp_channels), nBins, length(Amps_sim));
+PSTH_Sim = nan(length(resp_channels), nBins, length(Amps_sim), nSets_sim);
 PSTH_Seq = nan(length(resp_channels), nBins, length(Amps_seq), nSets_seq, numel(PTDs_ms));
 
 for ci = 1:length(resp_channels)
     ch_idx = resp_channels(ci); recCh = d(ch_idx);    
     
-    % --- SIMULTANEOUS ---
+    % --- SIMULTANEOUS (Loop over Sets) ---
     S_ch = sp_sim{recCh};
-    
-    % Get Bad Trials
-    bad_trs = []; 
+    bad_trs_sim = []; 
     if ~isempty(QC_Sim.BadTrials) && ch_idx <= length(QC_Sim.BadTrials)
-        bad_trs = QC_Sim.BadTrials{ch_idx}; 
+        bad_trs_sim = QC_Sim.BadTrials{ch_idx}; 
     end
     
-    % Get Bad Channels (Simultaneous usually Set 1 or flat list)
-    is_bad_ch = false;
-    if ~isempty(QC_Sim.BadCh)
-        if iscell(QC_Sim.BadCh)
-             % Check if bad in ANY set (conservative)
-             all_bad = [QC_Sim.BadCh{:}];
-             if ismember(ch_idx, all_bad), is_bad_ch = true; end
-        else
-             if ismember(ch_idx, QC_Sim.BadCh), is_bad_ch = true; end
-        end
-    end
-
-    for ai = 1:length(Amps_sim)
-        % RULE 1: If Bad Channel -> NaN (Ignore from Mean)
-        if is_bad_ch
-            SpikeCount_sim(ci,ai) = NaN; 
-            PSTH_Sim(ci, :, ai)   = nan(1, nBins);
-            continue;
+    for ss = 1:nSets_sim
+        % Identify Bad Channel for THIS Set
+        is_bad_ch = false;
+        if ~isempty(QC_Sim.BadCh)
+            if iscell(QC_Sim.BadCh)
+                 if ss <= length(QC_Sim.BadCh) && ismember(ch_idx, QC_Sim.BadCh{ss}), is_bad_ch = true; end
+            elseif ismember(ch_idx, QC_Sim.BadCh)
+                 is_bad_ch = true; % Fallback for older format
+            end
         end
         
-        % RULE 2: Check Responsiveness
-        is_resp = 0; 
-        try is_resp = Rsim.set(1).amp(ai).ptd(1).channel(ch_idx).is_responsive; catch, end
-        if ~is_resp
-            SpikeCount_sim(ci,ai) = 0; 
-            PSTH_Sim(ci, :, ai)   = zeros(1, nBins); 
-            continue; 
-        end
-        
-        % RULE 3: Filter Bad Trials
-        tr_ids = find(ampIdx_sim == ai);
-        tr_ids = setdiff(tr_ids, bad_trs); 
-        
-        if isempty(tr_ids), continue; end
-        
-        [count_val, psth_curve] = get_spike_count(tr_ids, trig_sim, S_ch, ...
-            post_win_ms, edges_psth, g_sym, bin_s, FS);
+        for ai = 1:length(Amps_sim)
+            % RULE 1: Bad Channel
+            if is_bad_ch
+                SpikeCount_sim(ci,ai,ss) = NaN; 
+                PSTH_Sim(ci, :, ai, ss)  = nan(1, nBins);
+                continue;
+            end
             
-        SpikeCount_sim(ci,ai) = count_val; 
-        PSTH_Sim(ci, :, ai)   = psth_curve;
+            % RULE 2: Responsiveness (Use set index ss)
+            is_resp = 0; 
+            try is_resp = Rsim.set(ss).amp(ai).ptd(1).channel(ch_idx).is_responsive; catch, end
+            if ~is_resp
+                SpikeCount_sim(ci,ai,ss) = 0; 
+                PSTH_Sim(ci, :, ai, ss)  = zeros(1, nBins); 
+                continue; 
+            end
+            
+            % RULE 3: Filter Bad Trials (Match Set AND Amp)
+            tr_ids = find(combClass_sim == ss & ampIdx_sim == ai);
+            tr_ids = setdiff(tr_ids, bad_trs_sim); 
+            
+            if isempty(tr_ids), continue; end
+            
+            [count_val, psth_curve] = get_spike_count(tr_ids, trig_sim, S_ch, ...
+                post_win_ms, edges_psth, g_sym, bin_s, FS);
+                
+            SpikeCount_sim(ci,ai,ss) = count_val; 
+            PSTH_Sim(ci, :, ai, ss)  = psth_curve;
+        end
     end
     
     % --- SEQUENTIAL ---
     S_ch = sp_seq{recCh};
-    bad_trs = []; 
+    bad_trs_seq = []; 
     if ~isempty(QC_Seq.BadTrials) && ch_idx <= length(QC_Seq.BadTrials)
-        bad_trs = QC_Seq.BadTrials{ch_idx}; 
+        bad_trs_seq = QC_Seq.BadTrials{ch_idx}; 
     end
     
     for p = 1:numel(PTDs_ms)
         for ss = 1:nSets_seq
-            
-            % Check Bad Channel for THIS Set
             is_bad_ch_seq = false;
             if ~isempty(QC_Seq.BadCh) && ss <= length(QC_Seq.BadCh)
                 if ismember(ch_idx, QC_Seq.BadCh{ss}), is_bad_ch_seq = true; end
             end
-
             for ai = 1:length(Amps_seq)
-                
-                % RULE 1: Bad Channel -> NaN
                 if is_bad_ch_seq
                     SpikeCount_seq(ci,ai,ss,p) = NaN;
                     PSTH_Seq(ci, :, ai, ss, p) = nan(1, nBins);
                     continue;
                 end
-                
-                % RULE 2: Check Responsiveness
                 is_resp = 0;
                 try is_resp = Rseq.set(ss).amp(ai).ptd(p).channel(ch_idx).is_responsive; catch, end
                 if ~is_resp
@@ -158,11 +156,8 @@ for ci = 1:length(resp_channels)
                     PSTH_Seq(ci, :, ai, ss, p) = zeros(1, nBins); 
                     continue; 
                 end
-                
-                % RULE 3: Filter Bad Trials
                 tr_ids = find(combClass_seq==ss & ptdIdx_seq==p & ampIdx_seq==ai);
-                tr_ids = setdiff(tr_ids, bad_trs); 
-                
+                tr_ids = setdiff(tr_ids, bad_trs_seq); 
                 if isempty(tr_ids), continue; end
                 
                 [count_val, psth_curve] = get_spike_count(tr_ids, trig_seq, S_ch, ...
@@ -178,22 +173,36 @@ end
 %% ===================== 4. PLOT (Full Figure) ======================
 figure('Color','w', 'Position',[100 100 800 600]); hold on;
 
-% --- Plot Simultaneous ---
-AvgSim = mean(SpikeCount_sim, 1, 'omitnan');
-SEMSim = std(SpikeCount_sim, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(SpikeCount_sim), 1));
-sim_col = [0 0.3 0.8];
-if any(~isnan(AvgSim))
-    for i = 1:length(Amps_sim)
-        valid = ~isnan(SpikeCount_sim(:,i));
-        if any(valid)
-            x_jit = (rand(sum(valid),1) - 0.5) * jitter_width + Amps_sim(i);
-            scatter(x_jit, SpikeCount_sim(valid,i), dot_size, sim_col, 'filled', ...
-                'MarkerFaceAlpha', scatter_alpha, 'HandleVisibility','off');
-        end
+% --- Plot Simultaneous Sets ---
+sim_base_col = [0 0.3 0.8]; 
+for ss = 1:nSets_sim
+    data_set = squeeze(SpikeCount_sim(:, :, ss));
+    AvgSim = mean(data_set, 1, 'omitnan');
+    SEMSim = std(data_set, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data_set), 1));
+    
+    % Slight color variation if multiple sim sets
+    if nSets_sim > 1
+        col = sim_base_col * (0.5 + 0.5*(ss/nSets_sim)); 
+    else
+        col = sim_base_col;
     end
-    plot_shaded_error(Amps_sim, AvgSim, SEMSim, sim_col);
-    plot(Amps_sim, AvgSim, '-o', 'Color', sim_col, 'LineWidth', 2, ...
-        'MarkerFaceColor', sim_col, 'DisplayName', 'Simultaneous');
+    
+    stimCh = uniqueComb_sim(ss,:); stimCh = stimCh(stimCh>0);
+    lbl = sprintf('Sim Set %d (Ch:%s)', ss, num2str(stimCh));
+    
+    if any(~isnan(AvgSim))
+        for i = 1:length(Amps_sim)
+            valid = ~isnan(data_set(:,i));
+            if any(valid)
+                x_jit = (rand(sum(valid),1) - 0.5) * jitter_width + Amps_sim(i);
+                scatter(x_jit, data_set(valid,i), dot_size, col, 'filled', ...
+                    'MarkerFaceAlpha', scatter_alpha, 'HandleVisibility','off');
+            end
+        end
+        plot_shaded_error(Amps_sim, AvgSim, SEMSim, col);
+        plot(Amps_sim, AvgSim, '-o', 'Color', col, 'LineWidth', 2, ...
+            'MarkerFaceColor', col, 'DisplayName', lbl);
+    end
 end
 
 % --- Plot Sequential Sets ---
@@ -223,7 +232,6 @@ for p = 1:numel(PTDs_ms)
         end
     end
 end
-
 xlabel('Amplitude (uA)', 'FontWeight','bold'); 
 ylabel('Mean Spike Count (2-20 ms)', 'FontWeight','bold');
 title('Response Magnitude (Total Spike Count)', 'FontWeight','bold');
@@ -233,15 +241,17 @@ legend('Location','best','Box','off'); box off;
 %   5. STATISTICS: POOLED ANOVA (Sim vs All Seq)
 % ============================================================
 y_val  = []; g_stim = []; g_amp  = [];
-% Sim
-for ai = 1:length(Amps_sim)
-    d = SpikeCount_sim(:, ai); d = d(~isnan(d));
-    if isempty(d), continue; end
-    y_val  = [y_val; d];
-    g_stim = [g_stim; repmat({'Simultaneous'}, length(d), 1)];
-    g_amp  = [g_amp;  repmat(Amps_sim(ai), length(d), 1)];
+% Sim (Pooled Sets)
+for ss = 1:nSets_sim
+    for ai = 1:length(Amps_sim)
+        d = squeeze(SpikeCount_sim(:, ai, ss)); d = d(~isnan(d));
+        if isempty(d), continue; end
+        y_val  = [y_val; d];
+        g_stim = [g_stim; repmat({'Simultaneous'}, length(d), 1)];
+        g_amp  = [g_amp;  repmat(Amps_sim(ai), length(d), 1)];
+    end
 end
-% Seq (Pooled)
+% Seq (Pooled Sets)
 for ss = 1:nSets_seq
     for ai = 1:length(Amps_seq)
         d = squeeze(SpikeCount_seq(:, ai, ss, 1)); d = d(~isnan(d));
@@ -268,14 +278,19 @@ fprintf('=======================================================================
 fprintf('Condition       \t');
 for ai = 1:length(Amps_sim), fprintf('%.0fuA_Mean SEM\t', Amps_sim(ai)); end
 fprintf('\n');
-% 2. Simultaneous Row
-fprintf('Simultaneous       \t');
-for ai = 1:length(Amps_sim)
-    d = SpikeCount_sim(:, ai);
-    mu = mean(d, 'omitnan'); sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
-    if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f %.4f\t', mu, sem); end
+
+% 2. Simultaneous Rows (Loop Sets)
+for ss = 1:nSets_sim
+    stimCh_List = uniqueComb_sim(ss, :); stimCh_List = stimCh_List(stimCh_List > 0);
+    fprintf('Sim_Set%d(Ch%s)\t', ss, num2str(stimCh_List));
+    for ai = 1:length(Amps_sim)
+        d = squeeze(SpikeCount_sim(:, ai, ss));
+        mu = mean(d, 'omitnan'); sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
+        if isnan(mu), fprintf('NaN\tNaN\t'); else, fprintf('%.4f %.4f\t', mu, sem); end
+    end
+    fprintf('\n');
 end
-fprintf('\n');
+
 % 3. Sequential Rows
 for ss = 1:nSets_seq
     stimCh_List = uniqueComb_seq(ss, :); stimCh_List = stimCh_List(stimCh_List > 0);
@@ -296,7 +311,6 @@ save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX010/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeCount_FixedPop_Zeroed_5ms_' exp_id '.mat']);
-
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
 ResultFR.Metadata.Metric = 'Mean Spike Count per Trial (Cleaned)';

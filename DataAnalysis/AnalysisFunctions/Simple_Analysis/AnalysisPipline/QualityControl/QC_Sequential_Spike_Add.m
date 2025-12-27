@@ -2,8 +2,8 @@
 clear all;
 
 %% User parameters
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single8_new';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq8';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single6';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
 
 pulse_offset_ms   = 0;          % shift for injection in sequential data
 use_fallback      = true;       % if no first spike, use PTD + 2 ms

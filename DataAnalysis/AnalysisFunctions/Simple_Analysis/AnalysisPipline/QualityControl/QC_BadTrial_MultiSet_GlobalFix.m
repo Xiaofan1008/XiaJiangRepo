@@ -9,7 +9,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq3';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq5_5ms';
 Electrode_Type = 1;       
 
 % --- MANUAL BAD TRIALS LIST ---
@@ -20,10 +20,50 @@ manual_additions = [
     % 2, 6, 6;
     
     % ENTER DATA HERE:
-    2, 6, 6;
-    2, 6, 8;
-    2, 6, 10;
-    2, 6, 24;
+    1,5,21;
+    1,5,22;
+    1,5,23;
+    1,5,24;
+    1,5,25;
+    1,5,26;
+    1,5,27;
+    1,5,28;
+    1,5,29;
+    1,5,30;
+    
+
+    1,4,21;
+    1,4,22;
+    1,4,23;
+    1,4,24;
+    1,4,25;
+    1,4,26;
+    1,4,27;
+    1,4,28;
+    1,4,29;
+    1,4,30;
+
+    1,3,25;
+    1,3,26;
+    1,3,27;
+    1,3,28;
+    1,3,29;
+    1,3,30;
+
+    1,2,23;
+    1,2,24;
+    1,2,25;
+    1,2,26;
+    1,2,27;
+    1,2,28;
+    1,2,29;
+    1,2,30;
+
+    1,1,2;
+    1,1,3;
+    1,1,4;
+    1,1,5;
+    1,1,6;
     
     % ... Add your other entries below ...
 ];

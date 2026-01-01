@@ -1,38 +1,35 @@
 %% Spike injection: grouped by amplitude, sequence set, PTD
+%  FIXED: Matches Stimulation Channels by NAME, not ID (Prevents cross-mapping errors)
 clear all;
-
 %% User parameters
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single1';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1';
-
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single2';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2';
 pulse_offset_ms   = 0;          % shift for injection in sequential data
 use_fallback      = true;       % if no first spike, use PTD + 2 ms
 FS                = 30000;
 Electrode_type    = 2;
-
 win_start_ms      = 0;          % injection window always starts at 2 ms
 
 %% Load single-pulse data (source spikes)
 cd(single_folder);
-single_sp_file = dir('*sp_xia.mat');
+single_sp_file = dir('*sp_xia_SSD.mat');
 assert(~isempty(single_sp_file),'No single sp_xia file found');
-load(single_sp_file(1).name, 'sp_clipped');
-sp_single   = sp_clipped;
+% load(single_sp_file(1).name, 'sp_clipped');
+% sp_single   = sp_clipped;
+load(single_sp_file(1).name, 'sp_corr');
+sp_single   = sp_corr;
 nChn        = numel(sp_single);
 trig_single = loadTrig(0);
-
 S1 = load(dir('*_exp_datafile_*.mat').name, ...
     'StimParams','simultaneous_stim','E_MAP','n_Trials');
 StimParams_single  = S1.StimParams;
-E_MAP              = S1.E_MAP;
+E_MAP_single       = S1.E_MAP; % [MODIFIED] Store as E_MAP_single
 n_Trials_single    = S1.n_Trials;
 simultaneous_stim1 = S1.simultaneous_stim;
-
 trialAmps_single = cell2mat(StimParams_single(2:end,16));
 trialAmps_single = trialAmps_single(1:simultaneous_stim1:end);
-
 stimNames_single  = StimParams_single(2:end,1);
-[~, idx_all_single] = ismember(stimNames_single, E_MAP(2:end));
+[~, idx_all_single] = ismember(stimNames_single, E_MAP_single(2:end));
 stimChPerTrial_single = cell(n_Trials_single,1);
 for t = 1:n_Trials_single
     rr = (t-1)*simultaneous_stim1 + (1:simultaneous_stim1);
@@ -48,19 +45,16 @@ assert(~isempty(seq_sp_file),'No sequential sp_xia file found');
 load(seq_sp_file(1).name, 'sp_clipped');
 sp_seq   = sp_clipped;
 trig_seq = loadTrig(0);
-
 S2 = load(dir('*_exp_datafile_*.mat').name, ...
     'StimParams','simultaneous_stim','E_MAP','n_Trials');
 StimParams_seq    = S2.StimParams;
+E_MAP_seq         = S2.E_MAP; % [MODIFIED] Store as E_MAP_seq
 n_Trials_seq      = S2.n_Trials;
 simultaneous_stim2 = S2.simultaneous_stim;
-
 trialAmps_seq = cell2mat(StimParams_seq(2:end,16));
 trialAmps_seq = trialAmps_seq(1:simultaneous_stim2:end);
-
 stimNames_seq = StimParams_seq(2:end,1);
-[~, idx_all_seq] = ismember(stimNames_seq, E_MAP(2:end));
-
+[~, idx_all_seq] = ismember(stimNames_seq, E_MAP_seq(2:end));
 stimChPerTrial_seq = cell(n_Trials_seq,1);
 for t = 1:n_Trials_seq
     rr = (t-1)*simultaneous_stim2 + (1:simultaneous_stim2);
@@ -68,7 +62,6 @@ for t = 1:n_Trials_seq
     v  = v(v>0);
     stimChPerTrial_seq{t} = v(:).';
 end
-
 comb_seq = zeros(n_Trials_seq, simultaneous_stim2);
 for t = 1:n_Trials_seq
     v = stimChPerTrial_seq{t};
@@ -76,11 +69,9 @@ for t = 1:n_Trials_seq
 end
 [uniqueComb_seq, ~, combClass_seq] = unique(comb_seq, 'rows', 'stable');
 nSeqSets = size(uniqueComb_seq,1);
-
 PTD_us_all = cell2mat(StimParams_seq(2:end, 6));
 PTD_us     = PTD_us_all(2:simultaneous_stim2:end);
 PTD_ms     = PTD_us / 1000;
-
 isSimultaneous = (PTD_ms == 0);
 
 %% Load first-spike times (from sequential data)
@@ -94,16 +85,12 @@ d = Depth_s(Electrode_type);
 %% Grouped injection: amp -> set -> PTD -> trial -> channel
 unique_amps = unique(trialAmps_seq);
 unique_PTDs = unique(PTD_ms);
-
 total_spikes_added_all = 0;
-
-% fprintf('\nSpike injection (grouped by amp, set, PTD) started.\n');
 
 for a = 1:numel(unique_amps)
     amp_val = unique_amps(a);
     total_spikes_added_amp = 0;
     
-    % single trials with this amplitude for each channel combo will be chosen later
     mask_single_amp = (trialAmps_single == amp_val);
     
     for set_id = 1:nSeqSets
@@ -112,14 +99,31 @@ for a = 1:numel(unique_amps)
         if isempty(stimVec)
             continue;
         end        
-        % first channel in ordered sequential set
-        ch_first_stim = stimVec(1);
         
-        % single trials that stimulate ch_first_stim at this amplitude
-        mask_single_chan = cellfun(@(x) ismember(ch_first_stim, x), stimChPerTrial_single);
+        % 1. Get the Index in Seq E_MAP
+        ch_first_idx_seq = stimVec(1);
+        
+        % 2. Get the Actual String Name (e.g., 'E-006')
+        % Note: E_MAP usually has an empty first cell, so idx maps to E_MAP{idx+1}
+        ch_name = E_MAP_seq{ch_first_idx_seq + 1};
+        
+        % 3. Find the Correct Index in Single E_MAP
+        % Returns the index into E_MAP_single(2:end)
+        ch_idx_in_single_map = find(strcmp(E_MAP_single(2:end), ch_name));
+        
+        if isempty(ch_idx_in_single_map)
+            fprintf('Warning: Seq Channel %s not found in Single Data Map.\n', ch_name);
+            continue;
+        end
+        
+        % 4. Select Single Trials using the CORRECTED index
+        % The idx_all_single logic above mapped names to 1..N indices matching E_MAP(2:end)
+        mask_single_chan = cellfun(@(x) ismember(ch_idx_in_single_map, x), stimChPerTrial_single);
+        
         single_trials_for_group = find(mask_single_amp & mask_single_chan);
+        
         if isempty(single_trials_for_group)
-            fprintf('No single trials for amp %g, first stim ch %d, set %d\n', amp_val, ch_first_stim, set_id);
+            fprintf('No single trials for amp %g, Stim %s (SeqID %d)\n', amp_val, ch_name, set_id);
             continue;
         end
         
@@ -141,6 +145,7 @@ for a = 1:numel(unique_amps)
             if isempty(seq_trials_group)
                 continue;
             end          
+            
             % loop trials in this group
             for gi = 1:numel(seq_trials_group)
                 tr_seq = seq_trials_group(gi);
@@ -216,12 +221,9 @@ for a = 1:numel(unique_amps)
     fprintf('Amplitude %g µA: %d spikes added.\n', amp_val, total_spikes_added_amp);
     total_spikes_added_all = total_spikes_added_all + total_spikes_added_amp;
 end
-
 % fprintf('\nTotal spikes added across all amplitudes: %d\n', total_spikes_added_all);
-
 %% Save new spike file
 base_sp_name = seq_sp_file(1).name;
 new_name = strrep(base_sp_name, '.sp_xia.mat', '.sp_xia_FirstPulse.mat');
 save(fullfile(sequential_folder, new_name), 'sp_seq', '-v7.3');
-
 fprintf('Saved injected sequential file: %s\n', new_name);

@@ -7,14 +7,14 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim1_251203_121823';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1';
 
 %% Choice
-Spike_filtering = 1;
-raster_chn_start = 56;
-raster_chn_end = 60; %nChn
+Spike_filtering = 0;
+raster_chn_start = 5;
+raster_chn_end = 12; %nChn
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
-PTD_to_plot = [0 5 10 12 15 17 20 25];   % e.g., [500 1000], empty for all PTD
+PTD_to_plot = [0 5 10 12 15 17];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
 %% Spike Amplitude Filtering Parameters
 pos_limit = 100;    % upper bound (µV)
@@ -347,13 +347,13 @@ if Spike_filtering == 1
         fprintf('Correlation Filtering Complete\n');
         save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
-    % load([base_name '.sp_xia.mat']);
+    load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
-    load([base_name '.sp_xia_FirstPulse.mat']);
-    sp_clipped = sp_seq;
+    % load([base_name '.sp_xia_FirstPulse.mat']);
+    % sp_clipped = sp_seq;
 end
 
 % if Spike_filtering == 1

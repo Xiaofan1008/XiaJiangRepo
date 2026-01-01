@@ -1,25 +1,24 @@
 %% ============================================================
 %   Unified Raster + PSTH Comparison
-%   (SSD Loading + Multi-Channel + Separate Sequential Orders)
-%   + Clearer Seq Colors + Unified Y-Limits
+%   (Combined Dataset: Sim is PTD=0, Seq is PTD>0)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX005/Xia_Exp1_Single';
-folder_sim    = '/Volumes/MACData/Data/Data_Xia/DX005/Xia_Exp1_Sim';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX005/Xia_Exp1_Seq';
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single1';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1'; 
 
-Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
-% --- List of channels to plot ---
-target_channels = [1:32]; 
+% --- Analysis Settings ---
+target_channels = [5:15]; 
+plot_amps      = [10];       % Amplitudes to plot
+target_PTDs    = [5 10 12];        % Specific Seq PTDs to plot (e.g. [5, 10]). Leave [] for ALL > 0.
 
-plot_amps      = [5];      % amplitudes → one figure per amp
-ras_win        = [-10 30];  % ms
+ras_win        = [-10 50];  % ms
 bin_ms         = 1;
-smooth_ms      = 3;
+smooth_ms      = 5;
 FS             = 30000;
 
 %% Colors
@@ -30,19 +29,17 @@ pastel_colors = [
     0.85 0.65 0.85; % pastel purple
     0.95 0.8 0.5;   % pastel orange
 ];
-col_sim = [0.3 0.65 0.3];    % soft green
-
-% MODIFIED: Brighter/clearer sequential colors
+col_sim = [0.3 0.65 0.3];    % soft green (Simultaneous)
 seq_colors = [
     0.85 0.10 0.10;  % Bright red
     0.90 0.60 0.10;  % Bright orange/gold
-    0.60 0.20 0.20;  % Dark red (fallback)
+    0.60 0.20 0.20;  % Dark red
 ];
 
 %% ============================================================
 % LOAD DATASETS
 % ============================================================
-% ... (Loading sections for Single, Sim, Seq remain unchanged) ...
+
 % ---------- Load Single ----------
 cd(folder_single)
 f = dir('*sp_xia_SSD.mat');
@@ -61,41 +58,15 @@ comb = zeros(D_single.nTrials, simN);
 for t = 1:D_single.nTrials, rr = (t-1)*simN + (1:simN); v = unique(idx(rr)); v = v(v>0).'; comb(t,1:numel(v)) = v; end
 [D_single.uniqueComb,~,D_single.combClass] = unique(comb,'rows');
 
-% ---------- Load Simultaneous ----------
-cd(folder_sim)
-f = dir('*sp_xia_SSD.mat');
-if isempty(f), error('No SSD file in Sim folder'); end
-tmp = load(f(1).name);
-if isfield(tmp, 'sp_corr'), D_sim.sp = tmp.sp_corr; 
-elseif isfield(tmp, 'sp_SSD'), D_sim.sp = tmp.sp_SSD; 
-else, D_sim.sp = tmp.sp_in; end
-if isempty(dir('*.trig.dat')); cleanTrig_sabquick; end
-D_sim.trig = loadTrig(0);
-S = load(dir('*_exp_datafile_*.mat').name,'StimParams','simultaneous_stim','E_MAP','n_Trials');
-Stim = S.StimParams; simN = S.simultaneous_stim; D_sim.E_MAP = S.E_MAP; D_sim.nTrials = S.n_Trials;
-amps_all = cell2mat(Stim(2:end,16)); D_sim.trialAmps = amps_all(1:simN:end);
-stimNames = Stim(2:end,1); [~, idx]  = ismember(stimNames, D_sim.E_MAP(2:end));
-comb = zeros(D_sim.nTrials, simN);
-for t = 1:D_sim.nTrials, rr = (t-1)*simN + (1:simN); v = unique(idx(rr)); v = v(v>0).'; comb(t,1:numel(v)) = v; end
-[D_sim.uniqueComb,~,D_sim.combClass] = unique(comb,'rows');
-
-% ---------- Load Sequential ----------
-% cd(folder_seq)
-% f = dir('*sp_xia_SSD.mat');
-% if isempty(f), error('No SSD file in Seq folder'); end
-% tmp = load(f(1).name);
-% if isfield(tmp, 'sp_corr'), D_seq.sp = tmp.sp_corr; 
-% elseif isfield(tmp, 'sp_SSD'), D_seq.sp = tmp.sp_SSD; 
-% else, D_seq.sp = tmp.sp_in; end
-
+% ---------- Load Combined (Sim + Seq) ----------
+% Note: We load this into D_seq, but it contains both PTD=0 (Sim) and PTD>0 (Seq)
 cd(folder_seq)
 f = dir('*sp_xia_FirstPulse.mat');
-if isempty(f), error('No SSD file in Seq folder'); end
+if isempty(f), error('No SSD/FirstPulse file in Combined folder'); end
 tmp = load(f(1).name);
 if isfield(tmp, 'sp_seq'), D_seq.sp = tmp.sp_seq; 
 elseif isfield(tmp, 'sp_SSD'), D_seq.sp = tmp.sp_SSD; 
 else, D_seq.sp = tmp.sp_in; end
-
 if isempty(dir('*.trig.dat')); cleanTrig_sabquick; end
 D_seq.trig = loadTrig(0);
 S_seq = load(dir('*_exp_datafile_*.mat').name,'StimParams','simultaneous_stim','E_MAP','n_Trials');
@@ -106,6 +77,20 @@ comb_seq = zeros(D_seq.nTrials, simN_seq);
 for t = 1:D_seq.nTrials, rr = (t-1)*simN_seq + (1:simN_seq); v  = idx_all(rr); v = v(v>0); comb_seq(t,1:numel(v)) = v(:).'; end
 [D_seq.uniqueComb,~,D_seq.combClass] = unique(comb_seq,'rows','stable');
 D_seq.nSets = size(D_seq.uniqueComb,1);
+
+% [MODIFIED] Extract PTDs (0 = Sim, >0 = Seq)
+PTD_all_us = cell2mat(Stim_seq(2:end,6)); 
+D_seq.trialPTD = PTD_all_us(2:simN_seq:end) / 1000; % Convert to ms
+
+% Determine which Sequential PTDs to plot (Excluding 0)
+available_PTDs = unique(D_seq.trialPTD);
+available_PTDs(available_PTDs == 0) = []; % Remove Sim
+if isempty(target_PTDs)
+    use_PTDs = available_PTDs;
+else
+    use_PTDs = intersect(available_PTDs, target_PTDs);
+end
+fprintf('Plotting Sequential PTDs: %s ms\n', num2str(use_PTDs'));
 
 %% PSTH KERNEL & DEPTH
 edges = ras_win(1):bin_ms:ras_win(2);
@@ -118,20 +103,20 @@ d = Depth_s(Electrode_Type);
 %% ===================== MAIN PLOTTING LOOPS =====================
 for ch_idx = 1:length(target_channels)
     target_channel = target_channels(ch_idx);
-
     for amp_val = plot_amps
         figure('Color','w','Position',[200 100 800 1400]);
         
         nSingleSets = size(D_single.uniqueComb,1);
         nSeqSets    = D_seq.nSets;
-        total_tiles = nSingleSets + 1 + nSeqSets + 2; 
+        nPTD        = length(use_PTDs);
+        
+        % Calculate total tiles: Single + Sim + (SeqSets * PTDs) + PSTHs
+        total_tiles = nSingleSets + 1 + (nSeqSets * nPTD) + 2; 
         
         tl = tiledlayout(total_tiles, 1, 'TileSpacing','compact','Padding','compact');
         title(tl,sprintf('Channel %d — %.0f µA',target_channel,amp_val),'FontSize',16);
-
-        % Variable to track maximum firing rate across all PSTHs
         max_psth_rate = 0;
-
+        
         % ============ 1. SINGLE RASTERS =============
         for s = 1:nSingleSets
             ax = nexttile(tl); set(ax,'NextPlot','add'); box(ax,'off');
@@ -150,39 +135,60 @@ for ch_idx = 1:length(target_channels)
             xlim(ax,ras_win); ylim(ax,[0 max(1,y)]);
         end
         
-        % ============ 2. SIMULTANEOUS RASTER =============
+        % ============ 2. SIMULTANEOUS RASTER (PTD = 0) =============
+        % [MODIFIED] Pull from D_seq where PTD == 0
         ax = nexttile(tl); set(ax,'NextPlot','add'); box(ax,'off');
-        stimCh = D_sim.uniqueComb(1, D_sim.uniqueComb(1,:)>0);
-        S_ch = D_sim.sp{d(target_channel)};
-        trial_ids = find(D_sim.trialAmps==amp_val);
+        S_ch = D_seq.sp{d(target_channel)};
+        
+        % Find all trials with Amp match AND PTD=0
+        trial_ids = find(D_seq.trialAmps==amp_val & D_seq.trialPTD == 0);
+        
+        % Identify Stim Channels for Sim (Use first valid Sim set)
+        if ~isempty(trial_ids)
+            sim_set_id = D_seq.combClass(trial_ids(1));
+            stimCh = D_seq.uniqueComb(sim_set_id, D_seq.uniqueComb(sim_set_id,:)>0);
+        else
+            stimCh = [NaN];
+        end
+        
         y = 0;
         for tr = trial_ids'
-            t0 = D_sim.trig(tr)/FS*1000;
+            t0 = D_seq.trig(tr)/FS*1000;
             tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
             for k=1:numel(tt), plot(ax,[tt(k) tt(k)],[y y+0.8], 'Color', col_sim, 'LineWidth',1.5); end
             y=y+1;
         end
-        title(ax, sprintf('Simultaneous — Ch%s', num2str(stimCh)), 'FontSize',11);
+        title(ax, sprintf('Simultaneous (PTD 0) — Ch%s', num2str(stimCh)), 'FontSize',11);
         xline(ax,0,'r--','HandleVisibility','off');
         xlim(ax,ras_win); ylim(ax,[0 max(1,y)]);
         
-        % ============ 3. SEQUENTIAL RASTERS =============
+        % ============ 3. SEQUENTIAL RASTERS (PTD > 0) =============
         for s = 1:nSeqSets
-            ax = nexttile(tl); set(ax,'NextPlot','add'); box(ax,'off');
             stimCh = D_seq.uniqueComb(s, D_seq.uniqueComb(s,:)>0);
-            S_ch = D_seq.sp{d(target_channel)};
-            trial_ids = find(D_seq.combClass==s & D_seq.trialAmps==amp_val);
             this_col = seq_colors(mod(s-1,size(seq_colors,1))+1, :);
-            y=0;
-            for tr = trial_ids'
-                t0 = D_seq.trig(tr)/FS*1000;
-                tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
-                for k=1:numel(tt), plot(ax,[tt(k) tt(k)],[y y+0.8], 'Color', this_col, 'LineWidth',1.5); end
-                y=y+1;
+            
+            for p_idx = 1:nPTD
+                ptd_val = use_PTDs(p_idx);
+                
+                ax = nexttile(tl); set(ax,'NextPlot','add'); box(ax,'off');
+                S_ch = D_seq.sp{d(target_channel)};
+                
+                % [MODIFIED] Filter by Set AND PTD
+                trial_ids = find(D_seq.combClass==s & D_seq.trialAmps==amp_val & abs(D_seq.trialPTD - ptd_val) < 0.01);
+                
+                y=0;
+                for tr = trial_ids'
+                    t0 = D_seq.trig(tr)/FS*1000;
+                    tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
+                    for k=1:numel(tt), plot(ax,[tt(k) tt(k)],[y y+0.8], 'Color', this_col, 'LineWidth',1.5); end
+                    y=y+1;
+                end
+                
+                title(ax, sprintf('Seq Set %d (%.0f ms) — Order: %s', s, ptd_val, num2str(stimCh)), 'FontSize',11);
+                xline(ax,0,'r--','HandleVisibility','off');
+                xline(ax,ptd_val,'k:','HandleVisibility','off'); % Mark 2nd pulse
+                xlim(ax,ras_win); ylim(ax,[0 max(1,y)]);
             end
-            title(ax, sprintf('Sequential Set %d — Order: %s', s, num2str(stimCh)), 'FontSize',11);
-            xline(ax,0,'r--','HandleVisibility','off');
-            xlim(ax,ras_win); ylim(ax,[0 max(1,y)]);
         end
         
         %% ============ 4. PSTH (Single Sets) ============
@@ -201,7 +207,6 @@ for ch_idx = 1:length(target_channels)
             rate = counts / (numel(trial_ids) * bin_s);
             rate_s = filter(g,1,rate);
             plot(ax_single_psth,ctrs,rate_s,'Color',pastel_colors(mod(s-1,5)+1,:), 'LineWidth',2, 'DisplayName',sprintf('Single %d',s));
-            % Update max rate
             max_psth_rate = max(max_psth_rate, max(rate_s));
         end    
         xline(ax_single_psth,0,'r--','HandleVisibility','off');
@@ -210,51 +215,62 @@ for ch_idx = 1:length(target_channels)
         
         %% ============ 5. PSTH (Sim + All Seq Sets) ============
         ax_simseq_psth = nexttile(tl); box(ax_simseq_psth,'off'); hold(ax_simseq_psth,'on');
-        title(ax_simseq_psth,'PSTH — Simultaneous vs Sequential');
+        title(ax_simseq_psth,'PSTH — Simultaneous vs Sequential (All PTDs)');
         
-        % --- Sim ---
-        S_ch = D_sim.sp{d(target_channel)};
-        trial_ids = find(D_sim.trialAmps==amp_val);
+        % --- Sim (PTD = 0) ---
+        S_ch = D_seq.sp{d(target_channel)};
+        % [MODIFIED] Filter PTD=0
+        trial_ids = find(D_seq.trialAmps==amp_val & D_seq.trialPTD == 0);
+        
         if ~isempty(trial_ids)
-            counts = zeros(1,length(edges)-1);
-            for tr = trial_ids'
-                t0 = D_sim.trig(tr)/FS*1000;
-                tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
-                counts = counts + histcounts(tt,edges);
-            end
-            rate_sim = filter(g,1, counts/(numel(trial_ids)*bin_s));
-            plot(ax_simseq_psth,ctrs,rate_sim,'Color',col_sim,'LineWidth',2,'DisplayName','Simultaneous');
-            % Update max rate
-            max_psth_rate = max(max_psth_rate, max(rate_sim));
-        end
-        
-        % --- Seq (Loop over sets) ---
-        for s = 1:nSeqSets
-            S_ch = D_seq.sp{d(target_channel)};
-            trial_ids = find(D_seq.combClass==s & D_seq.trialAmps==amp_val);
-            if isempty(trial_ids), continue; end
             counts = zeros(1,length(edges)-1);
             for tr = trial_ids'
                 t0 = D_seq.trig(tr)/FS*1000;
                 tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
                 counts = counts + histcounts(tt,edges);
             end
-            rate_seq = filter(g,1, counts/(numel(trial_ids)*bin_s));
+            rate_sim = filter(g,1, counts/(numel(trial_ids)*bin_s));
+            plot(ax_simseq_psth,ctrs,rate_sim,'Color',col_sim,'LineWidth',3,'DisplayName','Simultaneous (PTD 0)');
+            max_psth_rate = max(max_psth_rate, max(rate_sim));
+        end
+        
+        % --- Seq (Loop PTD > 0) ---
+        line_styles = {'-', '--', ':'};
+        for s = 1:nSeqSets
             this_col = seq_colors(mod(s-1,size(seq_colors,1))+1, :);
-            plot(ax_simseq_psth,ctrs,rate_seq,'Color',this_col,'LineWidth',2, 'DisplayName',sprintf('Seq Set %d', s));
-            % Update max rate
-            max_psth_rate = max(max_psth_rate, max(rate_seq));
+            
+            for p_idx = 1:nPTD
+                ptd_val = use_PTDs(p_idx);
+                S_ch = D_seq.sp{d(target_channel)};
+                
+                trial_ids = find(D_seq.combClass==s & D_seq.trialAmps==amp_val & abs(D_seq.trialPTD - ptd_val) < 0.01);
+                
+                if isempty(trial_ids), continue; end
+                
+                counts = zeros(1,length(edges)-1);
+                for tr = trial_ids'
+                    t0 = D_seq.trig(tr)/FS*1000;
+                    tt = S_ch(:,1); tt = tt(tt>=t0+ras_win(1) & tt<=t0+ras_win(2)) - t0;
+                    counts = counts + histcounts(tt,edges);
+                end
+                rate_seq = filter(g,1, counts/(numel(trial_ids)*bin_s));
+                
+                ls = line_styles{mod(p_idx-1, length(line_styles)) + 1};
+                
+                plot(ax_simseq_psth,ctrs,rate_seq,'Color',this_col,'LineStyle',ls, 'LineWidth',2, ...
+                    'DisplayName',sprintf('Seq Set %d (%.0f ms)', s, ptd_val));
+                
+                max_psth_rate = max(max_psth_rate, max(rate_seq));
+            end
         end
         
         xline(ax_simseq_psth,0,'r--','HandleVisibility','off');
         xlim(ax_simseq_psth,ras_win); ylabel(ax_simseq_psth,'Rate (sp/s)'); xlabel(ax_simseq_psth,'Time (ms)');
         legend(ax_simseq_psth,'Box','off','Location','northeast');
-
         if max_psth_rate > 0
-            ymax = max_psth_rate * 1.1; % Add 10% buffer
+            ymax = max_psth_rate * 1.1;
             ylim(ax_single_psth, [0 ymax]);
             ylim(ax_simseq_psth, [0 ymax]);
         end
-
-    end  % END amplitude loop
-end % END channel loop
+    end
+end

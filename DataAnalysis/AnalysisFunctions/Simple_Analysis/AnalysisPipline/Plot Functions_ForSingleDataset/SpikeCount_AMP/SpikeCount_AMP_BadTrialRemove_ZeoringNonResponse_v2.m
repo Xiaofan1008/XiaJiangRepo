@@ -11,8 +11,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Sim4';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4';
 Electrode_Type = 1;
 
 % 1. Analysis Window (Spike Counting)
@@ -307,7 +307,7 @@ fprintf('=======================================================================
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX010/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX006/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeCount_FixedPop_Zeroed_5ms_' exp_id '.mat']);

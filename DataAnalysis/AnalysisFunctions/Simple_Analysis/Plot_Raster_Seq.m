@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_25ms_251125_120717';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4_251003_205655';
 
 if ~isfolder(data_folder)
     error('The specified folder does not exist. Please check the path.');

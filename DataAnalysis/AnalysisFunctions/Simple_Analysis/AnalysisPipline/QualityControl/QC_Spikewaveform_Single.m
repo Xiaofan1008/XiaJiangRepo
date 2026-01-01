@@ -3,16 +3,16 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ================= USER SETTINGS =================
 spike_chn_start = 1;
-spike_chn_end   = 32;   % nChn (Depth_s index)
-Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
+spike_chn_end   = 64;   % nChn (Depth_s index)
+Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single6';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single1';
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)
 bin_ms       = 2;      % bin size (ms)
 nBins        = 30/bin_ms;   % we only use first 100 ms
-amp_threshold = 100;   % optional plotting limit (set Inf to disable)
+amp_threshold = 300;   % optional plotting limit (set Inf to disable)
 
 layout_row = 3;        % subplot layout
 layout_col = 5;

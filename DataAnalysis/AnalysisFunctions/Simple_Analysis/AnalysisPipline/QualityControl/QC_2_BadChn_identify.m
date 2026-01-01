@@ -5,12 +5,12 @@
 %       BadCh_perSet{setID} = [ch1 ch2 ch3 ...];
 % ============================================================
 
-clear; clc;
+clear; 
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
-Electrode_Type = 1;    % 0 rigid, 1 single-shank flex, 2 four-shank flex
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1';
+Electrode_Type = 2;    % 0 rigid, 1 single-shank flex, 2 four-shank flex
 
 %% ================= CHECK FOLDER =================
 if ~isfolder(data_folder)

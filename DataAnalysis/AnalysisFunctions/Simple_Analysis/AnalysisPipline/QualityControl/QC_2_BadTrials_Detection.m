@@ -5,9 +5,9 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1';
 
-Electrode_Type = 1;       % 0 rigid, 1 flex single-shank, 2 flex 4-shank
+Electrode_Type = 2;       % 0 rigid, 1 flex single-shank, 2 flex 4-shank
 FS = 30000;               % sampling rate (Hz)
 
 % Time window to look for bursts (relative to trigger, ms)

@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %%                     USER SETTINGS
 %% ================================================================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4';
 raster_chn_start = 1;
 raster_chn_end   = 32;
 Electrode_Type   = 1;    % 0: rigid, 1: flex, 2: 4-shank flex
@@ -44,6 +44,7 @@ assert(isfile(ssd_file), ...
     'SSD Filtered spike file %s not found. Run QC_SpikeFilter.m first.', ssd_file);
 S = load(ssd_file);
 sp_clipped = S.sp_corr;
+% sp_clipped = S.sp_pca;
 % ================================================================
 %                          LOAD TRIGGERS
 % ================================================================

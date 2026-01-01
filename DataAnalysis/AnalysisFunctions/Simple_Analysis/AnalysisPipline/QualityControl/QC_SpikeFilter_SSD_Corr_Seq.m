@@ -6,15 +6,15 @@ clear all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq3';
 FS = 30000;                 
 
 % 1. FILTERING PARAMETERS
 SSD_threshold_factor = 16;  % First pass: Remove massive outliers
-corr_thresh          = 0.5; % Correlation strictness 
+corr_thresh          = 0.6; % Correlation strictness 
 
 % 2. WINDOWS
-baseline_window_ms   = [-100 -5]; 
+baseline_window_ms   = [-50 -5]; 
 late_evoked_window   = [10 50];   
 cleanup_window_ms    = [0 100];   
 

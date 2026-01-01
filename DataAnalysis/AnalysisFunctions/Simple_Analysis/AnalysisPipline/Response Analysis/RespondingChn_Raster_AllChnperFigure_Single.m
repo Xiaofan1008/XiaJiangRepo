@@ -6,12 +6,12 @@
 %   - Does NOT remove bad trials; they are only noted in the title
 % =============================================================
 
-clear; clc;
+clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1_251125_110714';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Electrode_test';
 
 Electrode_Type   = 1;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
 raster_chn_start = 1;          % Depth_s index
@@ -176,10 +176,10 @@ end
 nSets = size(uniqueComb,1);
 
 fprintf('\nDetected %d stimulation sets (order-sensitive):\n', nSets);
-for k = 1:nSets
-    v = uniqueComb(k, uniqueComb(k,:)>0);
-    fprintf('  Set %d: %s\n', k, mat2str(v));
-end
+% for k = 1:nSets
+%     v = uniqueComb(k, uniqueComb(k,:)>0);
+%     fprintf('  Set %d: %s\n', k, mat2str(v));
+% end
 
 %% ===================== ELECTRODE MAP =========================
 

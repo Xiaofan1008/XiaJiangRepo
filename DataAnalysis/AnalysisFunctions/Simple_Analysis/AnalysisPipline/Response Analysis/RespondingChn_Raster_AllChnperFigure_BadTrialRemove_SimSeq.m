@@ -1,20 +1,29 @@
 %% =============================================================
 %   Raster + PSTH (All Channels) per Set × Amp × PTD
 %   - EXCLUDES bad trials from Plot and PSTH calculation
+%   - [NEW] Select specific PTDs to plot
 % =============================================================
 clear; 
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4';
-Electrode_Type   = 1;          
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2';
+Electrode_Type   = 2;          
 raster_chn_start = 1;          
-raster_chn_end   = 32;
+raster_chn_end   = 64;
+
 % ---- plotting windows ----
 ras_win       = [-50 80];      
 bin_ms_raster = 1;             
 smooth_ms     = 5;             
 Plot_Amps = [];     
+
+% [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
+% 0 = Simultaneous. Example: [0 5 10]
+Plot_PTDs = [0 5];    
+
 fig_position = [50 50 1600 900];
+
 %% ===================== INITIAL SETUP =========================
 if ~isfolder(data_folder)
     error('Folder not found: %s', data_folder);
@@ -30,6 +39,7 @@ else
     base_name = last_folder;
 end
 FS = 30000;
+
 %% ===================== LOAD SPIKES  ==========================
 ssd_file  = [base_name '.sp_xia_SSD.mat'];
 base_file = [base_name '.sp_xia.mat'];
@@ -48,6 +58,7 @@ else
 end
 nCh = numel(sp);
 fprintf('loaded %d spike channels.\n', nCh);
+
 %% ===================== LOAD BadChannels & BadTrials ==========
 BadCh_perSet = {};
 BadTrialsPerCh = {};
@@ -61,6 +72,7 @@ if isfile(badtr_file)
     tmp = load(badtr_file);
     if isfield(tmp,'BadTrials'), BadTrialsPerCh = tmp.BadTrials; end
 end
+
 %% ===================== LOAD Responding Channels ==============
 Resp = [];
 resp_file = [base_name '_RespondingChannels.mat'];
@@ -69,10 +81,12 @@ if isfile(resp_file)
     tmp = load(resp_file);
     if isfield(tmp,'Responding'), Resp = tmp.Responding; hasResp = true; end
 end
+
 %% ===================== LOAD TRIGGERS =========================
 if isempty(dir('*.trig.dat')), cleanTrig_sabquick; end
 trig = loadTrig(0);   
 nTrig = numel(trig);
+
 %% ===================== LOAD StimParams & DECODE ==============
 fileDIR = dir('*_exp_datafile_*.mat');
 assert(~isempty(fileDIR), 'No *_exp_datafile_*.mat file found.');
@@ -86,6 +100,7 @@ trialAmps     = trialAmps_all(1:sim_stim:end);
 [Amps,~,ampIdx] = unique(trialAmps);
 Amps(Amps == -1) = 0;
 if isempty(Plot_Amps), Plot_Amps = Amps(:).'; end
+
 if sim_stim > 1
     PTD_all = cell2mat(StimParams(3:sim_stim:end,6)); 
 else
@@ -93,6 +108,7 @@ else
 end
 [PTDs,~,ptdIdx] = unique(PTD_all);
 nPTD = numel(PTDs);
+
 stimNames = StimParams(2:end,1);
 [~, idx_all] = ismember(stimNames, E_MAP(2:end));
 stimSeq = zeros(n_Trials, sim_stim);
@@ -102,15 +118,18 @@ for t = 1:n_Trials
 end
 [uniqueComb,~,combClass] = unique(stimSeq, 'rows','stable');
 nSets = size(uniqueComb,1);
+
 %% ===================== ELECTRODE MAP =========================
 d = Depth_s(Electrode_Type);   
 depth_range = raster_chn_start : min(raster_chn_end, numel(d));
 nChPlot = numel(depth_range);
+
 %% ===================== PSTH KERNEL ===========================
 edges = ras_win(1) : bin_ms_raster : ras_win(2);
 ctrs  = edges(1:end-1) + diff(edges)/2;
 bin_s = bin_ms_raster / 1000;
 g = exp(-0.5 * ((0:smooth_ms-1) / (smooth_ms/2)).^2); g = g / sum(g);
+
 %% ===================== MAIN CONDITION LOOPS ==================
 for si = 1:nSets
     stimIdx = uniqueComb(si, uniqueComb(si,:)>0);
@@ -127,12 +146,29 @@ for si = 1:nSets
         if isempty(ai), continue; end
         
         for pi = 1:nPTD
+            
+            PTD_ms = PTDs(pi)/1000;
+            
+            % [MODIFIED] Check if this PTD is requested
+            if ~isempty(Plot_PTDs)
+                if ~any(abs(Plot_PTDs - PTD_ms) < 1e-4) % Tolerance check
+                    continue; 
+                end
+            end
+            
             trials_this = find(combClass==si & ampIdx==ai & ptdIdx==pi);
             if isempty(trials_this), continue; end
             
-            PTD_ms = PTDs(pi)/1000;
-            figTitle = sprintf('Set %d (%s) | Amp %.1f µA | PTD %.1f ms | Sequential', ...
-                               si, setLabel, aVal, PTD_ms);
+            % [MODIFIED] Dynamic Title String
+            if PTD_ms == 0
+                modeStr = 'Simultaneous';
+            else
+                modeStr = 'Sequential';
+            end
+            
+            figTitle = sprintf('Set %d (%s) | Amp %.1f µA | PTD %.1f ms | %s', ...
+                               si, setLabel, aVal, PTD_ms, modeStr);
+                               
             figure('Color','w','Name',figTitle,'Position',fig_position);
             tiledlayout('flow','TileSpacing','compact','Padding','compact');
             sgtitle(figTitle, 'FontSize', 14, 'FontWeight','bold');
@@ -218,7 +254,12 @@ for si = 1:nSets
                 end
                 ylim(ax,[0 nValid+1]); set(ax,'YTick',[]);
                 
-                xline(ax,0,'r--','LineWidth',1); xlim(ax, ras_win);
+                xline(ax,0,'r--','LineWidth',1); 
+                % [Optional] Mark 2nd pulse if sequential
+                if PTD_ms > 0
+                     xline(ax, PTD_ms, 'k:','LineWidth',1);
+                end
+                xlim(ax, ras_win);
                 
                 chLabel = sprintf('Ch %d', ich);
                 if isBadCh, chLabel = [chLabel ' BAD']; end

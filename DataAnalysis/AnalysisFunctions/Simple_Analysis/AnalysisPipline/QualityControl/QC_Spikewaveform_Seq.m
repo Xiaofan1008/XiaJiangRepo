@@ -6,13 +6,13 @@ spike_chn_start = 1;
 spike_chn_end   = 32;   % nChn (Depth_s index)
 Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4';
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)
 bin_ms       = 2;      % bin size (ms)
 nBins        = 40/bin_ms;   % we only use first 100 ms
-amp_threshold = 100;   % optional plotting limit (set Inf to disable)
+amp_threshold = 300;   % optional plotting limit (set Inf to disable)
 
 layout_row = 4;        % subplot layout
 layout_col = 5;
@@ -58,7 +58,9 @@ if isfile(qc_file)
 elseif isfile(ssd_file)
     fprintf('Found SSD file: %s\n', ssd_file);
     S = load(ssd_file);
-    if isfield(S,'sp_corr')
+    if isfield(S,'sp_pca')
+        sp_use = S.sp_pca;
+    elseif isfield(S,'sp_corr')
         sp_use = S.sp_corr;
     elseif isfield(S,'sp_SSD')
         sp_use = S.sp_SSD;
@@ -208,7 +210,7 @@ for ich = spike_chn_start:spike_chn_end
         stimIdx   = stimIdx(stimIdx > 0);
         stimLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimIdx, 'UniformOutput', false), ', ');
 
-        figure('Name', sprintf('Ch %d | StimSet %d (%s)| Simultaneous Pulse', ich, set_id, stimLabel), ...
+        figure('Name', sprintf('Ch %d | StimSet %d (%s)| Sequential Pulse', ich, set_id, stimLabel), ...
                'Color','w','Position', [100 100 1400 800]);        
         tiledlayout(layout_row, layout_col, 'Padding','compact', 'TileSpacing','compact');
 

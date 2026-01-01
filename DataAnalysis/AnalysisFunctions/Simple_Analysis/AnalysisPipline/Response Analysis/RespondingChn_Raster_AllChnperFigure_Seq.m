@@ -11,7 +11,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ========================
 
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq4';
 
 Electrode_Type   = 1;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
 raster_chn_start = 1;          % Depth_s index
@@ -54,7 +54,8 @@ base_file = [base_name '.sp_xia.mat'];
 
 if isfile(ssd_file)
     S = load(ssd_file);
-    if     isfield(S,'sp_corr'), sp = S.sp_corr;
+    if     isfield(S,'sp_pca'), sp = S.sp_pca;
+    elseif isfield(S,'sp_corr'), sp = S.sp_corr;
     elseif isfield(S,'sp_SSD'),  sp = S.sp_SSD;
     else, error('SSD file missing usable variable (sp_corr / sp_SSD).');
     end

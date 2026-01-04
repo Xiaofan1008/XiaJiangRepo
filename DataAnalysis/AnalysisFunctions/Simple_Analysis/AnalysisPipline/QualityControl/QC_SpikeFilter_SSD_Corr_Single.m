@@ -6,7 +6,7 @@ clear all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single7';
 FS = 30000;                 
 
 % 1. FILTERING PARAMETERS

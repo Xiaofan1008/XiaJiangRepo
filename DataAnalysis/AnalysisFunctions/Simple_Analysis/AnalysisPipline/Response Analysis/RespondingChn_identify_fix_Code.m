@@ -1,5 +1,5 @@
 % 1. Define the path to your file (Copy-paste the full path from your previous code)
-file_path = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2/Xia_Exp1_Seq_Sim2_RespondingChannels.mat';
+file_path = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7/Xia_Seq_Sim7_RespondingChannels.mat';
 
 % 2. Save the modified 'Responding' structure back to the file
 save(file_path,'Responding', 'Detection_Mode','baseline_win_ms','post_win_ms','post_win_singlepulse_ms', ...

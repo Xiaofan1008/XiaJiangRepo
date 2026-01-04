@@ -9,7 +9,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
 Electrode_Type = 2;
 
 % 1. Analysis Window
@@ -17,7 +17,7 @@ post_win_ms = [2 20];
 
 % 2. NORMALIZATION SETTINGS
 Ref_Amp = 5;            % Target Amplitude for Normalization (uA)
-min_ref_response = 1;   % Floor to avoid dividing by noise
+min_ref_response = 0;   % Floor to avoid dividing by noise
 
 % 3. Plotting
 FS = 30000;         
@@ -247,7 +247,7 @@ legend('Location','best','Box','off'); box off;
 ylim([0 3.0]);
 
 %% ================= SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX015/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX014/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);

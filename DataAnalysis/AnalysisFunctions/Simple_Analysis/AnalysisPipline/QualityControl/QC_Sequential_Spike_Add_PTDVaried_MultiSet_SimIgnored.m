@@ -2,8 +2,8 @@
 %  FIXED: Matches Stimulation Channels by NAME, not ID (Prevents cross-mapping errors)
 clear all;
 %% User parameters
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Single2';
-sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single7';
+sequential_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
 pulse_offset_ms   = 0;          % shift for injection in sequential data
 use_fallback      = true;       % if no first spike, use PTD + 2 ms
 FS                = 30000;

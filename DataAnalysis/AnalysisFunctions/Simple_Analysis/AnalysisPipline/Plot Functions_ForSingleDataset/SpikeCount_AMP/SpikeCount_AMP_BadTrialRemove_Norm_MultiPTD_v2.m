@@ -6,20 +6,21 @@
 %   - Filter 3: Exclude BAD TRIALS
 %   - Normalization: Value / MAX(All_Sim@Ref, All_Seq@Ref)
 %   - Refined: Combined Dataset (Sim=0ms, Seq=5ms)
+%   - MODIFIED: Uses UNION logic (Calculates raw count for all Union channels)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % [MODIFIED] Single dataset folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
 Electrode_Type = 2;
 
 % 1. Analysis Window
 post_win_ms = [2 20]; 
 
 % 2. NORMALIZATION SETTINGS
-Ref_Amp = 5;            % Look at this amplitude (uA)
+Ref_Amp = 4;            % Look at this amplitude (uA)
 min_ref_response = 1;   % Floor to avoid dividing by noise
 
 % 3. Plotting
@@ -113,10 +114,8 @@ for ci = 1:length(resp_channels)
             for ai = 1:length(Amps)
                 if is_bad_ch, Raw_Sim_All(ci, ai, ss) = NaN; continue; end
                 
-                % Check response
-                is_resp = 0; 
-                try is_resp = R.set(ss).amp(ai).ptd(ptd_sim_idx).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp, Raw_Sim_All(ci, ai, ss) = 0; continue; end
+                % [MODIFIED] REMOVED "if ~is_resp" check.
+                % We calculate RAW values for ALL Union channels.
                 
                 % Filter by Set, Amp, PTD=0
                 tr_ids = setdiff(find(ampIdx == ai & combClass == ss & ptdIdx == ptd_sim_idx), bad_trs); 
@@ -130,7 +129,7 @@ for ci = 1:length(resp_channels)
     % --- B. Calculate Raw Seq (PTD=5ms only) ---
     for p = 1:numel(PTDs_ms)
         
-        % [MODIFIED] Filter: Only process 5ms
+        % Filter: Only process 5ms
         if abs(PTDs_ms(p) - 5) > 0.001, continue; end
         
         for ss = 1:nSets
@@ -142,9 +141,7 @@ for ci = 1:length(resp_channels)
             for ai = 1:length(Amps)
                 if is_bad_ch, Raw_Seq_All(ci, ai, ss, p) = NaN; continue; end
                 
-                is_resp = 0; 
-                try is_resp = R.set(ss).amp(ai).ptd(p).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp, Raw_Seq_All(ci, ai, ss, p) = 0; continue; end
+                % [MODIFIED] REMOVED "if ~is_resp" check.
                 
                 tr_ids = setdiff(find(combClass==ss & ptdIdx==p & ampIdx==ai), bad_trs);
                 if ~isempty(tr_ids)
@@ -259,7 +256,7 @@ legend('Location','best','Box','off'); box off;
 ylim([0 3.0]);
 
 %% ================= SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX014/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX015/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);

@@ -7,14 +7,14 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
 Electrode_Type   = 2;          
 raster_chn_start = 1;          
 raster_chn_end   = 64;
 
 % ---- plotting windows ----
 ras_win       = [-50 80];      
-bin_ms_raster = 1;             
+bin_ms_raster = 1; 
 smooth_ms     = 5;             
 Plot_Amps = [];     
 

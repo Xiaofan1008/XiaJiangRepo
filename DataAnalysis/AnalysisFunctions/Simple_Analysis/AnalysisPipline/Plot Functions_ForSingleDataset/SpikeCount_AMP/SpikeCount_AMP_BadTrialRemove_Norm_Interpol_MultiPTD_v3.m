@@ -1,25 +1,22 @@
 %% ============================================================
 %   Response Magnitude: GLOBAL MAX AT REF AMP NORMALIZATION
 %   - Metric: Mean Spike Count (2-20ms)
-%   - Filter 1: If Channel NOT responsive -> Count = 0
-%   - Filter 2: If Channel BAD -> Count = NaN 
-%   - Filter 3: Exclude BAD TRIALS
-%   - Normalization: Value / MAX(All_Sim@Ref, All_Seq@Ref)
-%   - Refined: Combined Dataset (Sim=0ms, Seq=5ms)
+%   - Filter: NO forcing 0 for non-responsive (Union Logic)
+%   - Normalization: Value / MAX(Sim@Ref, Seq@Ref)
+%   - IMPROVEMENT: Uses INTERPOLATION if Ref_Amp is missing in dataset
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-% [MODIFIED] Single dataset folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
 Electrode_Type = 2;
 
 % 1. Analysis Window
 post_win_ms = [2 20]; 
 
 % 2. NORMALIZATION SETTINGS
-Ref_Amp = 5;            % Look at this amplitude (uA)
+Ref_Amp = 5;            % Target Amplitude for Normalization (uA)
 min_ref_response = 1;   % Floor to avoid dividing by noise
 
 % 3. Plotting
@@ -59,17 +56,13 @@ nSets = size(uniqueComb,1);
 d = Depth_s(Electrode_Type); nCh_Total = length(d);
 resp_channels_mask = false(nCh_Total, 1);
 
-% Scan R for PTD=0 or PTD=5 responsive channels
 for si=1:numel(R.set)
     for ai=1:numel(R.set(si).amp)
         for pi=1:numel(R.set(si).amp(ai).ptd)
             curr_ptd = R.set(si).amp(ai).ptd(pi).PTD_ms;
-            
-            % Check if relevant PTD (0 or 5)
             if abs(curr_ptd - 0) > 0.001 && abs(curr_ptd - 5) > 0.001
                 continue; 
             end
-            
             this = R.set(si).amp(ai).ptd(pi).channel; 
             for ch=1:min(length(this),nCh_Total)
                 if isfield(this(ch),'is_responsive') && this(ch).is_responsive
@@ -83,7 +76,7 @@ resp_channels = find(resp_channels_mask);
 fprintf('Analyzing Fixed Population (Union of Sim & Seq 5ms): %d Channels\n', length(resp_channels));
 
 %% =================== 3. COMPUTE RAW COUNTS & NORMALIZE =================
-% Init Output Arrays [Channels x Amps x Sets]
+% Init Output Arrays
 Norm_Sim = nan(length(resp_channels), length(Amps), nSets);
 Norm_Seq = nan(length(resp_channels), length(Amps), nSets, numel(PTDs_ms));
 Raw_Sim_All = nan(length(resp_channels), length(Amps), nSets);
@@ -93,7 +86,7 @@ for ci = 1:length(resp_channels)
     ch_idx = resp_channels(ci); recCh = d(ch_idx);    
     S_ch = sp{recCh};
     
-    % Get Bad Trials for this channel
+    % Bad Trials
     bad_trs = []; 
     if ~isempty(QC.BadTrials) && ch_idx <= length(QC.BadTrials)
         bad_trs = QC.BadTrials{ch_idx}; 
@@ -101,24 +94,14 @@ for ci = 1:length(resp_channels)
     
     % --- A. Calculate Raw Sim (PTD=0) ---
     ptd_sim_idx = find(abs(PTDs_ms - 0) < 0.001);
-    
     if ~isempty(ptd_sim_idx)
         for ss = 1:nSets
-            % Check Bad Channel
             is_bad_ch = false; 
-            if ~isempty(QC.BadCh) && ss <= length(QC.BadCh) && ismember(ch_idx, QC.BadCh{ss})
-                is_bad_ch = true;
-            end
+            if ~isempty(QC.BadCh) && ss <= length(QC.BadCh) && ismember(ch_idx, QC.BadCh{ss}), is_bad_ch = true; end
             
             for ai = 1:length(Amps)
                 if is_bad_ch, Raw_Sim_All(ci, ai, ss) = NaN; continue; end
                 
-                % Check response
-                is_resp = 0; 
-                try is_resp = R.set(ss).amp(ai).ptd(ptd_sim_idx).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp, Raw_Sim_All(ci, ai, ss) = 0; continue; end
-                
-                % Filter by Set, Amp, PTD=0
                 tr_ids = setdiff(find(ampIdx == ai & combClass == ss & ptdIdx == ptd_sim_idx), bad_trs); 
                 if ~isempty(tr_ids)
                     Raw_Sim_All(ci, ai, ss) = get_spike_count(tr_ids, trig, S_ch, post_win_ms, FS); 
@@ -129,22 +112,14 @@ for ci = 1:length(resp_channels)
     
     % --- B. Calculate Raw Seq (PTD=5ms only) ---
     for p = 1:numel(PTDs_ms)
-        
-        % [MODIFIED] Filter: Only process 5ms
         if abs(PTDs_ms(p) - 5) > 0.001, continue; end
         
         for ss = 1:nSets
             is_bad_ch = false; 
-            if ~isempty(QC.BadCh) && ss <= length(QC.BadCh) && ismember(ch_idx, QC.BadCh{ss})
-                is_bad_ch = true;
-            end
+            if ~isempty(QC.BadCh) && ss <= length(QC.BadCh) && ismember(ch_idx, QC.BadCh{ss}), is_bad_ch = true; end
             
             for ai = 1:length(Amps)
                 if is_bad_ch, Raw_Seq_All(ci, ai, ss, p) = NaN; continue; end
-                
-                is_resp = 0; 
-                try is_resp = R.set(ss).amp(ai).ptd(p).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp, Raw_Seq_All(ci, ai, ss, p) = 0; continue; end
                 
                 tr_ids = setdiff(find(combClass==ss & ptdIdx==p & ampIdx==ai), bad_trs);
                 if ~isempty(tr_ids)
@@ -154,32 +129,46 @@ for ci = 1:length(resp_channels)
         end
     end
     
-    % --- C. NORMALIZE TO GLOBAL MAX AT REFERENCE AMPLITUDE ---
+    % --- C. NORMALIZE (WITH INTERPOLATION) ---
     norm_denom = NaN;
     
-    % 1. Get Sim values at Ref Amp
-    ref_idx = find(abs(Amps - Ref_Amp) < 0.1);
-    val_sim_ref = [];
-    if ~isempty(ref_idx) && ~isempty(ptd_sim_idx)
-        slice = Raw_Sim_All(ci, ref_idx, :);
-        val_sim_ref = slice(:);
+    % 1. Create Mean Response Curves (Average across sets)
+    if ~isempty(ptd_sim_idx)
+        sim_curve_all = squeeze(Raw_Sim_All(ci, :, :)); % [Amps x Sets]
+        sim_curve_avg = mean(sim_curve_all, 2, 'omitnan')'; % [1 x Amps]
+    else
+        sim_curve_avg = nan(1, length(Amps));
     end
     
-    % 2. Get Seq values at Ref Amp (Only 5ms slices)
-    val_seq_ref = [];
-    if ~isempty(ref_idx)
-        % We need to grab only the PTD=5 slices
-        ptd5_idx = find(abs(PTDs_ms - 5) < 0.001);
-        if ~isempty(ptd5_idx)
-            slice = Raw_Seq_All(ci, ref_idx, :, ptd5_idx); 
-            val_seq_ref = slice(:); 
-        end
+    ptd5_idx = find(abs(PTDs_ms - 5) < 0.001);
+    if ~isempty(ptd5_idx)
+        seq_curve_all = squeeze(Raw_Seq_All(ci, :, :, ptd5_idx)); % [Amps x Sets]
+        seq_curve_avg = mean(seq_curve_all, 2, 'omitnan')'; % [1 x Amps]
+    else
+        seq_curve_avg = nan(1, length(Amps));
     end
     
-    % 3. Find GLOBAL MAX (Highest of Sim or Seq-5ms)
-    all_ref_vals = [val_sim_ref; val_seq_ref];
-    if ~isempty(all_ref_vals)
-        norm_denom = max(all_ref_vals, [], 'omitnan');
+    % 2. Interpolate/Extrapolate to find Value at Ref_Amp
+    est_sim = NaN; est_seq = NaN;
+    
+    valid_sim = ~isnan(sim_curve_avg);
+    if sum(valid_sim) >= 2
+        est_sim = interp1(Amps(valid_sim), sim_curve_avg(valid_sim), Ref_Amp, 'linear', 'extrap');
+    elseif sum(valid_sim) == 1
+        est_sim = sim_curve_avg(valid_sim); 
+    end
+    
+    valid_seq = ~isnan(seq_curve_avg);
+    if sum(valid_seq) >= 2
+        est_seq = interp1(Amps(valid_seq), seq_curve_avg(valid_seq), Ref_Amp, 'linear', 'extrap');
+    elseif sum(valid_seq) == 1
+        est_seq = seq_curve_avg(valid_seq);
+    end
+    
+    % 3. Find Global Max of the Estimated Reference Values
+    est_vals = [max(0, est_sim), max(0, est_seq)];
+    if any(~isnan(est_vals))
+        norm_denom = max(est_vals, [], 'omitnan');
     end
     
     % 4. Apply Normalization
@@ -187,9 +176,9 @@ for ci = 1:length(resp_channels)
         Norm_Sim(ci, :, :)       = Raw_Sim_All(ci, :, :) / norm_denom;
         Norm_Seq(ci, :, :, :)    = Raw_Seq_All(ci, :, :, :) / norm_denom;
     else
-        norm_denom = min_ref_response;
-        Norm_Sim(ci, :, :)       = Raw_Sim_All(ci, :, :) / norm_denom;
-        Norm_Seq(ci, :, :, :)    = Raw_Seq_All(ci, :, :, :) / norm_denom;
+        % Fallback to Raw if normalization fails
+        Norm_Sim(ci, :, :)       = Raw_Sim_All(ci, :, :);
+        Norm_Seq(ci, :, :, :)    = Raw_Seq_All(ci, :, :, :);
     end
 end 
 
@@ -200,7 +189,6 @@ figure('Color','w', 'Position',[100 100 700 500]); hold on;
 sim_base_col = [0 0.3 0.8];
 for ss = 1:nSets
     data_set = squeeze(Norm_Sim(:, :, ss));
-    % Check if empty (e.g. if this set was purely seq)
     if all(all(isnan(data_set) | data_set==0)), continue; end
     
     AvgSim = mean(data_set, 1, 'omitnan');
@@ -251,15 +239,15 @@ for p = 1:numel(PTDs_ms)
     end
 end
 
-yline(1.0, '--k', sprintf('Ref Max @ %.0fuA', Ref_Amp), 'HandleVisibility','off');
+yline(1.0, '--k', sprintf('Ref Max @ %.0fuA (Interp)', Ref_Amp), 'HandleVisibility','off');
 xlabel('Amplitude (uA)', 'FontWeight','bold'); 
 ylabel(sprintf('Normalized (%.0fuA)', Ref_Amp), 'FontWeight','bold');
-title(sprintf('Response Magnitude (Global Max Norm @ %.0fuA)', Ref_Amp), 'FontWeight','bold');
+title(sprintf('Response Magnitude (Global Max Norm @ %.0fuA - Interp)', Ref_Amp), 'FontWeight','bold');
 legend('Location','best','Box','off'); box off; 
 ylim([0 3.0]);
 
 %% ================= SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX014/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX015/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);

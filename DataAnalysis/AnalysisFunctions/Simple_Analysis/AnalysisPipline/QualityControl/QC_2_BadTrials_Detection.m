@@ -5,7 +5,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
 
 Electrode_Type = 2;       % 0 rigid, 1 flex single-shank, 2 flex 4-shank
 FS = 30000;               % sampling rate (Hz)

@@ -3,12 +3,13 @@
 %   - Metric: Mean Spike Count per Trial (Raw)
 %   - Logic: Counts spikes in window [2 20]ms
 %   - FILTER: Extracts Sim (PTD=0) and Seq (PTD=5) from single dataset
+%   - MODIFICATION: Uses RAW counts for all Union channels (No forced 0)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-% [MODIFIED] Single dataset folder containing both Sim (PTD=0) and Seq
+% Single dataset folder containing both Sim (PTD=0) and Seq
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7'; 
 Electrode_Type = 2;
 
@@ -64,7 +65,6 @@ d = Depth_s(Electrode_Type); nCh_Total = length(d);
 resp_channels_mask = false(nCh_Total, 1);
 
 % Consolidate responsive channels from the single R structure
-% We check ALL conditions in R (which includes both Sim and Seq results)
 for si=1:numel(R.set)
     for ai=1:numel(R.set(si).amp)
         for pi=1:numel(R.set(si).amp(ai).ptd)
@@ -88,12 +88,10 @@ fprintf('Analyzing Fixed Population (Union of Sim & Seq 5ms): %d Channels\n', le
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
 % Init Output Arrays
-% Sim: [Ch x Amp x Set]
 SpikeCount_sim = nan(length(resp_channels), length(Amps), nSets);
 nBins = length(edges_psth)-1;
 PSTH_Sim = nan(length(resp_channels), nBins, length(Amps), nSets);
 
-% Seq: [Ch x Amp x Set x PTD]
 SpikeCount_seq = nan(length(resp_channels), length(Amps), nSets, numel(PTDs_ms));
 PSTH_Seq = nan(length(resp_channels), nBins, length(Amps), nSets, numel(PTDs_ms));
 
@@ -106,9 +104,6 @@ for ci = 1:length(resp_channels)
     if ~isempty(QC.BadTrials) && ch_idx <= length(QC.BadTrials)
         bad_trs = QC.BadTrials{ch_idx}; 
     end
-    
-    % Get Bad Channel status (Global across sets or per set)
-    % Simplified logic: Check per set inside loop
     
     % --- SIMULTANEOUS (PTD = 0) ---
     ptd_sim_idx = find(abs(PTDs_ms - 0) < 0.001);
@@ -126,14 +121,10 @@ for ci = 1:length(resp_channels)
                     SpikeCount_sim(ci,ai,ss) = NaN; PSTH_Sim(ci, :, ai, ss) = nan(1, nBins); continue;
                 end
                 
-                % Check Responsiveness for PTD=0
-                is_resp = 0; 
-                try is_resp = R.set(ss).amp(ai).ptd(ptd_sim_idx).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp
-                    SpikeCount_sim(ci,ai,ss) = 0; PSTH_Sim(ci, :, ai, ss) = zeros(1, nBins); continue; 
-                end
+                % [MODIFIED] Removed "if ~is_resp" check.
+                % We calculate RAW counts for all channels in the Union Population.
                 
-                % [MODIFIED] Filter trials: Set + Amp + PTD=0
+                % Filter trials: Set + Amp + PTD=0
                 tr_ids = find(combClass == ss & ampIdx == ai & ptdIdx == ptd_sim_idx);
                 tr_ids = setdiff(tr_ids, bad_trs); 
                 
@@ -151,7 +142,7 @@ for ci = 1:length(resp_channels)
     % --- SEQUENTIAL (PTD = 5ms only) ---
     for p = 1:numel(PTDs_ms)
         
-        % [MODIFIED] FILTER: Only process 5ms case
+        % FILTER: Only process 5ms case
         if abs(PTDs_ms(p) - 5) > 0.001
             continue; 
         end
@@ -167,11 +158,7 @@ for ci = 1:length(resp_channels)
                     SpikeCount_seq(ci,ai,ss,p) = NaN; PSTH_Seq(ci, :, ai, ss, p) = nan(1, nBins); continue;
                 end
                 
-                is_resp = 0;
-                try is_resp = R.set(ss).amp(ai).ptd(p).channel(ch_idx).is_responsive; catch, end
-                if ~is_resp
-                    SpikeCount_seq(ci,ai,ss,p) = 0; PSTH_Seq(ci, :, ai, ss, p) = zeros(1, nBins); continue; 
-                end
+                % [MODIFIED] Removed "if ~is_resp" check.
                 
                 % Filter trials: Set + Amp + PTD=p
                 tr_ids = find(combClass==ss & ptdIdx==p & ampIdx==ai);
@@ -196,7 +183,6 @@ figure('Color','w', 'Position',[100 100 800 600]); hold on;
 sim_base_col = [0 0.3 0.8]; 
 for ss = 1:nSets
     data_set = squeeze(SpikeCount_sim(:, :, ss));
-    % Check if this set actually has Sim data (might be empty if purely seq set, rare but possible)
     if all(all(isnan(data_set) | data_set==0)), continue; end 
     
     AvgSim = mean(data_set, 1, 'omitnan');

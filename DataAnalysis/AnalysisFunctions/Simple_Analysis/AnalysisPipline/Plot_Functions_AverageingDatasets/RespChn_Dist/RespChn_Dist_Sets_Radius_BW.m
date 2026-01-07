@@ -14,27 +14,27 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= USER SETTINGS =================
 % List your single-dataset result files here
 file_paths = {
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim7.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim7.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim8.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim7.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim7.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim8.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim4.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim6.mat';
@@ -65,9 +65,9 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/RespChn_Dist/';
-dist_bin_edges = 0 : 50 : 700; 
+dist_bin_edges = 0 : 50 : 1300; 
 
 %% ================= 1. POOL DATA =================
 fprintf('Pooling data from %d files...\n', length(file_paths));
@@ -144,7 +144,7 @@ for i = 1:length(All_Amps)
     Avg_G_Seq = mean(Seq_G, 1, 'omitnan'); SEM_G_Seq = std(Seq_G, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Seq_G), 1));
     
     % --- Calc R_ext (Occupancy > 2%) ---
-    threshold = 0.004; 
+    threshold = 0.0035; 
     idx_sim = find(Avg_G_Sim > threshold, 1, 'last');
     if ~isempty(idx_sim), Sim_Rext(i) = bin_centers(idx_sim); else, Sim_Rext(i) = 0; end
     
@@ -152,7 +152,7 @@ for i = 1:length(All_Amps)
     if ~isempty(idx_seq), Seq_Rext(i) = bin_centers(idx_seq); else, Seq_Rext(i) = 0; end
     
     % === FIG 1: SPATIAL DENSITY (Prob within Bin) [B&W] ===
-    figNameA = sprintf('Resp_Prob_%.1fuA', curr_amp);
+    figNameA = sprintf('SpatialDensity_Group_%.1fuA', curr_amp);
     figure('Color','w', 'Position', [100 100 600 400], 'Name', figNameA); hold on;
     
     b = bar(bin_centers, [Avg_P_Sim; Avg_P_Seq]', 'grouped');
@@ -176,10 +176,10 @@ for i = 1:length(All_Amps)
     xlim([0, max(dist_bin_edges)]);
     
     legend('Location','best'); box off;
-    if save_figures, saveas(gcf, fullfile(save_dir, [figNameA '.fig'])); end
+    % if save_figures, saveas(gcf, fullfile(save_dir, [figNameA '.png'])); end
     
     % === FIG 2: GLOBAL OCCUPANCY (Count / Total Array) [B&W] ===
-    figNameB = sprintf('Global_Resp_%.1fuA', curr_amp);
+    figNameB = sprintf('GlobalOccupancy_Group_%.1fuA', curr_amp);
     figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
     
     b = bar(bin_centers, [Avg_G_Sim; Avg_G_Seq]', 'grouped');
@@ -192,10 +192,7 @@ for i = 1:length(All_Amps)
     errorbar(b(1).XEndPoints, Avg_G_Sim, SEM_G_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
     errorbar(b(2).XEndPoints, Avg_G_Seq, SEM_G_Seq, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
 
-    % yline(threshold, '--k', 'Range Threshold', 'HandleVisibility','off');
-
-    yline(threshold, '--k', 'HandleVisibility','off');
-
+    yline(threshold, '--k', 'Range Threshold', 'HandleVisibility','off');
     
     xlabel('Distance (\mum)'); ylabel('Fraction of Array Recruited');
     title(sprintf('Global Occupancy @ %.1f \\muA', curr_amp));
@@ -205,7 +202,7 @@ for i = 1:length(All_Amps)
     xlim([0, max(dist_bin_edges)]);
     
     legend('Location','best'); box off;
-    if save_figures, saveas(gcf, fullfile(save_dir, [figNameB '.fig'])); end
+    % if save_figures, saveas(gcf, fullfile(save_dir, [figNameB '.png'])); end
 end
 
 %% ================= 3. SUMMARY PLOT (Absolute Range) [B&W] =================
@@ -223,9 +220,9 @@ plot(All_Amps, Sim_Rext, '--o', 'Color', 'k', 'LineWidth', 1.5, ...
 plot(All_Amps, Seq_Rext, '-s', 'Color', 'k', 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k', 'DisplayName', 'Sequential');
 
-xlabel('Amplitude (\muA)'); ylabel('Absolute Range (R_{ext}) [\mum]');
-title('Absolute Spatial Range (Occupancy > 2%)');
-legend('Location','best'); box off; grid on;
+xlabel('Amplitude (µA)'); ylabel('Absolute Range (R_{ext}) [µm]');
+title('Absolute Spatial Range');
+legend('Location','best'); box off;
 
 if save_figures, saveas(gcf, fullfile(save_dir, [figNameSum '.fig'])); end
 fprintf('>>> Group Analysis Complete.\n');

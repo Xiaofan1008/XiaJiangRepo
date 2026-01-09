@@ -67,11 +67,8 @@ file_paths = {
 save_figures = false;
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/RespChn_Dist/';
 dist_bin_edges = 0 : 50 : 1300; 
-bin_centers = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2; % Calculate here for use in loop
-
-% === [CRITICAL] SET THIS VALUE HERE ===
-range_threshold = 0.032; % Threshold (e.g., 0.02 = 2% of array, ~1 channel)
-% ======================================
+bin_centers = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2; 
+range_threshold = 0.032; 
 
 %% ================= 1. POOL DATA =================
 fprintf('Pooling data from %d files...\n', length(file_paths));
@@ -96,7 +93,7 @@ for f = 1:length(file_paths)
                 Pooled.(fName).Val = val;
                 Pooled.(fName).Sim_Probs   = []; Pooled.(fName).Seq_Probs   = [];
                 Pooled.(fName).Sim_Global  = []; Pooled.(fName).Seq_Global  = [];
-                Pooled.(fName).Sim_Ranges  = []; Pooled.(fName).Seq_Ranges  = []; % Store Individual Ranges
+                Pooled.(fName).Sim_Ranges  = []; Pooled.(fName).Seq_Ranges  = []; 
                 All_Amps = [All_Amps, val]; %#ok<AGROW>
             end
             
@@ -108,7 +105,6 @@ for f = 1:length(file_paths)
             [glob_seq] = calc_metrics(Data.Dist, Data.Seq_Resp, Data.Seq_Valid, dist_bin_edges, 'global');
             
             % --- Calc Individual Range (R_ext) using User Setting ---
-            % [CHANGE] Used variable 'range_threshold' here
             idx_sim = find(glob_sim > range_threshold, 1, 'last');
             if ~isempty(idx_sim), r_sim = bin_centers(idx_sim); else, r_sim = 0; end
             
@@ -118,7 +114,6 @@ for f = 1:length(file_paths)
             % --- Store ---
             Pooled.(fName).Sim_Probs   = [Pooled.(fName).Sim_Probs; prob_sim];
             Pooled.(fName).Seq_Probs   = [Pooled.(fName).Seq_Probs; prob_seq];
-            
             Pooled.(fName).Sim_Global  = [Pooled.(fName).Sim_Global; glob_sim];
             Pooled.(fName).Seq_Global  = [Pooled.(fName).Seq_Global; glob_seq];
             
@@ -130,37 +125,27 @@ end
 All_Amps = unique(All_Amps);
 All_Amps = sort(All_Amps);
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+
 %% ================= 2. PLOT PROFILES (Per Amplitude) =================
 fprintf('Generating Profiles for %d Amplitudes...\n', length(All_Amps));
-% Arrays for Summary Plot
-Sim_Rext_Mean = []; Sim_Rext_SEM = [];
-Seq_Rext_Mean = []; Seq_Rext_SEM = [];
+% Arrays for Summary Plot - Pre-allocated with NaN to handle "skipping" cleanly
+Sim_Rext_Mean = nan(size(All_Amps)); Sim_Rext_SEM = nan(size(All_Amps));
+Seq_Rext_Mean = nan(size(All_Amps)); Seq_Rext_SEM = nan(size(All_Amps));
+
 for i = 1:length(All_Amps)
     curr_amp = All_Amps(i);
     fName = sprintf('A_%.1f', curr_amp); fName = strrep(fName, '.', 'p');
     
-    % % remove 10uA
-    % if abs(curr_amp - 10.0) < 0.1  % Use tolerance for float comparison
-    %     continue; 
-    % end
-
-
+    % remove 10uA
+    if abs(curr_amp - 8.0) < 0.1  
+        continue; 
+    end
+    
     % Extract Data
     Sim_P = Pooled.(fName).Sim_Probs;   Seq_P = Pooled.(fName).Seq_Probs;
     Sim_G = Pooled.(fName).Sim_Global;  Seq_G = Pooled.(fName).Seq_Global;
     
-    if isempty(Sim_P), 
-        Sim_Rext_Mean(i)=NaN; Sim_Rext_SEM(i)=NaN; 
-        Seq_Rext_Mean(i)=NaN; Seq_Rext_SEM(i)=NaN; 
-        continue; 
-    end
-    
-    % --- Histogram Statistics ---
-    Avg_P_Sim = mean(Sim_P, 1, 'omitnan'); SEM_P_Sim = std(Sim_P, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Sim_P), 1));
-    Avg_P_Seq = mean(Seq_P, 1, 'omitnan'); SEM_P_Seq = std(Seq_P, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Seq_P), 1));
-    
-    Avg_G_Sim = mean(Sim_G, 1, 'omitnan'); SEM_G_Sim = std(Sim_G, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Sim_G), 1));
-    Avg_G_Seq = mean(Seq_G, 1, 'omitnan'); SEM_G_Seq = std(Seq_G, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Seq_G), 1));
+    if isempty(Sim_P), continue; end
     
     % --- Range Statistics (Mean +/- SEM of Individual Ranges) ---
     r_sim_list = Pooled.(fName).Sim_Ranges;
@@ -172,63 +157,51 @@ for i = 1:length(All_Amps)
     Seq_Rext_Mean(i) = mean(r_seq_list); 
     Seq_Rext_SEM(i)  = std(r_seq_list) / sqrt(length(r_seq_list));
     
-    % % === FIG 1: SPATIAL DENSITY [B&W] ===
-    % figNameA = sprintf('SpatialDensity_Group_%.1fuA', curr_amp);
-    % figure('Color','w', 'Position', [100 100 600 400], 'Name', figNameA); hold on;
-    % 
-    % b = bar(bin_centers, [Avg_P_Sim; Avg_P_Seq]', 'grouped');
-    % b(1).FaceColor = 'w'; b(1).EdgeColor = 'k'; b(1).LineWidth = 1.0; b(1).DisplayName = 'Simultaneous';
-    % b(2).FaceColor = 'k'; b(2).EdgeColor = 'none'; b(2).DisplayName = 'Sequential';
-    % 
-    % errorbar(b(1).XEndPoints, Avg_P_Sim, SEM_P_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
-    % errorbar(b(2).XEndPoints, Avg_P_Seq, SEM_P_Seq, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
-    % 
-    % xlabel('Distance (\mum)'); ylabel('Response Probability');
-    % ylim([0 1.05]); title(sprintf('Spatial Density @ %.1f \\muA', curr_amp));
-    % 
-    % set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
-    % xlim([0, max(dist_bin_edges)]);
-    % legend('Location','best'); box off;
-    % 
-    % % === FIG 2: GLOBAL OCCUPANCY [B&W] ===
-    % figNameB = sprintf('GlobalOccupancy_Group_%.1fuA', curr_amp);
-    % figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
-    % 
-    % b = bar(bin_centers, [Avg_G_Sim; Avg_G_Seq]', 'grouped');
-    % b(1).FaceColor = 'w'; b(1).EdgeColor = 'k'; b(1).LineWidth = 1.0; b(1).DisplayName = 'Simultaneous';
-    % b(2).FaceColor = 'k'; b(2).EdgeColor = 'none'; b(2).DisplayName = 'Sequential';
-    % 
-    % errorbar(b(1).XEndPoints, Avg_G_Sim, SEM_G_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
-    % errorbar(b(2).XEndPoints, Avg_G_Seq, SEM_G_Seq, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
-    % 
-    % yline(range_threshold, '--k', 'Range Threshold', 'HandleVisibility','off');
-    % 
-    % xlabel('Distance (\mum)'); ylabel('Fraction of Array Recruited');
-    % title(sprintf('Global Occupancy @ %.1f \\muA', curr_amp));
-    % 
-    % set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
-    % xlim([0, max(dist_bin_edges)]);
-    % legend('Location','best'); box off;
+    % (Note: Individual Amplitude Histogram Plots are commented out per user code)
 end
+
 %% ================= 3. SUMMARY PLOT (Absolute Range with Error Bars) =================
 fprintf('Generating Summary R_ext Plot...\n');
 figNameSum = 'Spatial_Summary_R_ext';
-figure('Color','w', 'Position', [400 400 600 500], 'Name', figNameSum); hold on;
-% --- Simultaneous (Dashed, White Marker) ---
-errorbar(All_Amps, Sim_Rext_Mean, Sim_Rext_SEM, '--o', ...
-    'Color', 'k', 'LineWidth', 1.5, ...
+figure('Color','w', 'Position', [400 400 700 600], 'Name', figNameSum); hold on;
+
+% --- 1. Filter out NaNs (from skipped amplitudes like 10uA) ---
+valid_mask = ~isnan(Sim_Rext_Mean);
+Plot_Amps = All_Amps(valid_mask);
+Plot_Sim_Mean = Sim_Rext_Mean(valid_mask); Plot_Sim_SEM = Sim_Rext_SEM(valid_mask);
+Plot_Seq_Mean = Seq_Rext_Mean(valid_mask); Plot_Seq_SEM = Seq_Rext_SEM(valid_mask);
+
+% --- 2. Simultaneous (Dashed, White Marker) ---
+errorbar(Plot_Amps, Plot_Sim_Mean, Plot_Sim_SEM, '--o', ...
+    'Color', 'k', 'LineWidth', 2.0, ...            % Increased Thickness
+    'MarkerSize', 10, ...                          % Explicit Marker Size
     'MarkerFaceColor', 'w', 'MarkerEdgeColor', 'k', ...
-    'DisplayName', 'Simultaneous', 'CapSize', 8);
-% --- Sequential (Solid, Black Marker) ---
-errorbar(All_Amps, Seq_Rext_Mean, Seq_Rext_SEM, '-s', ...
-    'Color', 'k', 'LineWidth', 1.5, ...
+    'DisplayName', 'Simultaneous', 'CapSize', 12); % Larger Caps
+
+% --- 3. Sequential (Solid, Black Marker) ---
+errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
+    'Color', 'k', 'LineWidth', 2.0, ...            % Increased Thickness
+    'MarkerSize', 10, ...                          % Explicit Marker Size
     'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k', ...
-    'DisplayName', 'Sequential', 'CapSize', 8);
-xlabel('Amplitude (µA)'); ylabel('Absolute Range (R_{ext}) [µm]');
-title(sprintf('Absolute Spatial Range (Threshold = %.2f%%)', range_threshold*100));
-legend('Location','best'); box off; grid on;
+    'DisplayName', 'Sequential', 'CapSize', 12);   % Larger Caps
+
+% --- 4. Formatting ---
+xlabel('Amplitude (\muA)', 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Times New Roman');
+ylabel('Absolute Range (R_{ext}) [\mum]', 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Times New Roman');
+title(sprintf('Absolute Spatial Range (Threshold = %.2f%%)', range_threshold*100), ...
+    'FontSize', 16, 'FontName', 'Times New Roman');
+
+% Axes refinement
+set(gca, 'FontSize', 18, 'FontName', 'Times New Roman', 'LineWidth', 3, 'TickDir', 'out');
+xlim([0.5, 10.5]);  % Tightly frame the valid data (1-8uA)
+xticks(1:1:10);     % Force integer ticks
+
+legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+box off;
+
 if save_figures, saveas(gcf, fullfile(save_dir, [figNameSum '.fig'])); end
 fprintf('>>> Group Analysis Complete.\n');
+
 %% ================= HELPER FUNCTIONS =================
 function [metric_vec] = calc_metrics(dist, resp, valid, edges, mode)
     metric_vec = nan(1, length(edges)-1);

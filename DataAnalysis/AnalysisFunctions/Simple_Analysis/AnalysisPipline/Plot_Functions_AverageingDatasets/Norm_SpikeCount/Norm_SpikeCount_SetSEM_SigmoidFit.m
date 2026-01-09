@@ -60,7 +60,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX005/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim.mat';
 };
 
-save_figure = true;
+save_figure = false;
 save_dir    = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/';
 fig_name    = 'GrandAverage_Recruitment_Curve_Fitted.fig';
 

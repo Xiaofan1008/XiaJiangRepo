@@ -61,7 +61,7 @@ file_paths = {
 
 % Plot Settings
 save_figures = false;
-save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/Duration/';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE EMBC/Figures/5_Respond_Duration';
 fig_pos      = [100 100 1000 600];
 
 % --- Black and White Settings ---
@@ -183,10 +183,14 @@ for i = 1:length(All_Amps)
         text(1.5, y_star, txt, 'FontSize', 20, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
     end
     
-    ylabel('Duration (ms)', 'FontSize', 10, 'FontWeight', 'bold');
-    title(sprintf('Response Duration @ %.1f \\muA', curr_amp), 'FontSize', 10);
-    grid on; box off;
-    if save_figures, saveas(gcf, fullfile(save_dir, [figName '.fig'])); end
+    ylabel('Duration (ms)', 'FontSize', 18, 'FontWeight', 'bold');
+    title(sprintf('Response Duration @ %.1f \\muA', curr_amp), 'FontSize', 16);
+    box off;
+    axis square;
+
+    if save_figures
+    exportgraphics(gcf, fullfile(save_dir, [figName '.tiff']),'ContentType', 'vector');
+end
 end
 
 %% ================= 4. PLOT 2: LINE PLOT (Summary B&W) =================
@@ -196,11 +200,11 @@ figure('Color','w', 'Position', [150 150 800 600], 'Name', figNameB); hold on;
 
 % [MODIFIED] Sim: Dashed Line ('--o'), Open Circle
 errorbar(Stats_Amp, Stats_Mean_Sim, Stats_SEM_Sim, '--o', 'Color', color_sim, ...
-    'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Simultaneous');
+    'LineWidth', 3, 'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
 
 % [MODIFIED] Seq: Solid Line ('-s'), Filled Square
 errorbar(Stats_Amp, Stats_Mean_Seq, Stats_SEM_Seq, '-s', 'Color', color_seq, ...
-    'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 8, 'DisplayName', 'Sequential');
+    'LineWidth', 3, 'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
 
 for i = 1:length(Stats_Amp)
     p = Stats_PVal(i);
@@ -211,12 +215,17 @@ for i = 1:length(Stats_Amp)
         text(Stats_Amp(i), y_top + (y_top*0.05), txt, 'FontSize', 16, 'HorizontalAlignment', 'center', 'Color', 'k');
     end
 end
-xlabel('Amplitude (\muA)', 'FontSize', 12, 'FontWeight', 'bold');
-ylabel('Mean Duration (ms) \pm SEM', 'FontSize', 12, 'FontWeight', 'bold');
+xlabel('Amplitude (\muA)', 'FontSize', 18, 'FontWeight', 'bold');
+ylabel('Mean Duration (ms) \pm SEM', 'FontSize', 18, 'FontWeight', 'bold');
 title('Effect of Sequential Stimulation on Duration', 'FontSize', 14);
 legend('Location', 'northwest');
 set(gca, 'XTick', Stats_Amp); xlim([min(Stats_Amp)-0.5, max(Stats_Amp)+0.5]);
-if save_figures, saveas(gcf, fullfile(save_dir, [figNameB '.fig'])); end
+axis square;
+ylim([0,10]);
+
+if save_figures
+    exportgraphics(gcf, fullfile(save_dir, [figNameB '.tiff']),'ContentType', 'vector');
+end
 
 %% ================= 5. PLOT 3: EFFECT SIZE (Shaded Ribbon B&W) =================
 fprintf('Generating Effect Size Plot (Clean Ribbon)...\n');
@@ -232,16 +241,22 @@ y_conf = [diff_mean + diff_sem, fliplr(diff_mean - diff_sem)];
 fill(x_conf, y_conf, [0.8 0.8 0.8], 'FaceAlpha', 0.5, 'EdgeColor', 'none'); 
 
 % 3. Plot Main Trend Line (Black, Filled Circle)
-plot(Stats_Amp, diff_mean, '-o', 'Color', 'k', 'LineWidth', 2, 'MarkerFaceColor', 'k', 'MarkerSize', 6);
+plot(Stats_Amp, diff_mean, '-o', 'Color', 'k', 'LineWidth', 4, 'MarkerFaceColor', 'k', 'MarkerSize', 6);
 
 % 4. Style
 yline(0, '--k', 'Alpha', 0.5); 
-ylabel('\Delta Duration (Seq - Sim) [ms]', 'FontSize', 10, 'FontWeight', 'bold');
-xlabel('Amplitude (\muA)', 'FontSize', 10, 'FontWeight', 'bold');
-title('Added Duration by Sequence (Mean \pm SEM)', 'FontSize', 10);
+ylabel('\Delta Duration (Seq - Sim) [ms]', 'FontSize', 18, 'FontWeight', 'bold');
+xlabel('Amplitude (\muA)', 'FontSize', 18, 'FontWeight', 'bold');
+title('Added Duration by Sequence (Mean \pm SEM)', 'FontSize', 16);
 box off;
 xlim([min(Stats_Amp)-0.5, max(Stats_Amp)+0.5]); set(gca, 'XTick', Stats_Amp);
-if save_figures, saveas(gcf, fullfile(save_dir, 'Group_Effect_Size.fig')); end
+axis square;
+
+fig_name = 'Group_Effect_Size.tiff';
+if save_figures
+    % saveas(gcf, fullfile(save_dir, 'Group_Binned_Line.fig')); 
+    exportgraphics(gcf, fullfile(save_dir, fig_name),'ContentType', 'vector');
+end
 
 %% ================= 6. PLOT 4: BINNED AMPLITUDES (Line Plot B&W) =================
 fprintf('Generating Binned Line Plot...\n');
@@ -293,11 +308,16 @@ for b = 1:3
 end
 
 % 4. Style
-ylabel('Mean Duration (ms)', 'FontSize', 10, 'FontWeight', 'bold');
-title('Response Duration (Binned)', 'FontSize', 10);
+ylabel('Mean Duration (ms)', 'FontSize', 18, 'FontWeight', 'bold');
+title('Response Duration (Binned)', 'FontSize', 16);
 set(gca, 'XTick', 1:3, 'XTickLabel', bin_names);
 legend('Location', 'northwest');
 box off; xlim([0.5 3.5]);
+axis square;
 
-if save_figures, saveas(gcf, fullfile(save_dir, 'Group_Binned_Line.fig')); end
-fprintf('\n>>> Additional Summary Plots Generated.\n');
+fig_name = 'Group_Binned_Line.tiff';
+if save_figures
+    % saveas(gcf, fullfile(save_dir, 'Group_Binned_Line.fig')); 
+    exportgraphics(gcf, fullfile(save_dir, fig_name),'ContentType', 'vector');
+    fprintf('\n>>> Additional Summary Plots Generated.\n');
+end

@@ -1,41 +1,38 @@
 %% ============================================================
-%   Simultaneous vs Sequential: Two Plots (First & Second Filter)
-%   - Plot 1: Gaussian Filter Only
-%   - Plot 2: Gaussian + Moving Average (Smoother)
-%   - Both have 0-2ms blanking and causal logic
+%   Simultaneous vs Sequential: Final Conference Figure
+%   - FIXED: Curve visibility near zero (removed clipping/white patch)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
+% Plot Settings
+save_figure = false;
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE EMBC/Figures/2_Raster_PSTH_Sample';
+fig_name    = 'GrandAverage_Recruitment_Curve_BarSEM.tiff';
+
 %% =============== USER SETTINGS ==============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim6';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq6_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim4';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq4_5ms_new';
 Electrode_Type   = 1;
-target_channels  = [1:32];
-plot_amp         = 4;     % µA
+target_channels  = [21];
+plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;     % ms (Time of second pulse)
 stim_set_id_Sim = 1;      
 stim_set_id_Seq = 1;
 
 % Figure Settings
-ras_win   = [-50 50];
+ras_win   = [-30 30];
 bin_ms    = 1;
-smooth_ms = 8; 
+smooth_ms = 5; 
 FS        = 30000;
-
-% ARTIFACT BLANKING SETTINGS
 blank_artifact_win = [0 0]; 
-
-% STIMULUS PULSE SETTINGS
-stim_width_us = 500;      
+stim_width_us = 100;   % the width of the stimulation line
 stim_width_ms = stim_width_us / 1000; 
-
-% VISUAL SETTINGS
-raster_color  = [0.6 0.6 0.6]; 
-dash_width_ms = 1.0;           
+raster_color  = [0.2 0.2 0.2]; 
+dash_width_ms = 0.5;   % length of the raster points        
 
 %% ============================================================
-%                 HELPER FUNCTION 
+%                 HELPER & DATA LOADING
 % ============================================================
 function sp = load_ssd_spikes(folder)
     cd(folder);
@@ -48,9 +45,6 @@ function sp = load_ssd_spikes(folder)
     else, error('SSD file missing variables.'); end
 end
 
-%% ============================================================
-%              LOAD DATA
-% ============================================================
 % --- SIM ---
 cd(folder_sim);
 sp_sim = load_ssd_spikes(folder_sim);
@@ -81,29 +75,19 @@ comb_seq = zeros(nTr_seq, simN_seq);
 for t = 1:nTr_seq, rr = (t-1)*simN_seq + (1:simN_seq); v = idx_all(rr); v = v(v>0); comb_seq(t,1:numel(v)) = v(:).'; end
 [uniqueComb_seq,~,combClass_seq] = unique(comb_seq,'rows','stable'); nSets_seq = size(uniqueComb_seq,1);
 
-%% ============================================================
-%          CHECK REQUESTED CONDITION
-% ============================================================
+% --- Condition Selection ---
 ai_sim = find(Amps_sim == plot_amp,1);
 ai_seq = find(Amps_seq == plot_amp,1);
 pi_seq = find(PTDs_ms == plot_PTD_ms,1);
 trials_sim = find(combClass_sim==stim_set_id_Sim & ampIdx_sim==ai_sim);
 trials_seq = find(combClass_seq==stim_set_id_Seq & ampIdx_seq==ai_seq & ptdIdx_seq==pi_seq);
 
-%% ============================================================
-%            PSTH Kernels
-% ============================================================
+% --- Kernels ---
 edges = ras_win(1):bin_ms:ras_win(2);
 ctrs  = edges(1:end-1) + diff(edges)/2;
 bin_s = bin_ms/1000;
-
-% 1. Primary Gaussian Kernel
 g = exp(-0.5*((0:smooth_ms-1)/(smooth_ms/2)).^2); g = g / sum(g);
-
-% 2. Secondary Moving Average Kernel
-win_sec = 5; 
-b_sec = ones(1, win_sec) / win_sec; a_sec = 1;
-
+win_sec = 5; b_sec = ones(1, win_sec) / win_sec; a_sec = 1;
 d = Depth_s(Electrode_Type);
 
 %% ============================================================
@@ -112,10 +96,11 @@ d = Depth_s(Electrode_Type);
 for ch_idx = 1:length(target_channels)
     target_channel = target_channels(ch_idx);
     recCh = d(target_channel);
+    
     S_ch_sim = sp_sim{recCh};
     S_ch_seq = sp_seq{recCh};
     
-    % --- Compute SIM ---
+    % Compute Rates
     allSpikes_sim = cell(numel(trials_sim),1); counts_sim = zeros(1,length(edges)-1);
     for i = 1:numel(trials_sim)
         t0 = trig_sim(trials_sim(i))/FS*1000; tt = S_ch_sim(:,1);
@@ -125,7 +110,6 @@ for ch_idx = 1:length(target_channels)
     rate_sim_raw = filter(g, 1, counts_sim/(max(1,numel(trials_sim))*bin_s));
     rate_sim_sec = filter(b_sec, a_sec, rate_sim_raw);
     
-    % --- Compute SEQ ---
     allSpikes_seq = cell(numel(trials_seq),1); counts_seq = zeros(1,length(edges)-1);
     for i = 1:numel(trials_seq)
         t0 = trig_seq(trials_seq(i))/FS*1000; tt = S_ch_seq(:,1);
@@ -135,22 +119,10 @@ for ch_idx = 1:length(target_channels)
     rate_seq_raw = filter(g, 1, counts_seq/(max(1,numel(trials_seq))*bin_s));
     rate_seq_sec = filter(b_sec, a_sec, rate_seq_raw);
     
-    % --- APPLY ARTIFACT BLANKING ---
     mask_blank = ctrs >= blank_artifact_win(1) & ctrs <= blank_artifact_win(2);
-    rate_sim_raw(mask_blank) = NaN; rate_seq_raw(mask_blank) = NaN;
     rate_sim_sec(mask_blank) = NaN; rate_seq_sec(mask_blank) = NaN;
     
-    %% ============================================================
-    %   FIGURE 1: FIRST FILTER ONLY (Gaussian)
-    % ============================================================
-    plot_overlay_figure(1, 'First Filter', rate_sim_raw, rate_seq_raw, ...
-        allSpikes_sim, allSpikes_seq, ctrs, ras_win, stim_width_ms, ...
-        plot_PTD_ms, raster_color, dash_width_ms, target_channel, plot_amp);
-
-    %% ============================================================
-    %   FIGURE 2: SECOND FILTER (Gaussian + Smooth)
-    % ============================================================
-    plot_overlay_figure(2, 'Second Filter', rate_sim_sec, rate_seq_sec, ...
+    plot_overlay_figure(1, 'Final Result', rate_sim_sec, rate_seq_sec, ...
         allSpikes_sim, allSpikes_seq, ctrs, ras_win, stim_width_ms, ...
         plot_PTD_ms, raster_color, dash_width_ms, target_channel, plot_amp);
 end
@@ -161,76 +133,129 @@ end
 function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ...
                              ctrs, ras_win, stim_width, ptd_ms, r_col, dash_w, ch, amp)
     
-    figure('Color','w','Position',[100 + (fig_num*50), 200, 600, 450]); 
+    figure('Color','w','Position',[100, 200, 700, 500]); 
     
-    % --- RIGHT AXIS: Raster ---
-    yyaxis right
-    ylim([0 1]); yticks([]); ylabel(''); 
-    ax_r = gca; ax_r.YColor = 'none'; ax_r.XColor = 'k';
+    % Determine Max Rate
+    max_rate = max([max(r_sim), max(r_seq)]) * 1.2; 
+    if max_rate == 0 || isnan(max_rate), max_rate = 10; end
+    
+    % FIXED: Set Lower Limit slightly below zero so thick lines aren't clipped
+    % y_lims = [-max_rate*0.02, max_rate];
+    y_lims = [0, max_rate];
+
+    % -----------------------------------------------------------
+    % 1. LEFT AXIS SETUP (Backgrounds + PSTH)
+    % -----------------------------------------------------------
+    yyaxis left
+    ylim(y_lims);
     hold on;
     
+    % A. Draw Backgrounds (Scaled to rate limits)
+    % patch([ras_win(1) ras_win(2) ras_win(2) ras_win(1)], ...
+    %       [max_rate*0.5 max_rate*0.5 max_rate max_rate], ...
+    %       [0.92 0.94 0.96], 'EdgeColor', 'none', 'HandleVisibility', 'off'); % Light Blue
+    
+    patch([ras_win(1) ras_win(2) ras_win(2) ras_win(1)], ...
+          [max_rate*0.5 max_rate*0.5 max_rate max_rate], ...
+          [0.92 0.92 0.92], 'EdgeColor', 'none', 'HandleVisibility', 'off'); % Light Grey
+    
+    % B. Draw Stimulation Bars
+    patch([0, 0+stim_width, 0+stim_width, 0], [y_lims(1), y_lims(1), y_lims(2), y_lims(2)], ...
+          [0.6 0 0], 'FaceAlpha', 0.5, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+    patch([ptd_ms, ptd_ms+stim_width, ptd_ms+stim_width, ptd_ms], ...
+          [y_lims(1), y_lims(1), y_lims(2), y_lims(2)], ...
+          [0.6 0 0], 'FaceAlpha', 0.5, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+
+
+    % C. Plot Curves
+    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 3.0, 'DisplayName', 'Simultaneous');
+    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 3.0, 'DisplayName', 'Sequential');
+    
+    ylabel('Firing rate (Sp/s)', 'FontWeight','bold','FontSize',18,'Color','k', 'FontName', 'Times New Roman');
+    xlabel('Time (ms)', 'FontWeight','bold','FontSize',18,'Color','k', 'FontName', 'Times New Roman');
+    xlim(ras_win);
+    xticks(ras_win(1):5:ras_win(2)); % Sets ticks every 5ms across the whole window
+    % -----------------------------------------------------------
+    % 2. RIGHT AXIS SETUP (Rasters)
+    % -----------------------------------------------------------
+    yyaxis right
+    
+    % CRITICAL: Make Right Axis Transparent so Left Axis shows through
+    ax_r = gca; 
+    set(ax_r, 'Color', 'none'); 
+    set(ax_r, 'YColor', 'none'); 
+    set(ax_r, 'XColor', 'k');    
+    
+    ylim([0 1]); 
+    ylabel(''); 
+    hold on;
+    
+    % Raster Plotting
     y_seq_min = 0.05; y_seq_max = 0.45;
     y_sim_min = 0.55; y_sim_max = 0.95;
-    
-    % Sequential Raster
+
     n_seq = numel(sp_seq);
     if n_seq > 0
         h_tick = (y_seq_max - y_seq_min) / n_seq;
-        x_v=[]; y_v=[];
+        num_spikes = sum(cellfun(@length, sp_seq));
+        x_v = zeros(1, num_spikes*3); y_v = zeros(1, num_spikes*3);
+        idx = 1;
         for i = 1:n_seq
             tt = sp_seq{i}; if isempty(tt), continue; end; tt = tt(:)'; 
             y_pos = y_seq_min + (i-1)*h_tick;
-            x_v = [x_v, reshape([tt-dash_w/2; tt+dash_w/2; nan(size(tt))],1,[])];
-            y_v = [y_v, reshape([ones(size(tt))*y_pos; ones(size(tt))*y_pos; nan(size(tt))],1,[])];
+            for t_val = tt
+                 x_v(idx:idx+2) = [t_val-dash_w/2, t_val+dash_w/2, NaN];
+                 y_v(idx:idx+2) = [y_pos, y_pos, NaN];
+                 idx = idx + 3;
+            end
         end
-        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 0.5); 
+        x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
+        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 0.8); 
     end
     
-    % Simultaneous Raster
     n_sim = numel(sp_sim);
     if n_sim > 0
         h_tick = (y_sim_max - y_sim_min) / n_sim;
-        x_v=[]; y_v=[];
+        num_spikes = sum(cellfun(@length, sp_sim));
+        x_v = zeros(1, num_spikes*3); y_v = zeros(1, num_spikes*3);
+        idx = 1;
         for i = 1:n_sim
             tt = sp_sim{i}; if isempty(tt), continue; end; tt = tt(:)';
             y_pos = y_sim_min + (i-1)*h_tick;
-            x_v = [x_v, reshape([tt-dash_w/2; tt+dash_w/2; nan(size(tt))],1,[])];
-            y_v = [y_v, reshape([ones(size(tt))*y_pos; ones(size(tt))*y_pos; nan(size(tt))],1,[])];
+            for t_val = tt
+                 x_v(idx:idx+2) = [t_val-dash_w/2, t_val+dash_w/2, NaN];
+                 y_v(idx:idx+2) = [y_pos, y_pos, NaN];
+                 idx = idx + 3;
+            end
         end
-        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 0.5);
+        x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
+        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 0.8);
     end
     
-    yline(0.5, 'k-', 'LineWidth', 0.5);
-    text(ras_win(1), 0.98, ' Simultaneous', 'VerticalAlignment','top','FontSize',8,'Color','k');
-    text(ras_win(1), 0.48, ' Sequential', 'VerticalAlignment','top','FontSize',8,'Color','k');
-    
-    % --- LEFT AXIS: PSTH ---
+    % Text Labels
+    text(ras_win(1)+2, 0.95, 'Simultaneous', 'VerticalAlignment','top','FontSize',18,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
+    text(ras_win(1)+2, 0.45, 'Sequential', 'VerticalAlignment','top','FontSize',18,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
+
+    % -----------------------------------------------------------
+    % 3. FINAL VISIBILITY RESTORATION
+    % -----------------------------------------------------------
     yyaxis left
-    hold on;
-    
-    max_rate = max([max(r_sim), max(r_seq)]) * 1.1;
-    if max_rate == 0 || isnan(max_rate), max_rate = 10; end
-    ylim([0 max_rate]);
-    y_lims = [0 max_rate];
-    
-    % Patches
-    patch([0, 0+stim_width, 0+stim_width, 0], [y_lims(1), y_lims(1), y_lims(2), y_lims(2)], ...
-          [0.7 0.7 0.7], 'FaceAlpha', 0.4, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-    patch([ptd_ms, ptd_ms+stim_width, ptd_ms+stim_width, ptd_ms], ...
-          [y_lims(1), y_lims(1), y_lims(2), y_lims(2)], ...
-          [0.7 0.7 0.7], 'FaceAlpha', 0.4, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-    
-    % Curves
-    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 1.5, 'DisplayName', 'Simultaneous');
-    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 1.5, 'DisplayName', 'Sequential');
-    
-    ylabel('Firing rate (Sp/s)', 'FontWeight','bold','Color','k');
-    xlabel('Time (ms)', 'FontWeight','bold','Color','k');
-    xlim(ras_win);
-    
-    ax = gca; ax.YColor = 'k'; ax.XColor = 'k';
-    title(sprintf('Ch %d | %d µA (%s)', ch, amp, type_str), 'Color', 'k');
-    legend([p1, p2], 'Location', 'northeast', 'Box', 'off', 'TextColor', 'k');
-    set(gca, 'Color', 'none'); 
+    set(gca, 'Box', 'off');     
+    set(gca, 'Color', 'none');  
+    set(gca, 'Layer', 'top');   
+    set(gca, 'YColor', 'k');    
+    set(gca, 'XColor', 'k');
+    set(gca, 'FontName', 'Times New Roman', 'FontSize', 16, 'LineWidth', 3);
+    % set(gca, 'Units', 'normalized', 'Position', [0.13 0.13 0.85 0.82]);
+    % title(sprintf('Ch %d | %d µA', ch, amp), 'Color', 'k', 'FontSize', 14);
+    legend([p1, p2], 'Location', 'northeast', 'Box', 'off', 'FontSize', 18);
+    axis square;
     hold off;
+end
+
+%% Save Figure
+if save_figure
+    if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+    exportgraphics(gcf, fullfile(save_dir, fig_name),'ContentType', 'vector');
+    fprintf('\nFigure saved to: %s\n', fullfile(save_dir, fig_name));
 end

@@ -14,27 +14,27 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= USER SETTINGS =================
 % List your single-dataset result files here
 file_paths = {
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim7.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim4.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim5.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim6.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim7.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim8.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX015/Result_SpatialRaw_Xia_Seq_Sim7.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX014/Result_SpatialRaw_Xia_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim5.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim6.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim7.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX013/Result_SpatialRaw_Xia_Exp1_Seq_Sim8.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim4.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX012/Result_SpatialRaw_Xia_Exp1_Sim6.mat';
@@ -65,9 +65,9 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/RespChn_Dist/';
-dist_bin_edges = 0 : 50 : 700; 
+dist_bin_edges = 0 : 100 : 900; 
 
 %% ================= 1. POOL DATA =================
 fprintf('Pooling data from %d files...\n', length(file_paths));
@@ -80,15 +80,15 @@ for f = 1:length(file_paths)
     D = load(file_paths{f});
     if ~isfield(D, 'SpatialData'), continue; end
     SD = D.SpatialData;
-    
+
     for s = 1:length(SD.Set)
         if isempty(SD.Set(s).Amp), continue; end
-        
+
         for a = 1:length(SD.Set(s).Amp)
             Data = SD.Set(s).Amp(a);
             val = Data.Val;
             if val == 0, continue; end
-            
+
             fName = sprintf('A_%.1f', val); fName = strrep(fName, '.', 'p');
             if ~isfield(Pooled, fName)
                 Pooled.(fName).Val = val;
@@ -96,18 +96,18 @@ for f = 1:length(file_paths)
                 Pooled.(fName).Sim_Global  = []; Pooled.(fName).Seq_Global  = [];
                 All_Amps = [All_Amps, val]; %#ok<AGROW>
             end
-            
+
             % --- Calc Metrics ---
             [prob_sim] = calc_metrics(Data.Dist, Data.Sim_Resp, Data.Sim_Valid, dist_bin_edges, 'prob');
             [prob_seq] = calc_metrics(Data.Dist, Data.Seq_Resp, Data.Seq_Valid, dist_bin_edges, 'prob');
-            
+
             [glob_sim] = calc_metrics(Data.Dist, Data.Sim_Resp, Data.Sim_Valid, dist_bin_edges, 'global');
             [glob_seq] = calc_metrics(Data.Dist, Data.Seq_Resp, Data.Seq_Valid, dist_bin_edges, 'global');
-            
+
             % --- Store ---
             Pooled.(fName).Sim_Probs   = [Pooled.(fName).Sim_Probs; prob_sim];
             Pooled.(fName).Seq_Probs   = [Pooled.(fName).Seq_Probs; prob_seq];
-            
+
             Pooled.(fName).Sim_Global  = [Pooled.(fName).Sim_Global; glob_sim];
             Pooled.(fName).Seq_Global  = [Pooled.(fName).Seq_Global; glob_seq];
         end
@@ -181,32 +181,36 @@ for i = 1:length(All_Amps)
     % === FIG 2: GLOBAL OCCUPANCY (Count / Total Array) [B&W] ===
     figNameB = sprintf('Global_Resp_%.1fuA', curr_amp);
     figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
-    
+
     b = bar(bin_centers, [Avg_G_Sim; Avg_G_Seq]', 'grouped');
-    
+
     % --- STYLE: Black & White ---
-    b(1).FaceColor = 'w'; b(1).EdgeColor = 'k'; b(1).LineWidth = 1.0; b(1).DisplayName = 'Simultaneous';
+    % b(1).FaceColor = 'w';
+    b(1).FaceColor = [0.8 0.8 0.8];
+    b(1).EdgeColor = 'k'; b(1).LineWidth = 1.0; b(1).DisplayName = 'Simultaneous';
     b(2).FaceColor = 'k'; b(2).EdgeColor = 'none'; b(2).DisplayName = 'Sequential';
-    
+
     % Error Bars (Black) - Use XEndPoints for exact centering
     errorbar(b(1).XEndPoints, Avg_G_Sim, SEM_G_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
     errorbar(b(2).XEndPoints, Avg_G_Seq, SEM_G_Seq, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
 
     % yline(threshold, '--k', 'Range Threshold', 'HandleVisibility','off');
 
-    yline(threshold, '--k', 'HandleVisibility','off');
+    % yline(threshold, '--k', 'HandleVisibility','off');
 
-    
+
     xlabel('Distance (\mum)'); ylabel('Fraction of Array Recruited');
     title(sprintf('Global Occupancy @ %.1f \\muA', curr_amp));
-    
-    % --- [UPDATED] X-Axis Ticks Every 50um ---
-    set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
+
+    % --- X-Axis Ticks Every 50um ---
+    % set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
+    set(gca, 'XTick', 0 : 100 : max(dist_bin_edges));
     xlim([0, max(dist_bin_edges)]);
-    
+
     legend('Location','best'); box off;
     if save_figures, saveas(gcf, fullfile(save_dir, [figNameB '.fig'])); end
 end
+
 
 %% ================= 3. SUMMARY PLOT (Absolute Range) [B&W] =================
 fprintf('Generating Summary R_ext Plot...\n');
@@ -229,6 +233,169 @@ legend('Location','best'); box off; grid on;
 
 if save_figures, saveas(gcf, fullfile(save_dir, [figNameSum '.fig'])); end
 fprintf('>>> Group Analysis Complete.\n');
+
+%% ================= 4. SUMMARY PLOT: TOTAL RECRUITMENT vs. AMPLITUDE =================
+fprintf('Generating Summary Plot: Total Recruitment (Sum of Occupancy)...\n');
+
+% 1. Pre-allocate
+Recruit_Sim_Mean = nan(size(All_Amps)); Recruit_Sim_SEM = nan(size(All_Amps));
+Recruit_Seq_Mean = nan(size(All_Amps)); Recruit_Seq_SEM = nan(size(All_Amps));
+Recruit_Pvals    = nan(size(All_Amps));
+
+% 2. Calculate Stats
+for i = 1:length(All_Amps)
+    curr_amp = All_Amps(i);
+    fName = sprintf('A_%.1f', curr_amp); fName = strrep(fName, '.', 'p');
+
+    if abs(curr_amp - 8.0) < 0.1  % Use tolerance for float comparison
+        continue; 
+    end
+    
+    % Retrieve the matrix of histograms: [N_Datasets x N_Bins]
+    % Each row is one dataset's spatial histogram
+    Sim_Hists = Pooled.(fName).Sim_Global;
+    Seq_Hists = Pooled.(fName).Seq_Global;
+    
+    if isempty(Sim_Hists) || isempty(Seq_Hists), continue; end
+    
+    % --- Sum across Distance Bins to get TOTAL RECRUITMENT per dataset ---
+    % Result is a vector: [N_Datasets x 1] (e.g., 0.15 means 15% of array active)
+    Total_Sim_Vec = sum(Sim_Hists, 2); 
+    Total_Seq_Vec = sum(Seq_Hists, 2);
+    
+    % --- Simultaneous Stats ---
+    Recruit_Sim_Mean(i) = mean(Total_Sim_Vec, 'omitnan');
+    Recruit_Sim_SEM(i)  = std(Total_Sim_Vec, 0, 'omitnan') / sqrt(sum(~isnan(Total_Sim_Vec)));
+    
+    % --- Sequential Stats ---
+    Recruit_Seq_Mean(i) = mean(Total_Seq_Vec, 'omitnan');
+    Recruit_Seq_SEM(i)  = std(Total_Seq_Vec, 0, 'omitnan') / sqrt(sum(~isnan(Total_Seq_Vec)));
+    
+    % --- Statistical Test (Rank Sum) ---
+    p = ranksum(Total_Sim_Vec, Total_Seq_Vec);
+    Recruit_Pvals(i) = p;
+end
+
+% 3. Plotting
+% figNameRec = 'Summary_Total_Recruitment';
+% figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameRec); hold on;
+% 
+% % --- Plot Lines (B&W Style) ---
+% % Sim: Dashed, Open Circle
+% errorbar(All_Amps, Recruit_Sim_Mean, Recruit_Sim_SEM, '--o', ...
+%     'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
+%     'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
+% 
+% % Seq: Solid, Filled Square
+% errorbar(All_Amps, Recruit_Seq_Mean, Recruit_Seq_SEM, '-s', ...
+%     'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
+%     'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
+% 
+% % --- Add Significance Stars ---
+% for i = 1:length(All_Amps)
+%     p = Recruit_Pvals(i);
+%     if isnan(p), continue; end
+% 
+%     txt = ''; 
+%     if p < 0.001, txt = '***'; elseif p < 0.01, txt = '**'; elseif p < 0.05, txt = '*'; end
+% 
+%     if ~isempty(txt)
+%         % Place star slightly above the higher error bar
+%         y_top = max(Recruit_Sim_Mean(i)+Recruit_Sim_SEM(i), Recruit_Seq_Mean(i)+Recruit_Seq_SEM(i));
+%         text(All_Amps(i), y_top * 1.05, txt, 'FontSize', 20, ...
+%             'HorizontalAlignment', 'center', 'FontName', 'Times New Roman', 'FontWeight', 'bold');
+%     end
+% end
+% 
+% % --- Formatting ---
+% xlabel('Amplitude (µA)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+% ylabel('Total Active Fraction (Area)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+% % title('Total Recruitment vs. Amplitude', 'FontSize', 14, 'FontName', 'Times New Roman');
+% 
+% legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+% box off; 
+% set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
+% 
+% % xlim([1-0.5, max(All_Amps)+0.5]);
+% % xticks(1:1:max(All_Amps));
+% xlim([1-0.5, 10+0.5]);
+% xticks(1:1:10);
+% 
+% axis square;
+% % Adjust Y-Limit (0 to Max + padding)
+% ymax = max([Recruit_Sim_Mean + Recruit_Sim_SEM, Recruit_Seq_Mean + Recruit_Seq_SEM], [], 'all');
+% % ylim([0, ymax * 1.2]); 
+% ylim([0, 1]);
+% 
+% % --- Save ---
+% if save_figures
+%     exportgraphics(gcf, fullfile(save_dir, [figNameRec '.tiff']), 'ContentType', 'vector');
+%     fprintf('Summary Recruitment plot saved: %s\n', figNameRec);
+% end
+
+% ================= 3. PLOT 3: TOTAL RECRUITMENT (Line Plot) =================
+figNameRec = 'Summary_Total_Recruitment';
+figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameRec); hold on;
+
+% --- [NEW] STEP 2.5: FILTER OUT NaNs BEFORE PLOTTING ---
+% Find indices where we actually calculated data (excludes the skipped 8.0uA)
+valid_mask = ~isnan(Recruit_Sim_Mean);
+
+% Extract only the valid data points for plotting
+Plot_Amps     = All_Amps(valid_mask);
+Plot_Sim_Mean = Recruit_Sim_Mean(valid_mask); 
+Plot_Sim_SEM  = Recruit_Sim_SEM(valid_mask);
+Plot_Seq_Mean = Recruit_Seq_Mean(valid_mask); 
+Plot_Seq_SEM  = Recruit_Seq_SEM(valid_mask);
+
+% --- Plot Lines (Using the Filtered Data) ---
+% Sim: Dashed, Open Circle
+errorbar(Plot_Amps, Plot_Sim_Mean, Plot_Sim_SEM, '--o', ...
+    'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
+    'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
+
+% Seq: Solid, Filled Square
+errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
+    'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
+    'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
+
+% --- Add Significance Stars ---
+for i = 1:length(All_Amps)
+    p = Recruit_Pvals(i);
+    % Check if p is valid (not NaN) before plotting
+    if isnan(p), continue; end
+    
+    txt = ''; 
+    if p < 0.001, txt = '***'; elseif p < 0.01, txt = '**'; elseif p < 0.05, txt = '*'; end
+    
+    if ~isempty(txt)
+        % Use the original full vectors here because 'i' corresponds to All_Amps
+        y_top = max(Recruit_Sim_Mean(i)+Recruit_Sim_SEM(i), Recruit_Seq_Mean(i)+Recruit_Seq_SEM(i));
+        text(All_Amps(i), y_top * 1.05, txt, 'FontSize', 20, ...
+            'HorizontalAlignment', 'center', 'FontName', 'Times New Roman', 'FontWeight', 'bold');
+    end
+end
+
+% --- Formatting ---
+xlabel('Amplitude (µA)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+ylabel('Total Active Fraction (Area)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+
+legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+box off; 
+set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
+
+% X-Limits: Set to cover the full range (e.g., 1 to 10), preserving the gap visually on the axis
+xlim([1-0.5, 10+0.5]);
+xticks(1:1:10);
+axis square;
+ylim([0, 1]);
+
+% --- Save ---
+if save_figures
+    exportgraphics(gcf, fullfile(save_dir, [figNameRec '.tiff']), 'ContentType', 'vector');
+    fprintf('Summary Recruitment plot saved: %s\n', figNameRec);
+end
+
 
 %% ================= HELPER FUNCTIONS =================
 function [metric_vec] = calc_metrics(dist, resp, valid, edges, mode)

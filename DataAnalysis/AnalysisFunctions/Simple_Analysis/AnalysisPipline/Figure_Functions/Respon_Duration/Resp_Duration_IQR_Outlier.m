@@ -2,7 +2,6 @@
 %   GROUP DURATION ANALYSIS: Pooled Population (Refined)
 %   - Input: Result_Duration_*.mat files
 %   - Features: IQR Filtering, Effect Size Ribbon, Binned Line Plots
-%   - Style: Black & White (Publication Ready - Dashed/Solid Lines)
 % ============================================================
 clear; close all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
@@ -63,11 +62,8 @@ file_paths = {
 save_figures = false;
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Group_Analysis/Duration/';
 fig_pos      = [100 100 1000 600];
-
-% --- Black and White Settings ---
-color_sim    = 'k'; % Black line
-color_seq    = 'k'; % Black line
-% Removed fill settings as Box plots will be no-fill
+color_sim    = [0 0.4 0.8]; % Blue
+color_seq    = [0.8 0.1 0.1]; % Red
 
 % Hard upper limit to catch obvious artifacts (before statistical filtering)
 filter_time_hard_limit = 15; 
@@ -111,11 +107,13 @@ for f = 1:length(file_paths)
             if ~isempty(curr_sim)
                 iqr_val = iqr(curr_sim); q1 = prctile(curr_sim, 25); q3 = prctile(curr_sim, 75);
                 lower_b = q1 - 1.5*iqr_val; upper_b = q3 + 1.5*iqr_val;
+                % lower_b = q1 - 1*iqr_val; upper_b = q3 + 1*iqr_val;
                 curr_sim(curr_sim < lower_b | curr_sim > upper_b) = [];
             end
             if ~isempty(curr_seq)
                 iqr_val = iqr(curr_seq); q1 = prctile(curr_seq, 25); q3 = prctile(curr_seq, 75);
                 lower_b = q1 - 1.5*iqr_val; upper_b = q3 + 1.5*iqr_val;
+                % lower_b = q1 - 1*iqr_val; upper_b = q3 + 1*iqr_val;
                 curr_seq(curr_seq < lower_b | curr_seq > upper_b) = [];
             end
             
@@ -167,13 +165,14 @@ for i = 1:length(All_Amps)
     figure('Color','w', 'Position', fig_pos_single, 'Name', figName); hold on;
     
     data_plot = [s1; s2]; groups = [ones(size(s1)); 2*ones(size(s2))];
-    labels = {}; if ~isempty(s1), labels{end+1} = 'Simultaneous'; end; if ~isempty(s2), labels{end+1} = 'Sequential'; end
+    labels = {}; if ~isempty(s1), labels{end+1} = 'Sim'; end; if ~isempty(s2), labels{end+1} = 'Seq'; end
     
     if ~isempty(data_plot)
-         % [MODIFIED] Added 'Colors','k' to make lines black.
-         % [MODIFIED] Removed 'patch' code so boxes are unfilled (transparent).
-         % The median line is shown by default in boxplot.
-         boxplot(data_plot, groups, 'Labels', labels, 'Widths', 0.5, 'Symbol', 'o', 'Notch', 'on', 'Colors', 'k');
+         boxplot(data_plot, groups, 'Labels', labels, 'Widths', 0.5, 'Symbol', 'o', 'Notch', 'on');
+         h = findobj(gca,'Tag','Box');
+         if length(h) >= 1 && ~isempty(s2), patch(get(h(1),'XData'), get(h(1),'YData'), color_seq, 'FaceAlpha', 0.5); end
+         if length(h) >= 2 && ~isempty(s1), patch(get(h(2),'XData'), get(h(2),'YData'), color_sim, 'FaceAlpha', 0.5); 
+         elseif length(h) == 1 && isempty(s2) && ~isempty(s1), patch(get(h(1),'XData'), get(h(1),'YData'), color_sim, 'FaceAlpha', 0.5); end
     end
     
     p = Stats_PVal(i);
@@ -183,24 +182,18 @@ for i = 1:length(All_Amps)
         text(1.5, y_star, txt, 'FontSize', 20, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
     end
     
-    ylabel('Duration (ms)', 'FontSize', 10, 'FontWeight', 'bold');
-    title(sprintf('Response Duration @ %.1f \\muA', curr_amp), 'FontSize', 10);
+    ylabel('Duration (ms)', 'FontSize', 12, 'FontWeight', 'bold');
+    title(sprintf('Response Duration @ %.1f \\muA', curr_amp), 'FontSize', 14);
     grid on; box off;
     if save_figures, saveas(gcf, fullfile(save_dir, [figName '.fig'])); end
 end
 
-%% ================= 4. PLOT 2: LINE PLOT (Summary B&W) =================
+%% ================= 4. PLOT 2: LINE PLOT (Summary) =================
 fprintf('Generating Line Plot...\n');
 figNameB = 'Group_Duration_LinePlot';
 figure('Color','w', 'Position', [150 150 800 600], 'Name', figNameB); hold on;
-
-% [MODIFIED] Sim: Dashed Line ('--o'), Open Circle
-errorbar(Stats_Amp, Stats_Mean_Sim, Stats_SEM_Sim, '--o', 'Color', color_sim, ...
-    'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Simultaneous');
-
-% [MODIFIED] Seq: Solid Line ('-s'), Filled Square
-errorbar(Stats_Amp, Stats_Mean_Seq, Stats_SEM_Seq, '-s', 'Color', color_seq, ...
-    'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 8, 'DisplayName', 'Sequential');
+errorbar(Stats_Amp, Stats_Mean_Sim, Stats_SEM_Sim, '-o', 'Color', color_sim, 'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Simultaneous');
+errorbar(Stats_Amp, Stats_Mean_Seq, Stats_SEM_Seq, '-s', 'Color', color_seq, 'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Sequential');
 
 for i = 1:length(Stats_Amp)
     p = Stats_PVal(i);
@@ -214,11 +207,12 @@ end
 xlabel('Amplitude (\muA)', 'FontSize', 12, 'FontWeight', 'bold');
 ylabel('Mean Duration (ms) \pm SEM', 'FontSize', 12, 'FontWeight', 'bold');
 title('Effect of Sequential Stimulation on Duration', 'FontSize', 14);
-legend('Location', 'northwest');
+grid on; legend('Location', 'northwest');
 set(gca, 'XTick', Stats_Amp); xlim([min(Stats_Amp)-0.5, max(Stats_Amp)+0.5]);
 if save_figures, saveas(gcf, fullfile(save_dir, [figNameB '.fig'])); end
 
-%% ================= 5. PLOT 3: EFFECT SIZE (Shaded Ribbon B&W) =================
+%% ================= 5. PLOT 3: EFFECT SIZE (Shaded Ribbon, No Dots) =================
+% Shows "Seq - Sim" difference with a clean shaded error band.
 fprintf('Generating Effect Size Plot (Clean Ribbon)...\n');
 figure('Color','w', 'Position', [200 200 600 500], 'Name', 'Effect_Size_Plot'); hold on;
 
@@ -226,24 +220,25 @@ figure('Color','w', 'Position', [200 200 600 500], 'Name', 'Effect_Size_Plot'); 
 diff_mean = Stats_Mean_Seq - Stats_Mean_Sim;
 diff_sem  = sqrt(Stats_SEM_Seq.^2 + Stats_SEM_Sim.^2);
 
-% 2. Create Shaded Error Ribbon (Light Gray)
+% 2. Create Shaded Error Ribbon (Polygon)
 x_conf = [Stats_Amp, fliplr(Stats_Amp)];
 y_conf = [diff_mean + diff_sem, fliplr(diff_mean - diff_sem)];
 fill(x_conf, y_conf, [0.8 0.8 0.8], 'FaceAlpha', 0.5, 'EdgeColor', 'none'); 
 
-% 3. Plot Main Trend Line (Black, Filled Circle)
+% 3. Plot Main Trend Line (Black)
 plot(Stats_Amp, diff_mean, '-o', 'Color', 'k', 'LineWidth', 2, 'MarkerFaceColor', 'k', 'MarkerSize', 6);
 
 % 4. Style
 yline(0, '--k', 'Alpha', 0.5); 
-ylabel('\Delta Duration (Seq - Sim) [ms]', 'FontSize', 10, 'FontWeight', 'bold');
-xlabel('Amplitude (\muA)', 'FontSize', 10, 'FontWeight', 'bold');
-title('Added Duration by Sequence (Mean \pm SEM)', 'FontSize', 10);
-box off;
+ylabel('\Delta Duration (Seq - Sim) [ms]', 'FontSize', 12, 'FontWeight', 'bold');
+xlabel('Amplitude (\muA)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Added Duration by Sequence (Mean \pm SEM)', 'FontSize', 14);
+grid on; box off;
 xlim([min(Stats_Amp)-0.5, max(Stats_Amp)+0.5]); set(gca, 'XTick', Stats_Amp);
 if save_figures, saveas(gcf, fullfile(save_dir, 'Group_Effect_Size.fig')); end
 
-%% ================= 6. PLOT 4: BINNED AMPLITUDES (Line Plot B&W) =================
+%% ================= 6. PLOT 4: BINNED AMPLITUDES (Line Plot) =================
+% [IMPROVED] Replaces Swarm Chart with a simple Line Plot (Mean +/- SEM)
 fprintf('Generating Binned Line Plot...\n');
 
 % 1. Data Aggregation
@@ -273,13 +268,8 @@ b_sim = [BinStats.Mean_Sim]; sem_sim = [BinStats.SEM_Sim];
 b_seq = [BinStats.Mean_Seq]; sem_seq = [BinStats.SEM_Seq];
 x_pts = 1:3;
 
-% [MODIFIED] Sim: Dashed Line ('--o'), Open Circle
-errorbar(x_pts, b_sim, sem_sim, '--o', 'Color', color_sim, 'LineWidth', 2, ...
-    'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
-
-% [MODIFIED] Seq: Solid Line ('-s'), Filled Square
-errorbar(x_pts, b_seq, sem_seq, '-s', 'Color', color_seq, 'LineWidth', 2, ...
-    'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
+errorbar(x_pts, b_sim, sem_sim, '-o', 'Color', color_sim, 'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
+errorbar(x_pts, b_seq, sem_seq, '-s', 'Color', color_seq, 'LineWidth', 2, 'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Sequential');
 
 % 3. Statistics
 for b = 1:3
@@ -293,11 +283,11 @@ for b = 1:3
 end
 
 % 4. Style
-ylabel('Mean Duration (ms)', 'FontSize', 10, 'FontWeight', 'bold');
-title('Response Duration (Binned)', 'FontSize', 10);
+ylabel('Mean Duration (ms)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Response Duration (Binned)', 'FontSize', 14);
 set(gca, 'XTick', 1:3, 'XTickLabel', bin_names);
 legend('Location', 'northwest');
-box off; xlim([0.5 3.5]);
+grid on; box off; xlim([0.5 3.5]);
 
 if save_figures, saveas(gcf, fullfile(save_dir, 'Group_Binned_Line.fig')); end
 fprintf('\n>>> Additional Summary Plots Generated.\n');

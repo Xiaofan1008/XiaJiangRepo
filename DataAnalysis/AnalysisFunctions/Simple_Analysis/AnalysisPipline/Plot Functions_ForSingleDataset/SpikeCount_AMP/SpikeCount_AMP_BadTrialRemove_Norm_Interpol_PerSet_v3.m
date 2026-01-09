@@ -13,8 +13,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Sim3';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq3';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Sim';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq';
 Electrode_Type = 2;
 
 % 1. Analysis Window

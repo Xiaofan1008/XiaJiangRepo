@@ -64,7 +64,7 @@ file_paths = {
 
 % Plot Settings
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE EMBC/Figures/4_Peak_FR_Time';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/4_Peak_FR_Time';
 hist_bin_width = 1; % ms (Width of visual bars)
 
 %% ================= 2. POOL DATA ACROSS DATASETS =================
@@ -75,7 +75,7 @@ All_Amps = [];
 % --- DEFINE CUTOFFS GLOBALLY HERE ---
 % (Applied to both Channel calculations and Histograms)
 max_cutoff_sim = 14; 
-max_cutoff_seq = 18;
+max_cutoff_seq = 16;
 
 for i = 1:length(file_paths)
     if ~exist(file_paths{i}, 'file'), continue; end
@@ -161,7 +161,7 @@ for i = 1:length(All_Amps)
     N_seq = histcounts(seq_data, edges, 'Normalization', 'probability');
     
     % 3. Plot Grouped Bars
-    b = bar(centers, [N_sim; N_seq]', 'grouped', 'BarWidth', 0.9);
+    b = bar(centers, [N_sim; N_seq]'*100, 'grouped', 'BarWidth', 1);
     
     % --- STYLE SETTINGS ---
     b(1).FaceColor = [0.9 0.9 0.9]; b(1).EdgeColor = 'k'; b(1).LineWidth = 1.0;
@@ -180,7 +180,7 @@ for i = 1:length(All_Amps)
     
     % --- Formatting ---
     xlabel('Time (ms)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
-    ylabel('Fraction', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+    ylabel('Percentage (%)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
     % title(sprintf('Peak Latency @ %.1f \\muA', curr_amp), 'FontSize', 14, 'FontName', 'Times New Roman');
     legend('Location','northeast', 'Box','off', 'FontSize', 14, 'FontName', 'Times New Roman');
     
@@ -188,10 +188,11 @@ for i = 1:length(All_Amps)
     set(gca, 'FontSize', 13, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
     % axis square;
     % xlim([min_t-0.5, max_t+0.5]);
-    xlim([0-0.5, 18+0.5]);
+    xlim([0, 17+0.5]);
     % set(gca, 'XTick', min_t : 1 : max_t);
     set(gca, 'XTick', 0 : 1 : 18);
-    ylim([0, 0.35]); 
+    ylim([0, 25]); 
+    set(gca, 'YTick', 0 : 5 : 25);
     
     if save_figure
         exportgraphics(gcf, fullfile(save_dir, [fig_name '.tiff']), 'ContentType', 'vector');

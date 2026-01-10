@@ -65,7 +65,7 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/6_Resp_Dist';
 dist_bin_edges = 0 : 100 : 900; 
 
@@ -219,7 +219,6 @@ for i = 1:length(All_Amps)
     % --- X-Axis Ticks ---
     % set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
     set(gca, 'XTick', 0 : 100 : max(dist_bin_edges));
-    set(gca, 'YTick', 0 : 4 : 20);
     set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
     xlim([0, max(dist_bin_edges)]);
     ylim([0,20]);
@@ -373,11 +372,6 @@ Plot_Sim_SEM  = Recruit_Sim_SEM(valid_mask);
 Plot_Seq_Mean = Recruit_Seq_Mean(valid_mask); 
 Plot_Seq_SEM  = Recruit_Seq_SEM(valid_mask);
 
-% Amp = 0 case
-Plot_Amps     = [0, Plot_Amps];
-Plot_Sim_Mean = [0, Plot_Sim_Mean]; Plot_Sim_SEM = [0, Plot_Sim_SEM];
-Plot_Seq_Mean = [0, Plot_Seq_Mean]; Plot_Seq_SEM = [0, Plot_Seq_SEM];
-
 % --- Plot Lines (Using the Filtered Data) ---
 % Sim: Dashed, Open Circle
 errorbar(Plot_Amps, Plot_Sim_Mean, Plot_Sim_SEM, '--o', ...
@@ -407,16 +401,16 @@ errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
 % end
 
 % --- Formatting ---
-xlabel('Amplitude (µA)', 'FontSize', 18, 'FontName', 'Times New Roman');
-ylabel('Fraction of Active Channels', 'FontSize', 16, 'FontName', 'Times New Roman');
+xlabel('Amplitude (µA)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
+ylabel('Fraction of Active Channels', 'FontSize', 16, 'FontWeight','bold', 'FontName', 'Times New Roman');
 
 legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
 box off; 
 set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
-set(gca, 'YTick', 0 : 0.2 : 1);
+
 % X-Limits: Set to cover the full range (e.g., 1 to 10), preserving the gap visually on the axis
-xlim([0, 10+0.5]);
-xticks(0:1:10);
+xlim([1-0.5, 10+0.5]);
+xticks(1:1:10);
 axis square;
 ylim([0, 1]);
 

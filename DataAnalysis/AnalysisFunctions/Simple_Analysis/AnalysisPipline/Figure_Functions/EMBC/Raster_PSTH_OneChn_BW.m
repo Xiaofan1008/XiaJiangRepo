@@ -8,7 +8,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 % Plot Settings
 save_figure = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/2_Raster_PSTH_Sample';
-fig_name    = 'GrandAverage_Recruitment_Curve_BarSEM_v2.tiff';
+fig_name    = 'GrandAverage_Recruitment_Curve_BarSEM_v3.tiff';
 
 %% =============== USER SETTINGS ==============================
 folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim4';
@@ -133,7 +133,9 @@ end
 function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ...
                              ctrs, ras_win, stim_width, ptd_ms, r_col, dash_w, ch, amp)
     
-    figure('Color','w','Position',[100, 200, 700, 500]); 
+    % figure('Color','w','Position',[100, 200, 700, 500]); 
+    % 8.5 cm width (fits half of 18.2cm page), 8.0 cm height (square-ish)
+    figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Color', 'w');
     
     % Determine Max Rate
     max_rate = max([max(r_sim), max(r_seq)]) * 1.2; 
@@ -168,13 +170,13 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
 
 
     % C. Plot Curves
-    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 3.0, 'DisplayName', 'Simultaneous');
-    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 3.0, 'DisplayName', 'Sequential');
+    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 1.5, 'DisplayName', 'Simultaneous');
+    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 1.5, 'DisplayName', 'Sequential');
     
-    ylabel('Firing rate (Sp/s)', 'FontSize',16,'Color','k', 'FontName', 'Times New Roman');
-    xlabel('Time (ms)', 'FontSize',16,'Color','k', 'FontName', 'Times New Roman');
+    ylabel('Firing rate (Sp/s)', 'FontSize',14,'Color','k', 'FontName', 'Times New Roman');
+    xlabel('Time (ms)', 'FontSize',14,'Color','k', 'FontName', 'Times New Roman');
     xlim(ras_win);
-    xticks(ras_win(1):5:ras_win(2)); % Sets ticks every 5ms across the whole window
+    xticks(ras_win(1):10:ras_win(2)); % Sets ticks every 5ms across the whole window
     % -----------------------------------------------------------
     % 2. RIGHT AXIS SETUP (Rasters)
     % -----------------------------------------------------------
@@ -210,7 +212,7 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
             end
         end
         x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
-        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.8); 
+        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.5); 
     end
     
     n_sim = numel(sp_sim);
@@ -229,12 +231,12 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
             end
         end
         x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
-        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.8);
+        plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.5);
     end
     
     % Text Labels
-    text(ras_win(1)+2, 0.95, 'Simultaneous', 'VerticalAlignment','top','FontSize',22,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
-    text(ras_win(1)+2, 0.45, 'Sequential', 'VerticalAlignment','top','FontSize',22,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
+    % text(ras_win(1)+2, 0.95, 'Simultaneous', 'VerticalAlignment','top','FontSize',10,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
+    % text(ras_win(1)+2, 0.45, 'Sequential', 'VerticalAlignment','top','FontSize',10,'FontWeight','bold','Color','k', 'FontName', 'Times New Roman');
 
     % -----------------------------------------------------------
     % 3. FINAL VISIBILITY RESTORATION
@@ -245,10 +247,10 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     set(gca, 'Layer', 'top');   
     set(gca, 'YColor', 'k');    
     set(gca, 'XColor', 'k');
-    set(gca, 'FontName', 'Times New Roman', 'FontSize', 16, 'LineWidth', 3);
+    set(gca, 'FontName', 'Times New Roman', 'FontSize', 14, 'LineWidth', 1.5);
     % set(gca, 'Units', 'normalized', 'Position', [0.13 0.13 0.85 0.82]);
     % title(sprintf('Ch %d | %d µA', ch, amp), 'Color', 'k', 'FontSize', 14);
-    legend([p1, p2], 'Location', 'northeast', 'Box', 'off', 'FontSize', 20);
+    legend([p1, p2], 'Location', 'northeast', 'Box', 'off', 'FontSize', 14);
     axis square;
     hold off;
 end

@@ -64,7 +64,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/RespChn_Dist/DX005/Result_SpatialRaw_Xia_Exp1_Sim.mat';
 };
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/6_Resp_Dist';
 dist_bin_edges = 0 : 50 : 1300; 
 bin_centers = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2; 
@@ -162,8 +162,9 @@ end
 
 %% ================= 3. SUMMARY PLOT (Absolute Range with Error Bars) =================
 fprintf('Generating Summary R_ext Plot...\n');
-figNameSum = 'Absolute_Range_AMP_R_ext';
-figure('Color','w', 'Position', [400 400 700 600], 'Name', figNameSum); hold on;
+figNameSum = 'Absolute_Range_AMP_R_ext_v2';
+% figure('Color','w', 'Position', [400 400 700 600], 'Name', figNameSum); hold on;
+figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameSum); hold on;
 
 % --- 1. Filter out NaNs (from skipped amplitudes like 10uA) ---
 valid_mask = ~isnan(Sim_Rext_Mean);
@@ -191,18 +192,18 @@ errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
     'DisplayName', 'Sequential', 'CapSize', 8);   % Larger Caps
 
 % --- 4. Formatting ---
-xlabel('Amplitude (\muA)', 'FontSize', 18, 'FontName', 'Times New Roman');
-ylabel('Maximal Responding Distance (\mum)', 'FontSize', 18, 'FontName', 'Times New Roman');
+xlabel('Amplitude (\muA)', 'FontSize', 20, 'FontName', 'Times New Roman');
+ylabel('Maximal Responding Distance (\mum)', 'FontSize', 20, 'FontName', 'Times New Roman');
 % title(sprintf('Absolute Spatial Range (Threshold = %.2f%%)', range_threshold*100), ...
 %     'FontSize', 16, 'FontName', 'Times New Roman');
 
 % Axes refinement
 set(gca, 'FontSize', 18, 'FontName', 'Times New Roman', 'LineWidth', 3, 'TickDir', 'out');
 xlim([0, 10.5]);  % Tightly frame the valid data
-xticks(0:1:10);     % Force integer ticks
+xticks(0:2:10);     % Force integer ticks
 yticks(0:100:500);
 
-legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+legend('Location','northwest', 'Box','off', 'FontSize', 20, 'FontName', 'Times New Roman');
 box off;
 axis square;
 

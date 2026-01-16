@@ -67,7 +67,7 @@ file_paths = {
 % Plot Settings
 save_figures = false;
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/6_Resp_Dist';
-dist_bin_edges = 0 : 100 : 900; 
+dist_bin_edges = 0 : 100 : 1000; 
 
 %% ================= 1. POOL DATA =================
 fprintf('Pooling data from %d files...\n', length(file_paths));
@@ -153,29 +153,30 @@ for i = 1:length(All_Amps)
     
     % === FIG 1: SPATIAL DENSITY (Prob within Bin) [B&W] ===
     figNameA = sprintf('Resp_Prob_%.1fuA', curr_amp);
-    figure('Color','w', 'Position', [100 100 600 400], 'Name', figNameA); hold on;
-    
+    % figure('Color','w', 'Position', [100 100 600 400], 'Name', figNameA); hold on;
+    figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5],'Name', figNameA, 'Color', 'w'); hold on;
+
     b = bar(bin_centers, [Avg_P_Sim; Avg_P_Seq]', 'grouped');
     
     % --- STYLE: Black & White ---
     % Sim: White Face, Black Edge
     % b(1).FaceColor = 'w'; 
     b(1).FaceColor = [0.8 0.8 0.8];
-    b(1).EdgeColor = 'k'; b(1).LineWidth = 1.5; b(1).DisplayName = 'Simultaneous';
+    b(1).EdgeColor = 'k'; b(1).LineWidth = 0.1; b(1).DisplayName = 'Simultaneous';
     % Seq: Black Face, No Edge
     b(2).FaceColor = 'k'; b(2).EdgeColor = 'none'; b(2).DisplayName = 'Sequential';
     
     % Error Bars (Black)
     % Error Bars (Black) - Use XEndPoints for exact centering
-    errorbar(b(1).XEndPoints, Avg_P_Sim, SEM_P_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
-    errorbar(b(2).XEndPoints, Avg_P_Seq, SEM_P_Seq, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
+    errorbar(b(1).XEndPoints, Avg_P_Sim, SEM_P_Sim, 'k.', 'LineWidth', 0.5, 'HandleVisibility','off');
+    errorbar(b(2).XEndPoints, Avg_P_Seq, SEM_P_Seq, 'k.', 'LineWidth', 0.5, 'HandleVisibility','off');
 
     xlabel('Distance (\mum)'); ylabel('Response Probability');
     ylim([0 1.05]); title(sprintf('Spatial Density @ %.1f \\muA', curr_amp));
     
     % --- X-Axis Ticks Every 50um ---
     set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
-    set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
+    set(gca, 'FontSize', 14, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
 
     xlim([0, max(dist_bin_edges)]);
     
@@ -184,18 +185,20 @@ for i = 1:length(All_Amps)
     
     % === FIG 2: GLOBAL OCCUPANCY (Count / Total Array) [B&W] ===
     figNameB = sprintf('Global_Resp_%.1fuA', curr_amp);
-    figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
+    % figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
+    figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Name', figNameB,'Color', 'w'); hold on;
+
 
     b = bar(bin_centers, [Avg_G_Sim; Avg_G_Seq]' *100, 'grouped');
 
     % --- STYLE: Black & White ---
     % b(1).FaceColor = 'w';
     b(1).FaceColor = [0.8 0.8 0.8];
-    b(1).EdgeColor = 'k'; b(1).LineWidth = 1.5; b(1).DisplayName = 'Simultaneous';
+    b(1).EdgeColor = 'k'; b(1).LineWidth = 0.1; b(1).DisplayName = 'Simultaneous';
 
     b(2).FaceColor = 'k'; 
     % b(2).EdgeColor = 'none'; 
-    b(2).LineWidth = 1.5;b(2).DisplayName = 'Sequential';
+    b(2).LineWidth = 0.1;b(2).DisplayName = 'Sequential';
 
     % Double side - Error Bars (Black) - Use XEndPoints for exact centering
     % errorbar(b(1).XEndPoints, Avg_G_Sim, SEM_G_Sim, 'k.', 'LineWidth', 1, 'HandleVisibility','off');
@@ -207,21 +210,23 @@ for i = 1:length(All_Amps)
 
     % Single side error bar
     errorbar(b(1).XEndPoints, Avg_G_Sim * 100, zeros(size(SEM_G_Sim)), SEM_G_Sim * 100, ...
-        'k.', 'LineWidth', 1, 'CapSize', 4, 'HandleVisibility','off');
+        'k.', 'LineWidth', 0.5, 'CapSize', 6, 'HandleVisibility','off');
         
     errorbar(b(2).XEndPoints, Avg_G_Seq * 100, zeros(size(SEM_G_Seq)), SEM_G_Seq * 100, ...
-        'k.', 'LineWidth', 1, 'CapSize', 4, 'HandleVisibility','off');
+        'k.', 'LineWidth', 0.5, 'CapSize', 6, 'HandleVisibility','off');
 
-    xlabel('Distance (\mum)','FontName', 'Times New Roman','FontSize', 16); 
-    ylabel('Percentage of Total Channels (%)','FontName', 'Times New Roman','FontSize', 16);
+    xlabel('Distance (\mum)','FontName', 'Times New Roman','FontSize', 14); 
+    ylabel('Percentage of Total Channels (%)','FontName', 'Times New Roman','FontSize', 14);
     % title(sprintf('Global Occupancy @ %.1f \\muA', curr_amp));
 
     % --- X-Axis Ticks ---
     % set(gca, 'XTick', 0 : 50 : max(dist_bin_edges));
     set(gca, 'XTick', 0 : 100 : max(dist_bin_edges));
-    set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
+    set(gca, 'YTick', 0 : 4 : 20);
+    set(gca, 'FontSize', 14, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 1.5);
     xlim([0, max(dist_bin_edges)]);
     ylim([0,20]);
+    axis square;
 
     legend('Location','best','Box','off'); box off;
     if save_figures 
@@ -247,9 +252,10 @@ plot(All_Amps, Sim_Rext, '--o', 'Color', 'k', 'LineWidth', 1.5, ...
 plot(All_Amps, Seq_Rext, '-s', 'Color', 'k', 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k', 'DisplayName', 'Sequential');
 
-xlabel('Amplitude (\muA)'); ylabel('Absolute Range (R_{ext}) [\mum]');
+xlabel('Amplitude (\muA)','FontName', 'Times New Roman','FontSize', 14); 
+ylabel('Absolute Range (R_{ext}) [\mum]','FontName', 'Times New Roman','FontSize', 14);
 title('Absolute Spatial Range (Occupancy > 2%)');
-legend('Location','best'); box off; grid on;
+legend('Location','best'); box off; 
 
 if save_figures 
     % saveas(gcf, fullfile(save_dir, [figNameB '.fig']));
@@ -358,8 +364,10 @@ end
 % end
 
 % ================= 3. PLOT 3: TOTAL RECRUITMENT (Line Plot) =================
-figNameRec = 'Summary_Total_Recruitment';
-figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameRec); hold on;
+figNameRec = 'Summary_Total_Recruitment_v2';
+% figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameRec); hold on;
+figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Name', figNameRec,'Color', 'w'); hold on;
+
 
 % --- FILTER OUT NaNs BEFORE PLOTTING ---
 % Find indices where we actually calculated data (excludes the skipped 8.0uA)
@@ -372,16 +380,21 @@ Plot_Sim_SEM  = Recruit_Sim_SEM(valid_mask);
 Plot_Seq_Mean = Recruit_Seq_Mean(valid_mask); 
 Plot_Seq_SEM  = Recruit_Seq_SEM(valid_mask);
 
+% Amp = 0 case
+Plot_Amps     = [0, Plot_Amps];
+Plot_Sim_Mean = [0, Plot_Sim_Mean]; Plot_Sim_SEM = [0, Plot_Sim_SEM];
+Plot_Seq_Mean = [0, Plot_Seq_Mean]; Plot_Seq_SEM = [0, Plot_Seq_SEM];
+
 % --- Plot Lines (Using the Filtered Data) ---
 % Sim: Dashed, Open Circle
 errorbar(Plot_Amps, Plot_Sim_Mean, Plot_Sim_SEM, '--o', ...
-    'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
-    'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
+    'Color', 'k', 'LineWidth', 1, 'MarkerSize', 6, ...
+    'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Simultaneous');
 
 % Seq: Solid, Filled Square
 errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
-    'Color', 'k', 'LineWidth', 2.0, 'MarkerSize', 10, ...
-    'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
+    'Color', 'k', 'LineWidth', 1, 'MarkerSize', 6, ...
+    'MarkerFaceColor', 'k', 'CapSize', 8, 'DisplayName', 'Sequential');
 
 % --- Add Significance Stars ---
 % for i = 1:length(All_Amps)
@@ -401,16 +414,16 @@ errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
 % end
 
 % --- Formatting ---
-xlabel('Amplitude (µA)', 'FontSize', 18, 'FontWeight','bold', 'FontName', 'Times New Roman');
-ylabel('Fraction of Active Channels', 'FontSize', 16, 'FontWeight','bold', 'FontName', 'Times New Roman');
+xlabel('Amplitude (µA)', 'FontSize', 14, 'FontName', 'Times New Roman');
+ylabel('Fraction of Active Channels', 'FontSize', 14, 'FontName', 'Times New Roman');
 
-legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+legend('Location','northwest', 'Box','off', 'FontSize', 14, 'FontName', 'Times New Roman');
 box off; 
-set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
-
+set(gca, 'FontSize', 14, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 1.5);
+set(gca, 'YTick', 0 : 0.2 : 1);
 % X-Limits: Set to cover the full range (e.g., 1 to 10), preserving the gap visually on the axis
-xlim([1-0.5, 10+0.5]);
-xticks(1:1:10);
+xlim([0, 10]);
+xticks(0:2:10);
 axis square;
 ylim([0, 1]);
 

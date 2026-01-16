@@ -59,9 +59,9 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX005/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim.mat';
 };
 % Plot Settings
-save_figure = true;
+save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/3_Total_Spike_Count';
-fig_name    = 'GrandAverage_Recruitment_Curve_BarSEM_BW.tiff';
+fig_name    = 'GrandAverage_Recruitment_Curve_BarSEM_BW_v2.tiff';
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
 % Storage: [Amplitude, Mean_Value]
@@ -99,13 +99,25 @@ for i = 1:length(file_paths)
     % --- 2. Store in Master Pool ---
     % We store simply as pairs: [Amp, Value]
     for a = 1:length(Amps)
+        % if abs(Amps(a)) < 0.001
+        if abs(Amps(a)) < 1
+            val_sim = 0; 
+            val_seq = 0;
+        else
+            val_sim = sim_dataset_mean(a);
+            val_seq = seq_dataset_mean(a);
+        end
         % Sim
-        if ~isnan(sim_dataset_mean(a))
-            Pool_Sim = [Pool_Sim; Amps(a), sim_dataset_mean(a)]; %#ok<*AGROW>
+        % if ~isnan(sim_dataset_mean(a))
+        if ~isnan(val_sim)
+            % Pool_Sim = [Pool_Sim; Amps(a), sim_dataset_mean(a)]; %#ok<*AGROW>
+            Pool_Sim = [Pool_Sim; Amps(a), val_sim]; %#ok<*AGROW>
         end
         % Seq
-        if ~isnan(seq_dataset_mean(a))
-            Pool_Seq = [Pool_Seq; Amps(a), seq_dataset_mean(a)];
+        % if ~isnan(seq_dataset_mean(a))
+        if ~isnan(val_seq)
+            % Pool_Seq = [Pool_Seq; Amps(a), seq_dataset_mean(a)];
+            Pool_Seq = [Pool_Seq; Amps(a), val_seq];
         end
     end
 end
@@ -282,8 +294,8 @@ plot(Unique_Amps(valid), Grand_Seq_Mean(valid), '-s', ...
 
 % --- Formatting ---
 % yline(1.0, '--k', 'Ref (5uA)', 'HandleVisibility','off');
-xlabel('Amplitude (\muA)', 'FontSize', 20, 'FontWeight','bold', 'FontName', 'Times New Roman');
-ylabel('Normalized Spike Count (a.u.)', 'FontSize', 20, 'FontWeight','bold', 'FontName', 'Times New Roman');
+xlabel('Amplitude (\muA)', 'FontSize', 20, 'FontName', 'Times New Roman');
+ylabel('Normalized Spike Count (a.u.)', 'FontSize', 20,  'FontName', 'Times New Roman');
 
 legend('Location','northwest', 'Box','off', 'FontSize', 18, 'FontName', 'Times New Roman');
 
@@ -340,8 +352,8 @@ end
 
 % --- C. Formatting (Times New Roman Style) ---
 yline(1.0, ':k', 'HandleVisibility','off');
-xlabel('Amplitude (\muA)', 'FontSize', 12, 'FontWeight','bold', 'FontName', 'Times New Roman');
-ylabel('Normalized Spike Count', 'FontSize', 12, 'FontWeight','bold', 'FontName', 'Times New Roman');
+xlabel('Amplitude (\muA)', 'FontSize', 16, 'FontWeight','bold', 'FontName', 'Times New Roman');
+ylabel('Normalized Spike Count', 'FontSize', 16, 'FontWeight','bold', 'FontName', 'Times New Roman');
 title('Naka-Rushton Fit', 'FontSize', 14, 'FontName', 'Times New Roman');
 legend('Location','northwest','Box','off', 'FontName', 'Times New Roman');
 box off; set(gca, 'FontSize', 12, 'FontName', 'Times New Roman');

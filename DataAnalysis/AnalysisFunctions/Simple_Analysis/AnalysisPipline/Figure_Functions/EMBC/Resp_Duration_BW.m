@@ -325,7 +325,9 @@ fprintf('Generating Binned Line Plot...\n');
 
 % 1. Data Aggregation
 bin_defs = { [1, 3.5],   [3.9, 6.5],    [7.5, 12] }; 
-bin_names = {'Low (1-3\muA)', 'Medium (4-6\muA)', 'High (8-10\muA)'};
+% bin_names = {'Low (1-3\muA)', 'Medium (4-6\muA)', 'High (8-10\muA)'};
+bin_names = {'1-3\muA', '4-6\muA', '8-10\muA'};
+
 BinStats = [];
 
 for b = 1:length(bin_defs)
@@ -345,18 +347,19 @@ for b = 1:length(bin_defs)
 end
 
 % 2. Plot
-figure('Color','w', 'Position', [300 300 600 500], 'Name', 'Binned_LinePlot'); hold on;
+% figure('Color','w', 'Position', [300 300 600 500], 'Name', 'Binned_LinePlot'); hold on;
+figure('Units', 'centimeters', 'Position', [5 5 10.5 9.5],'Color', 'w', 'Name', 'Binned_LinePlot'); hold on;
 b_sim = [BinStats.Mean_Sim]; sem_sim = [BinStats.SEM_Sim];
 b_seq = [BinStats.Mean_Seq]; sem_seq = [BinStats.SEM_Seq];
 x_pts = 1:3;
 
 % [MODIFIED] Sim: Dashed Line ('--o'), Open Circle
-errorbar(x_pts, b_sim, sem_sim, '--o', 'Color', color_sim, 'LineWidth', 2, ...
-    'MarkerFaceColor', 'w', 'CapSize', 10, 'DisplayName', 'Simultaneous');
+errorbar(x_pts, b_sim, sem_sim, '--o', 'Color', color_sim, 'LineWidth', 1, ...
+    'MarkerFaceColor', 'w', 'CapSize', 8, 'DisplayName', 'Simultaneous');
 
 % [MODIFIED] Seq: Solid Line ('-s'), Filled Square
-errorbar(x_pts, b_seq, sem_seq, '-s', 'Color', color_seq, 'LineWidth', 2, ...
-    'MarkerFaceColor', 'k', 'CapSize', 10, 'DisplayName', 'Sequential');
+errorbar(x_pts, b_seq, sem_seq, '-s', 'Color', color_seq, 'LineWidth', 1, ...
+    'MarkerFaceColor', 'k', 'CapSize', 8, 'DisplayName', 'Sequential');
 
 % 3. Statistics
 for b = 1:3
@@ -365,24 +368,49 @@ for b = 1:3
     txt = ''; if p<0.001, txt='***'; elseif p<0.01, txt='**'; elseif p<0.05, txt='*'; end
     if ~isempty(txt)
         y_top = max(b_sim(b)+sem_sim(b), b_seq(b)+sem_seq(b));
-        text(b, y_top * 1.05, txt, 'FontSize', 18, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+        text(b, y_top * 1.05, txt, 'FontSize', 14, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
     end
 end
 
 % 4. Style
-ylabel('Mean Duration (ms)', 'FontSize', 20,'FontName', 'Times New Roman');
-xlabel('Amplitude Range', 'FontSize', 20, 'FontName', 'Times New Roman');
+ylabel('Mean Duration (ms)', 'FontSize', 14,'FontName', 'Times New Roman');
+xlabel('Amplitude Range', 'FontSize', 14, 'FontName', 'Times New Roman');
 
 % title('Response Duration (Binned)', 'FontSize', 16);
 set(gca, 'XTick', 1:3, 'XTickLabel', bin_names);
-set(gca, 'FontSize', 18, 'FontName', 'Times New Roman', 'LineWidth', 2, 'TickDir', 'out');
-legend('Location', 'northwest', 'Box', 'off', 'FontSize', 18, 'FontName', 'Times New Roman');
+% set(gca, 'XTick', 1:3, 'XTickLabel', {['Low' newline '(1-3\muA)'], ['Medium' newline '(4-6\muA)'], ['High' newline '(8-10\muA)']});
+set(gca, 'FontSize', 14, 'FontName', 'Times New Roman', 'LineWidth', 1.5, 'TickDir', 'out');
+legend('Location', 'northwest', 'Box', 'off', 'FontSize', 14, 'FontName', 'Times New Roman');
 box off; xlim([0.5 3.5]);
 axis square;
 
-fig_name = 'Group_Binned_Line_v2.tiff';
+fig_name = 'Group_Binned_Line_v3.tiff';
 if save_figures
     % saveas(gcf, fullfile(save_dir, 'Group_Binned_Line.fig')); 
     exportgraphics(gcf, fullfile(save_dir, fig_name),'ContentType', 'vector');
     fprintf('\n>>> Plots saved.\n');
 end
+
+%% ================= 7. PRINT STATISTICS TO COMMAND WINDOW =================
+fprintf('\n================================================================\n');
+fprintf('             STATISTICAL SUMMARY (BINNED AMPLITUDES)            \n');
+fprintf('================================================================\n');
+fprintf('%-15s | %-20s | %-20s | %-10s\n', 'Range', 'Sim (Mean+/-SEM)', 'Seq (Mean+/-SEM)', 'P-Value');
+fprintf('----------------------------------------------------------------\n');
+
+for b = 1:length(BinStats)
+    % Extract values for readability
+    m_sim = BinStats(b).Mean_Sim;
+    s_sim = BinStats(b).SEM_Sim;
+    m_seq = BinStats(b).Mean_Seq;
+    s_seq = BinStats(b).SEM_Seq;
+    pval  = BinStats(b).P;
+    
+    % Format the name (replacing latex \mu with u for readable text)
+    range_name = strrep(bin_names{b}, '\mu', 'u');
+    
+    % Print the row
+    fprintf('%-15s | %6.2f +/- %.2f      | %6.2f +/- %.2f      | %.5f\n', ...
+        range_name, m_sim, s_sim, m_seq, s_seq, pval);
+end
+fprintf('================================================================\n');

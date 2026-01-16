@@ -162,8 +162,10 @@ end
 
 %% ================= 3. SUMMARY PLOT (Absolute Range with Error Bars) =================
 fprintf('Generating Summary R_ext Plot...\n');
-figNameSum = 'Spatial_Summary_R_ext';
-figure('Color','w', 'Position', [400 400 700 600], 'Name', figNameSum); hold on;
+figNameSum = 'Absolute_Range_AMP_R_ext_v3';
+% figure('Color','w', 'Position', [400 400 700 600], 'Name', figNameSum); hold on;
+% figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameSum); hold on;
+figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Name', figNameSum,'Color', 'w'); hold on;
 
 % --- 1. Filter out NaNs (from skipped amplitudes like 10uA) ---
 valid_mask = ~isnan(Sim_Rext_Mean);
@@ -171,32 +173,38 @@ Plot_Amps = All_Amps(valid_mask);
 Plot_Sim_Mean = Sim_Rext_Mean(valid_mask); Plot_Sim_SEM = Sim_Rext_SEM(valid_mask);
 Plot_Seq_Mean = Seq_Rext_Mean(valid_mask); Plot_Seq_SEM = Seq_Rext_SEM(valid_mask);
 
+% Prepend 0 to amplitude, means, and SEMs
+Plot_Amps     = [0, Plot_Amps];
+Plot_Sim_Mean = [0, Plot_Sim_Mean]; Plot_Sim_SEM = [0, Plot_Sim_SEM];
+Plot_Seq_Mean = [0, Plot_Seq_Mean]; Plot_Seq_SEM = [0, Plot_Seq_SEM];
+
 % --- 2. Simultaneous (Dashed, White Marker) ---
 errorbar(Plot_Amps, Plot_Sim_Mean, Plot_Sim_SEM, '--o', ...
-    'Color', 'k', 'LineWidth', 2.5, ...            % Increased Thickness
-    'MarkerSize', 10, ...                          % Explicit Marker Size
+    'Color', 'k', 'LineWidth', 1, ...            % Increased Thickness
+    'MarkerSize', 6, ...                          % Explicit Marker Size
     'MarkerFaceColor', 'w', 'MarkerEdgeColor', 'k', ...
     'DisplayName', 'Simultaneous', 'CapSize', 8); % Larger Caps
 
 % --- 3. Sequential (Solid, Black Marker) ---
 errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
-    'Color', 'k', 'LineWidth', 2.5, ...            % Increased Thickness
-    'MarkerSize', 10, ...                          % Explicit Marker Size
+    'Color', 'k', 'LineWidth', 1, ...            % Increased Thickness
+    'MarkerSize', 6, ...                          % Explicit Marker Size
     'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k', ...
     'DisplayName', 'Sequential', 'CapSize', 8);   % Larger Caps
 
 % --- 4. Formatting ---
-xlabel('Amplitude (\muA)', 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Times New Roman');
-ylabel('Maximal Responding Distance (\mum)', 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Times New Roman');
+xlabel('Amplitude (\muA)', 'FontSize', 14, 'FontName', 'Times New Roman');
+ylabel('Maximal Responding Distance (\mum)', 'FontSize', 14, 'FontName', 'Times New Roman');
 % title(sprintf('Absolute Spatial Range (Threshold = %.2f%%)', range_threshold*100), ...
 %     'FontSize', 16, 'FontName', 'Times New Roman');
 
 % Axes refinement
-set(gca, 'FontSize', 18, 'FontName', 'Times New Roman', 'FontWeight', 'bold', 'LineWidth', 3, 'TickDir', 'out');
-xlim([0.5, 10.5]);  % Tightly frame the valid data (1-8uA)
-xticks(1:1:10);     % Force integer ticks
+set(gca, 'FontSize', 14, 'FontName', 'Times New Roman', 'LineWidth', 1.5, 'TickDir', 'out');
+xlim([0, 10]);  % Tightly frame the valid data
+xticks(0:2:10);     % Force integer ticks
+yticks(0:100:500);
 
-legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+legend('Location','northwest', 'Box','off', 'FontSize', 14, 'FontName', 'Times New Roman');
 box off;
 axis square;
 

@@ -65,7 +65,7 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/6_Resp_Dist';
 dist_bin_edges = 0 : 100 : 900; 
 
@@ -184,7 +184,9 @@ for i = 1:length(All_Amps)
     
     % === FIG 2: GLOBAL OCCUPANCY (Count / Total Array) [B&W] ===
     figNameB = sprintf('Global_Resp_%.1fuA', curr_amp);
-    figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
+    % figure('Color','w', 'Position', [750 100 600 400], 'Name', figNameB); hold on;
+    figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameB); hold on;
+
 
     b = bar(bin_centers, [Avg_G_Sim; Avg_G_Seq]' *100, 'grouped');
 
@@ -223,6 +225,7 @@ for i = 1:length(All_Amps)
     set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
     xlim([0, max(dist_bin_edges)]);
     ylim([0,20]);
+    axis square;
 
     legend('Location','best','Box','off'); box off;
     if save_figures 
@@ -359,7 +362,7 @@ end
 % end
 
 % ================= 3. PLOT 3: TOTAL RECRUITMENT (Line Plot) =================
-figNameRec = 'Summary_Total_Recruitment';
+figNameRec = 'Summary_Total_Recruitment_v2';
 figure('Color','w', 'Position', [500 400 600 500], 'Name', figNameRec); hold on;
 
 % --- FILTER OUT NaNs BEFORE PLOTTING ---
@@ -407,16 +410,16 @@ errorbar(Plot_Amps, Plot_Seq_Mean, Plot_Seq_SEM, '-s', ...
 % end
 
 % --- Formatting ---
-xlabel('Amplitude (µA)', 'FontSize', 18, 'FontName', 'Times New Roman');
-ylabel('Fraction of Active Channels', 'FontSize', 16, 'FontName', 'Times New Roman');
+xlabel('Amplitude (µA)', 'FontSize', 20, 'FontName', 'Times New Roman');
+ylabel('Fraction of Active Channels', 'FontSize', 20, 'FontName', 'Times New Roman');
 
-legend('Location','northwest', 'Box','off', 'FontSize', 16, 'FontName', 'Times New Roman');
+legend('Location','northwest', 'Box','off', 'FontSize', 18, 'FontName', 'Times New Roman');
 box off; 
 set(gca, 'FontSize', 16, 'FontName', 'Times New Roman', 'TickDir', 'out', 'LineWidth', 2);
 set(gca, 'YTick', 0 : 0.2 : 1);
 % X-Limits: Set to cover the full range (e.g., 1 to 10), preserving the gap visually on the axis
 xlim([0, 10+0.5]);
-xticks(0:1:10);
+xticks(0:2:10);
 axis square;
 ylim([0, 1]);
 

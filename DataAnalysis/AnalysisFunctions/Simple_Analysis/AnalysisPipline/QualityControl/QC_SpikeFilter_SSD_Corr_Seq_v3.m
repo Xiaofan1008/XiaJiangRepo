@@ -6,7 +6,7 @@ clear all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 FS = 30000;                 
 
 % 1. FILTERING PARAMETERS
@@ -28,7 +28,7 @@ cd(data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 4, base_name = last_folder(1 : underscores(end-1)-1);
+if numel(underscores) > 4, base_name = last_folder(1 : underscores(end-1)-1);
 else, base_name = last_folder; end
 
 %% ================= LOAD SPIKES =================

@@ -5,7 +5,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 
 Electrode_Type = 2;       % 0 rigid, 1 flex single-shank, 2 flex 4-shank
 FS = 30000;               % sampling rate (Hz)
@@ -32,7 +32,7 @@ fprintf('\nRunning Bad Trial Detection in:\n%s\n\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 u = strfind(last_folder, '_');
-if numel(u) >= 4
+if numel(u) > 4
     base_name = last_folder(1 : u(end-1)-1);
 else
     base_name = last_folder;

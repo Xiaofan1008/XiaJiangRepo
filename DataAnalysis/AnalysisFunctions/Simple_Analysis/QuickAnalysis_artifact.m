@@ -15,9 +15,9 @@ dName='amplifier';
 vFID = fopen([filepath filesep dName '.dat'],'r'); % read data file
 
 %% ------ Quick Analysis data parameters ------ %%
-nTrials = 220; % number of trials used for analysis
+nTrials = 200; % number of trials used for analysis
 
-artifact_window_ms = [-1, 10];  % artifact window in ms
+artifact_window_ms = [-1, 30];  % artifact window in ms
 artifact_window_samp = round(artifact_window_ms / 1000 * FS);
 artifact_samples = diff(artifact_window_samp) + 1;
 artifact_time = (artifact_window_samp(1):artifact_window_samp(2)) / FS * 1000;

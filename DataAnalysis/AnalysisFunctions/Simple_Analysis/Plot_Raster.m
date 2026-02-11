@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6_251125_181554'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Sim3_260210_182946'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single2_251104_122817';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -28,8 +28,8 @@ end
 %% Choice
 Spike_filtering =1;
 raster_chn_start = 1;
-raster_chn_end = 32; %nChn
-Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+raster_chn_end = 64; %nChn
+Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Pre Set
 FS=30000; % Sampling frequency

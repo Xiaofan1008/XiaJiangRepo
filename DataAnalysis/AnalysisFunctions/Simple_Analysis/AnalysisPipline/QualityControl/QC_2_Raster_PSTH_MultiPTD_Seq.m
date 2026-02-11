@@ -4,13 +4,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %% ================================================================
 %%                     USER SETTINGS
 %% ================================================================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 raster_chn_start = 1;
 raster_chn_end   = 64;
 Electrode_Type   = 2;    % 0: 1-rigid, 1: 1-flex, 2: 4-shank flex
 
 % [NEW] Select specific PTDs to plot (e.g. [5 10]). Leave [] to plot ALL.
-target_PTDs      = [0];   
+target_PTDs      = [10];   
 
 % ---------------- RASTER PARAMETERS ----------------
 ras_win         = [-50 80];   % ms window for raster
@@ -29,7 +29,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts       = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder,'_');
-if numel(underscores) >= 4
+if numel(underscores) > 4
     base_name = last_folder(1 : underscores(end-1) - 1);
 else
     base_name = last_folder;

@@ -141,7 +141,7 @@ d = Depth_s(Electrode_Type);
 %% ======================================================================
 Responding = struct();
 
-fprintf('Running Responding Channel Detection (Sim(0ms) and Seq(5ms) ONLY)...\n');
+fprintf('Running Responding Channel Detection (Sim(0ms) and Seq(All ISI))...\n');
 
 for si = 1:nSets
     if si <= numel(BadCh_perSet)
@@ -158,10 +158,10 @@ for si = 1:nSets
             current_ptd_ms = PTDs(pi)/1000;
 
             % If only analyze ptd = 0 (simultaneous) and ptd = 5 (ISI = 5)
-            if abs(current_ptd_ms - 0) > 0.001 && abs(current_ptd_ms - 5) > 0.001
-                % Skip this PTD if it's not 0 or 5
-                continue; 
-            end
+            % if abs(current_ptd_ms - 0) > 0.001 && abs(current_ptd_ms - 5) > 0.001
+            %     % Skip this PTD if it's not 0 or 5
+            %     continue; 
+            % end
             
             Responding.set(si).amp(ai).amp_value              = Amps(ai);
             Responding.set(si).amp(ai).ptd(pi).PTD_us         = PTDs(pi);

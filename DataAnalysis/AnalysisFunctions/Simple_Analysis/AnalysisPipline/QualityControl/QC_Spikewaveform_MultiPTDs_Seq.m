@@ -2,10 +2,10 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-spike_chn_start = 1;
-spike_chn_end   = 64;   % nChn (Depth_s index)
+spike_chn_start = 16;
+spike_chn_end   = 16;   % nChn (Depth_s index)
 Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 
 % [NEW] Select specific PTDs to plot (e.g. [0 5 10]). 
 % 0 = Simultaneous. Leave [] to plot ALL found in dataset.
@@ -30,7 +30,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts       = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 4
+if numel(underscores) > 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % e.g. 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback

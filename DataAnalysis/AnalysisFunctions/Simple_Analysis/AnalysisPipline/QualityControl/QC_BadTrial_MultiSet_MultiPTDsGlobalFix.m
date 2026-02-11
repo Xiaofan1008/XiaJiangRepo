@@ -10,7 +10,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 Electrode_Type = 2;       
 
 % --- MANUAL BAD TRIALS LIST ---
@@ -24,12 +24,66 @@ manual_additions = [
     % 1, 3, 0, 30;  % Set 1, 3uA, Sim(0ms), Trial 30
     % 1, 2, 5, 37;  % Set 1, 2uA, Seq(5ms), Trial 37
 
-   2,5,0,7;
-   2,5,0,6;
+   1,10,0,16;
+   1,10,0,17;
+   1,10,0,30;
+   1,10,0,28;
+   1,10,0,20;
+   1,10,0,11;
+   1,10,0,8;
+
+   1,8,0,9;
+   1,8,0,10;
+   1,8,0,25;
+   1,8,0,5;
+   1,8,0,22;
+   1,8,0,20;
+   1,8,0,1;
+
+   1,5,0,11;
+   1,5,0,18;
+   1,5,0,24;
+   1,5,0,23;
+   1,5,0,26;
+   1,5,0,8;
+   1,5,0,21;
+   1,5,0,14;
+
+   1,3,0,29;
+   1,3,0,30;
+   1,3,0,21;
+   1,3,0,23;
+   1,3,0,24;
+   1,3,0,14;
+   1,3,0,25;
+
+   2,10,0,12;
+   2,10,0,23;
+   2,10,0,19;
+
+   2,8,0,24;
+   2,8,0,25;
+   2,8,0,21;
+   2,8,0,12;
+   2,8,0,16;
+   2,8,0,5;
+   2,8,0,7;
+   2,8,0,11;
+   
    2,5,0,5;
+   2,5,0,4;
    2,5,0,3;
-   2,5,0,2;
-   2,5,0,1;
+   2,5,0,7;
+   2,5,0,15;
+   2,5,0,16;
+   2,5,0,12;
+
+   2,3,0,14;
+   2,3,0,21;
+   2,3,0,4;
+   2,3,0,23;
+   2,3,0,16;
+   2,3,0,24;
 
 ];
 
@@ -41,7 +95,7 @@ fprintf('\nRunning Global Manual Bad Trial Entry in:\n%s\n\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 u = strfind(last_folder, '_');
-if numel(u) >= 4, base_name = last_folder(1 : u(end-1)-1);
+if numel(u) > 4, base_name = last_folder(1 : u(end-1)-1);
 else, base_name = last_folder; end
 
 % ---------------- LOAD METADATA & PARSE SETS ----------------

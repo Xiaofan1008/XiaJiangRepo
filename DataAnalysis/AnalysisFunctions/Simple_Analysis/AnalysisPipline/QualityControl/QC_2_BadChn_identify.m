@@ -24,7 +24,7 @@ fprintf('QC Bad Channel Selection\nFolder: %s\n\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 u = strfind(last_folder, '_');
-if numel(u)>=4
+if numel(u)>4
     base_name = last_folder(1:u(end-1)-1);
 else
     base_name = last_folder;

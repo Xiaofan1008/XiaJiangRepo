@@ -7,7 +7,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 Electrode_Type   = 2;          
 raster_chn_start = 1;          
 raster_chn_end   = 64;
@@ -20,7 +20,7 @@ Plot_Amps = [];
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [0 5];    
+Plot_PTDs = [0];    
 
 fig_position = [50 50 1600 900];
 
@@ -33,7 +33,7 @@ fprintf('Raster+PSTH plotting in folder:\n%s\n\n', data_folder);
 parts       = split(data_folder, filesep);
 last_folder = parts{end};
 u           = strfind(last_folder, '_');
-if numel(u) >= 4
+if numel(u) > 4
     base_name = last_folder(1:u(end-1)-1);   
 else
     base_name = last_folder;

@@ -24,7 +24,7 @@ Plot_Amps = [];     % e.g. [4 6 8];  [] = all
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [0 5];     
+Plot_PTDs = [12];     
 
 % Fixed figure size (all figures the same)
 fig_position = [50 50 1600 900];

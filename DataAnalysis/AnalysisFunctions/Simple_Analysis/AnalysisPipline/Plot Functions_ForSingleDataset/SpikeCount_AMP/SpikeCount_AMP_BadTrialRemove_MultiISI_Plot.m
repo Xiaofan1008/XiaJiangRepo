@@ -1,8 +1,8 @@
 %% ============================================================
-%   Spike Count Analysis (Combined Dataset: PTD 0=Sim, PTD 5=Seq)
+%   Spike Count Analysis (Combined Dataset: PTD 0=Sim, PTD X=Seq)
 %   - Metric: Mean Spike Count per Trial (Raw)
 %   - Logic: Counts spikes in window [2 20]ms
-%   - FILTER: Extracts Sim (PTD=0) and Seq (PTD=5) from single dataset
+%   - FILTER: Extracts Sim (PTD=0) and Selected Seq ISIs from single dataset
 %   - MODIFICATION: Uses RAW counts for all Union channels (No forced 0)
 % ============================================================
 clear;
@@ -13,14 +13,17 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
+% [NEW] Select which ISIs (PTDs) you want to analyze (e.g., [1, 5, 10])
+target_ISIs = [5,10]; 
+
 % 1. Analysis Window (Spike Counting)
-post_win_ms = [2 20]; 
+post_win_ms = [2 25]; 
 % 2. Plotting & PSTH
 psth_win_ms = [-50 100]; 
-FS = 30000;            
+FS = 30000;             
 bin_ms     = 1;
 sigma_bins = 3;        
-jitter_width = 0.2; scatter_alpha = 0.4; dot_size = 20;          
+jitter_width = 0.2; scatter_alpha = 0.4; dot_size = 20;           
 
 % Kernels
 edges_peak = post_win_ms(1):bin_ms:post_win_ms(2);
@@ -67,9 +70,13 @@ resp_channels_mask = false(nCh_Total, 1);
 for si=1:numel(R.set)
     for ai=1:numel(R.set(si).amp)
         for pi=1:numel(R.set(si).amp(ai).ptd)
-            % Check if this PTD is relevant (0 or 5)
+            % Check if this PTD is relevant (0 or target_ISIs)
             curr_ptd = R.set(si).amp(ai).ptd(pi).PTD_ms;
-            if abs(curr_ptd - 0) > 0.001 && abs(curr_ptd - 5) > 0.001
+            
+            % [MODIFIED] Check against target_ISIs list
+            is_target_seq = any(abs(target_ISIs - curr_ptd) < 0.001);
+            
+            if abs(curr_ptd - 0) > 0.001 && ~is_target_seq
                 continue; 
             end
             
@@ -83,7 +90,7 @@ for si=1:numel(R.set)
     end
 end
 resp_channels = find(resp_channels_mask); 
-fprintf('Analyzing Fixed Population (Union of Sim & Seq 5ms): %d Channels\n', length(resp_channels));
+fprintf('Analyzing Fixed Population (Union of Sim & Seq %s ms): %d Channels\n', num2str(target_ISIs), length(resp_channels));
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
 % Init Output Arrays
@@ -138,11 +145,11 @@ for ci = 1:length(resp_channels)
         end
     end
     
-    % --- SEQUENTIAL (PTD = 5ms only) ---
+    % --- SEQUENTIAL (Target ISIs) ---
     for p = 1:numel(PTDs_ms)
         
-        % FILTER: Process target ptd only (if 5 Only process 5ms case)
-        if abs(PTDs_ms(p) - 5) > 0.001
+        % [MODIFIED] FILTER: Process target ISIs only
+        if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001)
             continue; 
         end
         
@@ -205,19 +212,28 @@ for ss = 1:nSets
     end
 end
 
-% --- Plot Sequential (PTD=5ms) ---
-set_colors = [0.85 0.33 0.10; 0.60 0.20 0.60; 0.20 0.60 0.20]; 
-for p = 1:numel(PTDs_ms)
-    if abs(PTDs_ms(p) - 5) > 0.001, continue; end
+% --- Plot Sequential (Target ISIs) ---
+% [MODIFIED] Define colors for different ISIs
+% If you analyze many ISIs, this creates a distinct color for each.
+isi_colors = lines(length(target_ISIs)); 
+
+for p_idx = 1:length(target_ISIs)
+    target_isi = target_ISIs(p_idx);
+    
+    % Find corresponding index in PTDs_ms array
+    p = find(abs(PTDs_ms - target_isi) < 0.001);
+    if isempty(p), continue; end
     
     for ss = 1:nSets
         data_set = squeeze(SpikeCount_seq(:, :, ss, p));
         AvgSeq = mean(data_set, 1, 'omitnan');
         SEMSeq = std(data_set, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(data_set), 1));
-        col = set_colors(mod(ss-1,3)+1, :);
+        
+        % Assign color based on ISI (p_idx)
+        col = isi_colors(p_idx, :);
         
         stimCh = uniqueComb(ss,:); stimCh = stimCh(stimCh>0);
-        lbl = sprintf('Seq Set %d (Ch:%s)', ss, num2str(stimCh));
+        lbl = sprintf('Seq %dms Set %d (Ch:%s)', round(target_isi), ss, num2str(stimCh));
         
         if any(~isnan(AvgSeq))
             for i = 1:length(Amps)
@@ -239,7 +255,7 @@ title('Response Magnitude (Total Spike Count)', 'FontWeight','bold');
 legend('Location','best','Box','off'); box off;
 
 %% ============================================================
-%   5. STATISTICS: POOLED ANOVA (Sim vs Seq 5ms)
+%   5. STATISTICS: POOLED ANOVA (Sim vs Seq Selected ISIs)
 % ============================================================
 y_val  = []; g_stim = []; g_amp  = [];
 
@@ -254,15 +270,19 @@ for ss = 1:nSets
     end
 end
 
-% Seq Data (5ms only)
+% Seq Data (Target ISIs)
 for ss = 1:nSets
     for p = 1:numel(PTDs_ms)
-        if abs(PTDs_ms(p) - 5) > 0.001, continue; end
+        % [MODIFIED] Check against target ISIs
+        if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001), continue; end
+        
+        label_str = sprintf('Seq_%dms', round(PTDs_ms(p)));
+        
         for ai = 1:length(Amps)
             d = squeeze(SpikeCount_seq(:, ai, ss, p)); d = d(~isnan(d));
             if isempty(d), continue; end
             y_val  = [y_val; d];
-            g_stim = [g_stim; repmat({'Sequential'}, length(d), 1)];
+            g_stim = [g_stim; repmat({label_str}, length(d), 1)];
             g_amp  = [g_amp;  repmat(Amps(ai), length(d), 1)];
         end
     end
@@ -298,12 +318,14 @@ for ss = 1:nSets
     fprintf('\n');
 end
 
-% Seq Rows
+% Seq Rows (Target ISIs)
 for ss = 1:nSets
     for p = 1:numel(PTDs_ms)
-        if abs(PTDs_ms(p) - 5) > 0.001, continue; end
+        % [MODIFIED] Check against target ISIs
+        if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001), continue; end
+        
         stimCh_List = uniqueComb(ss, :); stimCh_List = stimCh_List(stimCh_List > 0);
-        fprintf('Seq_Set%d(Ch%s_5ms)\t', ss, num2str(stimCh_List));
+        fprintf('Seq_Set%d(Ch%s_%dms)\t', ss, num2str(stimCh_List), round(PTDs_ms(p)));
         for ai = 1:length(Amps)
             d = squeeze(SpikeCount_seq(:, ai, ss, p)); 
             mu = mean(d, 'omitnan'); sem = std(d, 0, 'omitnan') / sqrt(sum(~isnan(d)));
@@ -317,16 +339,20 @@ fprintf('=======================================================================
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX016/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_PTD_SpikeCount/DX016/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
-out_filename = fullfile(save_dir, ['Result_SpikeCount_5ms_' exp_id '.mat']);
+
+% [MODIFIED] Generate filename based on selected ISIs
+isi_str = strjoin(string(target_ISIs), '_');
+out_filename = fullfile(save_dir, ['Result_SpikeCount_ISIs_' char(isi_str) 'ms_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
 ResultFR.Metadata.Metric = 'Mean Spike Count per Trial (Cleaned)';
 ResultFR.Metadata.Window = post_win_ms;
 ResultFR.Metadata.Amps = Amps;
+ResultFR.Metadata.TargetISIs = target_ISIs;
 ResultFR.PeakFR.Sim_Z = SpikeCount_sim; 
 ResultFR.PeakFR.Seq_Z = SpikeCount_seq;
 ResultFR.PSTH.Sim = PSTH_Sim;

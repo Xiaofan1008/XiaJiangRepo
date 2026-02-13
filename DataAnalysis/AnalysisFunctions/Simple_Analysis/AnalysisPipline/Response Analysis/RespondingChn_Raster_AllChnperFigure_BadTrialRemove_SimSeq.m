@@ -20,7 +20,7 @@ Plot_Amps = [];
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [0];    
+Plot_PTDs = [10];    
 
 fig_position = [50 50 1600 900];
 

@@ -20,11 +20,11 @@ bin_ms_raster = 1;             % ms, PSTH bin size
 smooth_ms     = 5;             % ms, Gaussian smoothing width
 
 % Which amplitudes to plot (µA). If empty → plot ALL amplitudes.
-Plot_Amps = [];     % e.g. [4 6 8];  [] = all
+Plot_Amps = [10];     % e.g. [4 6 8];  [] = all
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [12];     
+Plot_PTDs = [5,8,10,12,15,17,20,25];     
 
 % Fixed figure size (all figures the same)
 fig_position = [50 50 1600 900];

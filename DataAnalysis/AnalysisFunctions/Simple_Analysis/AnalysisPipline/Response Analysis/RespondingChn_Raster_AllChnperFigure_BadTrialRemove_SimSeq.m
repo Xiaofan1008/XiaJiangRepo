@@ -16,11 +16,11 @@ raster_chn_end   = 64;
 ras_win       = [-50 80];      
 bin_ms_raster = 1; 
 smooth_ms     = 5;             
-Plot_Amps = [];     
+Plot_Amps = [5];     
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [10];    
+Plot_PTDs = [12];    
 
 fig_position = [50 50 1600 900];
 

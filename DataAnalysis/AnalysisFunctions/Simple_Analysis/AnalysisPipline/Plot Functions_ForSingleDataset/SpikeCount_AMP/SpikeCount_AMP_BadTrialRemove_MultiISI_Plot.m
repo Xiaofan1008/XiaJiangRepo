@@ -14,7 +14,7 @@ data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % [NEW] Select which ISIs (PTDs) you want to analyze (e.g., [1, 5, 10])
-target_ISIs = [5,10]; 
+target_ISIs = [0,5]; 
 
 % 1. Analysis Window (Spike Counting)
 post_win_ms = [2 25]; 

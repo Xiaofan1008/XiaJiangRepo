@@ -13,7 +13,7 @@ Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank fl
 % --- Analysis Settings ---
 target_channels = [1:40];     % Choose which channel(s) to plot
 plot_amps      = [10];       % Choose which Amplitude(s) to plot
-target_PTDs    = [5 8 10 12 15 17 20 25]; % Only sequential ISIs > 0
+target_PTDs    = [5 8 10 12 15 17 20]; % Only sequential ISIs > 0
 num_trials_plot = 20;        % Set the number of random trials to plot per ISI
 ras_win        = [-20 60];   % ms (Set your desired time window here)
 bin_ms         = 1;

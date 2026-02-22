@@ -2,14 +2,14 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ================= USER SETTINGS =================
-spike_chn_start = 16;
-spike_chn_end   = 16;   % nChn (Depth_s index)
+spike_chn_start = 1;
+spike_chn_end   = 32;   % nChn (Depth_s index)
 Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 
 % [NEW] Select specific PTDs to plot (e.g. [0 5 10]). 
 % 0 = Simultaneous. Leave [] to plot ALL found in dataset.
-target_PTDs     = [0];   
+target_PTDs     = [15];   
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)

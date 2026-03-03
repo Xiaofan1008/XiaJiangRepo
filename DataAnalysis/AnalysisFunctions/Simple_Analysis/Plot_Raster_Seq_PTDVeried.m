@@ -7,10 +7,10 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_3_260210_194555';
 
 %% Choice
-Spike_filtering = 1;
+Spike_filtering = 0;
 raster_chn_start = 35;
 raster_chn_end = 40; %nChn
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
@@ -347,13 +347,17 @@ if Spike_filtering == 1
         fprintf('Correlation Filtering Complete\n');
         save([base_name '.sp_xia.mat'], 'sp_clipped');
 else
-    load([base_name '.sp_xia.mat']);
+    % load([base_name '.sp_xia.mat']);
 
     % load([base_name '.sp.mat']);
     % sp_clipped = sp;
 
     % load([base_name '.sp_xia_FirstPulse.mat']);
     % sp_clipped = sp_seq;
+
+    load([base_name '.sp.mat']);
+    sp_clipped = sp;
+    save([base_name '.sp_xia.mat'], 'sp_clipped');
 end
 
 % if Spike_filtering == 1

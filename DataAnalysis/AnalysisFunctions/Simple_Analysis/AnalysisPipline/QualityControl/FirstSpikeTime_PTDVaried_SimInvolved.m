@@ -15,7 +15,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% === User Input ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_2_260210_162757';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_3';
 
 win_ms = 10;       % window length after PTD (ms)
 FS = 30000;        % sampling rate
@@ -26,7 +26,9 @@ cd(data_folder);
 %% --- Load filtered spikes ---
 sp_file = dir('*sp_xia.mat');
 load(sp_file(1).name, 'sp_clipped');
-
+% sp_file = dir('*sp.mat');
+% load(sp_file(1).name, 'sp');
+% sp_clipped = sp;
 %% --- Load triggers ---
 trig = loadTrig(0);
 

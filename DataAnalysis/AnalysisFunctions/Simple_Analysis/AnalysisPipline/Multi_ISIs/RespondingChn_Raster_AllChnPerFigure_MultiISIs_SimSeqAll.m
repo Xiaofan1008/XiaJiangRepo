@@ -11,8 +11,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %% ====================== USER SETTINGS ========================
 data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 Electrode_Type   = 2;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
-raster_chn_start = 19;          % Depth_s index
-raster_chn_end   = 61;
+raster_chn_start = 1;          % Depth_s index
+raster_chn_end   = 31;
 
 % ---- plotting windows ----
 ras_win       = [-50 80];      % ms, time relative to first pulse
@@ -20,11 +20,11 @@ bin_ms_raster = 1;             % ms, PSTH bin size
 smooth_ms     = 5;             % ms, Gaussian smoothing width
 
 % Which amplitudes to plot (µA). If empty → plot ALL amplitudes.
-Plot_Amps = [];     % e.g. [4 6 8];  [] = all
+Plot_Amps = [10];     % e.g. [4 6 8];  [] = all
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [0 5];     
+Plot_PTDs = [0 5 8 10 12 15 17 20 25];     
 
 % Fixed figure size (all figures the same)
 fig_position = [50 50 1600 900];
@@ -72,7 +72,7 @@ fprintf('  -> loaded %d spike channels.\n', nCh);
 %% ===================== LOAD BadChannels & BadTrials ==========
 BadCh_perSet = {};
 BadTrialsPerCh = {};
-badch_file = [base_name '.BadChannels.mat'];
+badch_file = [base_name '.MultiISIs_BadChannels.mat'];
 if isfile(badch_file)
     tmp = load(badch_file);
     if isfield(tmp,'BadCh_perSet')
@@ -84,7 +84,7 @@ if isfile(badch_file)
 else
     fprintf('No BadChannels.mat found – no channels marked as bad.\n');
 end
-badtr_file = [base_name '.BadTrials.mat'];
+badtr_file = [base_name '.MultiISIs_BadTrials.mat'];
 if isfile(badtr_file)
     tmp = load(badtr_file);
     if isfield(tmp,'BadTrials')
@@ -99,7 +99,7 @@ end
 
 %% ===================== LOAD Responding Channels ==============
 Resp = [];
-resp_file = [base_name '_RespondingChannels.mat'];
+resp_file = [base_name '_MultiISI_RespondingChannels.mat'];
 hasResp = false;
 if isfile(resp_file)
     tmp = load(resp_file);

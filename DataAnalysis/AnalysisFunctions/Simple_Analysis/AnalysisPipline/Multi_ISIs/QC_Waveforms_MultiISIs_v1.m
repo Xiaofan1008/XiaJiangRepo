@@ -3,13 +3,16 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ================= USER SETTINGS =================
 spike_chn_start = 1;
-spike_chn_end   = 64;   % nChn (Depth_s index)
+spike_chn_end   = 31;   % nChn (Depth_s index)
 Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 
-% [NEW] Select specific PTDs to plot (e.g. [0 5 10]). 
+% [MODIFIED] Choose which amplitudes (uA) to plot (can be one or multiple)
+target_amps     = [10]; % e.g., [10, 20]
+
+% Select specific PTDs to plot (e.g. [0 5 10]). 
 % 0 = Simultaneous. Leave [] to plot ALL found in dataset.
-target_PTDs     = [5];   
+target_PTDs     = [8];   
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)
@@ -95,6 +98,20 @@ Amps(Amps == -1) = 0;
 n_AMP = numel(Amps);
 cmap  = lines(n_AMP);
 
+% [MODIFIED] Find the internal indices for all requested target amplitudes
+target_amp_idx = [];
+for ta = target_amps
+    idx = find(abs(Amps - ta) < 0.001);
+    if ~isempty(idx)
+        target_amp_idx = [target_amp_idx; idx];
+    else
+        warning('Target amplitude %g µA not found in dataset.', ta);
+    end
+end
+if isempty(target_amp_idx)
+    error('None of the target amplitudes were found in the dataset.');
+end
+
 %% ---- Stimulation sets (order-sensitive) ----
 E_NAME    = E_MAP(2:end);
 stimNames = StimParams(2:end,1);
@@ -122,7 +139,7 @@ trialPTD_us = PTD_all_us(2:simultaneous_stim:end); % Usually stored on 2nd pulse
 trialPTD_ms = trialPTD_us / 1000;
 unique_PTDs = unique(trialPTD_ms);
 
-% [NEW] Filter PTDs based on User Input
+% Filter PTDs based on User Input
 if ~isempty(target_PTDs)
     % Keep only PTDs that exist in the data AND are requested
     unique_PTDs = intersect(unique_PTDs, target_PTDs);
@@ -157,8 +174,8 @@ for ich = spike_chn_start:spike_chn_end
         for pi = 1:length(unique_PTDs)
             ptd_val = unique_PTDs(pi);
             
-            % Filter trials by Set AND PTD
-            trial_mask = (combClass_win == s) & (abs(trialPTD_ms - ptd_val) < 0.001);
+            % [MODIFIED] Filter trials by Set, PTD AND multiple Target Amplitudes using ismember
+            trial_mask = (combClass_win == s) & (abs(trialPTD_ms - ptd_val) < 0.001) & ismember(ampIdx, target_amp_idx);
             if ~any(trial_mask), continue; end
             
             trial_ids = find(trial_mask);
@@ -174,7 +191,10 @@ for ich = spike_chn_start:spike_chn_end
                 mode_str = sprintf('Sequential Pulse (%.0f ms)', ptd_val);
             end
             
-            figure('Name', sprintf('Ch %d | StimSet %d (%s) | %s', ich, s, stimLabel, mode_str), ...
+            % Format the amplitudes for the title
+            amp_str = sprintf('%g ', target_amps);
+            
+            figure('Name', sprintf('Ch %d | StimSet %d (%s) | %s | %suA', ich, s, stimLabel, mode_str, amp_str), ...
                    'Color','w','Position', [100 100 1400 800]);        
             tiledlayout(layout_row, layout_col, 'Padding','compact', 'TileSpacing','compact');
             
@@ -209,7 +229,9 @@ for ich = spike_chn_start:spike_chn_end
             for b = 1:nBins
                 nexttile; hold on;
                 spike_count = 0;
-                for a = 1:n_AMP
+                
+                % [MODIFIED] Loops through the array of multiple target amplitude indices
+                for a = target_amp_idx'
                     waves = all_spikes_by_bin_amp{b,a};
                     if isempty(waves), continue; end
                     spike_count = spike_count + size(waves, 1);
@@ -240,13 +262,16 @@ for ich = spike_chn_start:spike_chn_end
             end
             
             % -------- Legend --------
-            legend_handles = gobjects(n_AMP,1);
-            legend_labels  = cell(n_AMP,1);
-            for a = 1:n_AMP
-                legend_handles(a) = plot(nan,nan,'-', 'Color', cmap(a,:), 'LineWidth',1.5);
-                legend_labels{a}  = sprintf('%g µA', Amps(a));
+            % [MODIFIED] Rebuilt legend to loop through all target amplitudes dynamically
+            legend_handles = gobjects(length(target_amp_idx), 1);
+            legend_labels  = cell(length(target_amp_idx), 1);
+            for i = 1:length(target_amp_idx)
+                a = target_amp_idx(i);
+                legend_handles(i) = plot(nan, nan, '-', 'Color', cmap(a,:), 'LineWidth', 1.5);
+                legend_labels{i}  = sprintf('%g µA', Amps(a));
             end
             legend(legend_handles, legend_labels, 'Location','northeastoutside');
+            
         end % End PTD loop
     end % End Set loop
 end % End Channel loop

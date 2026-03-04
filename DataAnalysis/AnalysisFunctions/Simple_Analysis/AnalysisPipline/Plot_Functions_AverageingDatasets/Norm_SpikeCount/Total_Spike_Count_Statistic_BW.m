@@ -132,7 +132,9 @@ for k = 1:length(Unique_Amps)
     Grand_Seq_Mean(k) = mean(vq); Grand_Seq_SEM(k) = std(vq)/sqrt(9);
 end
 %% ================= 4. PLOT =================
-figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Color', 'w'); hold on;
+% figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Color', 'w'); hold on;
+figure('Units', 'centimeters', 'Position', [15, 15, 20.5, 19.5], 'Color', 'w'); hold on;
+
 % A. Scatter (Background)
 jitter_w = 0.4; 
 for i = 1:size(Pool_Seq, 1)

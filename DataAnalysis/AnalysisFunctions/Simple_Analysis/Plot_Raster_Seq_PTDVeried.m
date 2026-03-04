@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_3_260210_194555';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4_260210_205501';
 
 %% Choice
 Spike_filtering = 0;
@@ -357,7 +357,7 @@ else
 
     load([base_name '.sp.mat']);
     sp_clipped = sp;
-    save([base_name '.sp_xia.mat'], 'sp_clipped');
+    save([base_name '.sp_xia.mat'], 'sp_clipped', '-v7.3');
 end
 
 % if Spike_filtering == 1

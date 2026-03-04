@@ -1,6 +1,6 @@
 %% ============================================================
 %   Spike Count Analysis (Fixed Macro-Window Method)
-%   - Metric: Population Spike Count per Trial (Trial-by-Trial Variance)
+%   - Metric: Mean Spike Count per Trial per Channel (Classic)
 %   - Logic: Counts spikes in a single, wide window [start, end] for ALL ISIs.
 %   - FILTER: Evaluates responding channels PER SET for TARGET AMP only.
 % ============================================================
@@ -111,9 +111,9 @@ for ss = 1:nSets
 end
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
-% [MODIFIED] Init Output Arrays based on total trials to sum the network correctly
-TrialSpikes_sim = cell(length(Amps), nSets);
-TrialSpikes_seq = cell(length(Amps), nSets, numel(PTDs_ms));
+% [MODIFIED] Init Output Arrays based on total channels (Classic approach)
+SpikeCount_sim = nan(nCh_Total, length(Amps), nSets);
+SpikeCount_seq = nan(nCh_Total, length(Amps), nSets, numel(PTDs_ms));
 nBins = length(edges_psth)-1;
 PSTH_Sim = nan(nCh_Total, nBins, length(Amps), nSets);
 PSTH_Seq = nan(nCh_Total, nBins, length(Amps), nSets, numel(PTDs_ms));
@@ -121,21 +121,6 @@ PSTH_Seq = nan(nCh_Total, nBins, length(Amps), nSets, numel(PTDs_ms));
 % Loop through sets first, then only process that set's responding channels
 for ss = 1:nSets
     current_set_channels = resp_channels_per_set{ss};
-    
-    % [MODIFIED] Pre-allocate trial matrices to perfectly align trial numbers
-    for ai = 1:length(Amps)
-        ptd_sim_idx = find(abs(PTDs_ms - 0) < 0.001);
-        if ~isempty(ptd_sim_idx)
-           tr_ids_global = find(combClass == ss & ampIdx == ai & ptdIdx == ptd_sim_idx);
-           TrialSpikes_sim{ai,ss} = nan(nTr, 1);
-           TrialSpikes_sim{ai,ss}(tr_ids_global) = 0; % 0 means valid trial, ready to count
-        end
-        for p = 1:numel(PTDs_ms)
-           tr_ids_global = find(combClass==ss & ptdIdx==p & ampIdx==ai);
-           TrialSpikes_seq{ai,ss,p} = nan(nTr, 1);
-           TrialSpikes_seq{ai,ss,p}(tr_ids_global) = 0;
-        end
-    end
     
     for ci = 1:length(current_set_channels)
         ch_idx = current_set_channels(ci); 
@@ -164,12 +149,12 @@ for ss = 1:nSets
                 
                 if isempty(tr_ids), continue; end
                 
-                % [MODIFIED] Collect trial-by-trial vector and sum into network total
-                [counts_per_trial, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
+                % [MODIFIED] Collect mean count per trial for THIS channel
+                [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
                     fixed_macro_win_ms, edges_psth, g_sym, bin_s, FS);
                     
-                TrialSpikes_sim{ai,ss}(tr_ids) = TrialSpikes_sim{ai,ss}(tr_ids) + counts_per_trial;
-                PSTH_Sim(ch_idx, :, ai, ss)  = psth_curve;
+                SpikeCount_sim(ch_idx, ai, ss) = count_val;
+                PSTH_Sim(ch_idx, :, ai, ss)    = psth_curve;
             end
         end
         
@@ -185,12 +170,12 @@ for ss = 1:nSets
                 
                 if isempty(tr_ids), continue; end
                 
-                % [MODIFIED] Collect trial-by-trial vector and sum into network total
-                [counts_per_trial, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
+                % [MODIFIED] Collect mean count per trial for THIS channel
+                [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
                     fixed_macro_win_ms, edges_psth, g_sym, bin_s, FS);
                 
-                TrialSpikes_seq{ai,ss,p}(tr_ids) = TrialSpikes_seq{ai,ss,p}(tr_ids) + counts_per_trial;
-                PSTH_Seq(ch_idx, :, ai, ss, p) = psth_curve;
+                SpikeCount_seq(ch_idx, ai, ss, p) = count_val;
+                PSTH_Seq(ch_idx, :, ai, ss, p)    = psth_curve;
             end
         end
     end
@@ -209,19 +194,19 @@ for ss = 1:nSets
     for p_idx = 1:length(target_ISIs)
         target_isi = target_ISIs(p_idx);
         
-        % [MODIFIED] Extract the array of trials and remove NaN placeholders
+        % [MODIFIED] Extract the array of channel means
         if target_isi == 0
-            data_set = TrialSpikes_sim{ai_target, ss};
+            data_set = squeeze(SpikeCount_sim(:, ai_target, ss));
         else
             p = find(abs(PTDs_ms - target_isi) < 0.001);
             if isempty(p)
                 data_set = NaN;
             else
-                data_set = TrialSpikes_seq{ai_target, ss, p};
+                data_set = squeeze(SpikeCount_seq(:, ai_target, ss, p));
             end
         end
         
-        data_set = data_set(~isnan(data_set)); % Clean out invalid trials
+        data_set = data_set(~isnan(data_set)); % Clean out invalid channels
         
         if ~isempty(data_set)
             y_mean(p_idx) = mean(data_set);
@@ -235,11 +220,7 @@ for ss = 1:nSets
         stimCh = uniqueComb(ss,:); stimCh = stimCh(stimCh>0);
         lbl = sprintf('Set %d (Ch:%s)', ss, num2str(stimCh));
         
-        % % Using standard errorbar for discrete intervals
-        % errorbar(target_ISIs, y_mean, y_sem, '-o', 'Color', col, 'LineWidth', 2, ...
-        %     'MarkerFaceColor', 'w', 'MarkerSize', 8, 'DisplayName', lbl);
-
-        % [MODIFIED] Plotting just the mean trend line without error bars
+        % Plotting just the mean trend line without error bars
         plot(target_ISIs, y_mean, '-o', 'Color', col, 'LineWidth', 2, ...
             'MarkerFaceColor', 'w', 'MarkerSize', 8, 'DisplayName', lbl);
     end
@@ -247,9 +228,9 @@ end
 
 % Formatting
 xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold', 'FontSize', 12); 
-% [MODIFIED] Updated Y label to reflect the Network Trial Sums
-ylabel(sprintf('Total Network Spikes per Trial (%.1f uA, Win: %.1f to %.1f ms)', target_Amp_Stats, fixed_macro_win_ms(1), fixed_macro_win_ms(2)), 'FontWeight','bold', 'FontSize', 12);
-title('ISI Tuning Curve (Population Trial-by-Trial Variance)', 'FontWeight','bold', 'FontSize', 14);
+% [MODIFIED] Updated Y label to reflect Mean Spikes per Channel
+ylabel(sprintf('Mean Spikes per Trial per Channel (%.1f uA, Win: %.1f to %.1f ms)', target_Amp_Stats, fixed_macro_win_ms(1), fixed_macro_win_ms(2)), 'FontWeight','bold', 'FontSize', 12);
+title('ISI Tuning Curve (Classic Method)', 'FontWeight','bold', 'FontSize', 14);
 % Force X-ticks to exactly match the tested ISIs
 xticks(sort(target_ISIs));
 legend('Location','best','Box','off'); box off;
@@ -257,72 +238,32 @@ legend('Location','best','Box','off'); box off;
 %% ============================================================
 %   5. STATISTICS: ANOVA (Compare ISIs at TARGET AMPLITUDE)
 % ============================================================
-y_val  = []; g_isi = []; 
+% [MODIFIED] Ignored ANOVA execution for single dataset, but kept structure.
 fprintf('\n=== ANOVA RESULTS (Amplitude: %.1f uA) ===\n', target_Amp_Stats);
-if ~isempty(ai_target)
-    % Collect Sim Data
-    if any(abs(target_ISIs - 0) < 0.001)
-        for ss = 1:nSets
-            % [MODIFIED] Feed exact trials into the ANOVA
-            d = TrialSpikes_sim{ai_target, ss}; 
-            d = d(~isnan(d));
-            if ~isempty(d)
-                y_val  = [y_val; d];
-                g_isi = [g_isi; repmat({'ISI_0ms'}, length(d), 1)];
-            end
-        end
-    end
-    
-    % Collect Seq Data
-    for ss = 1:nSets
-        for p = 1:numel(PTDs_ms)
-            if PTDs_ms(p) == 0, continue; end
-            if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001), continue; end
-            
-            label_str = sprintf('ISI_%dms', round(PTDs_ms(p)));
-            
-            % [MODIFIED] Feed exact trials into the ANOVA
-            d = TrialSpikes_seq{ai_target, ss, p}; 
-            d = d(~isnan(d));
-            
-            if ~isempty(d)
-                y_val  = [y_val; d];
-                g_isi = [g_isi; repmat({label_str}, length(d), 1)];
-            end
-        end
-    end
-    
-    if ~isempty(y_val)
-        [p_anova, tbl, stats] = anovan(y_val, {g_isi}, ...
-            'varnames', {'ISI'}, 'display', 'on');
-        fprintf('ISI Effect P-value: %.5f\n', p_anova(1));
-        
-        figure('Color','w','Name',sprintf('ISI Comparison @ %.1fuA', target_Amp_Stats));
-        multcompare(stats, 'Dimension', 1);
-    end
-end
+fprintf('ANOVA skipped for single dataset analysis (Requires multi-dataset pooling).\n');
 
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/ISI_SpikeCount/DX016/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_PTD_SpikeCount/DX016/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 isi_str = strjoin(string(target_ISIs), '_');
 
-% Rename save file to reflect Population Fixed Macro-Window
-out_filename = fullfile(save_dir, ['Result_PopSpikeCount_MacroWin_' char(isi_str) 'ms_' exp_id '.mat']);
+% Rename save file to reflect Classic Fixed Macro-Window
+out_filename = fullfile(save_dir, ['Result_ClassicSpikeCount_MacroWin_' char(isi_str) 'ms_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
-ResultFR.Metadata.Metric = 'Population Fixed Macro-Window Spike Count (Trial Var)';
+ResultFR.Metadata.Metric = 'Classic Fixed Macro-Window Spike Count (Mean per Channel)';
 ResultFR.Metadata.FixedMacroWin = fixed_macro_win_ms;
 ResultFR.Metadata.Amps = Amps;
 ResultFR.Metadata.TargetISIs = target_ISIs;
 ResultFR.Metadata.BadTrialsExcluded = exclude_bad_trials;
-% [MODIFIED] Save the Trial arrays instead of the Channel arrays
-ResultFR.PeakFR.Sim = TrialSpikes_sim; 
-ResultFR.PeakFR.Seq = TrialSpikes_seq;
+
+% [MODIFIED] Save the Channel arrays instead of Trial arrays
+ResultFR.PeakFR.Sim = SpikeCount_sim; 
+ResultFR.PeakFR.Seq = SpikeCount_seq;
 ResultFR.PSTH.Sim = PSTH_Sim;
 ResultFR.PSTH.Seq = PSTH_Seq;
 
@@ -330,13 +271,13 @@ save(out_filename, 'ResultFR');
 fprintf('\n>>> Results Saved to: %s\n', out_filename);
 
 %% ==================== HELPER FUNCTIONS =========================
-% [MODIFIED] Function now returns a vector of exact spike counts per trial
-function [counts_per_trial, psth_trace] = get_spike_count_macro(tr_ids, trig, sp_data, ...
+% [MODIFIED] Helper function reverted to output the classic mean count per trial
+function [count_val, psth_trace] = get_spike_count_macro(tr_ids, trig, sp_data, ...
     count_win, psth_edges, g_sym, bin_s, FS)
     
     nTr = numel(tr_ids);
     all_psth_spikes = [];
-    counts_per_trial = zeros(nTr, 1); 
+    total_spikes_in_window = 0;
     
     for k = 1:nTr
         tr = tr_ids(k);
@@ -345,10 +286,16 @@ function [counts_per_trial, psth_trace] = get_spike_count_macro(tr_ids, trig, sp
         
         % Count spikes strictly inside the provided static window
         mask_count = (tt >= count_win(1) & tt <= count_win(2));
-        counts_per_trial(k) = sum(mask_count);
+        total_spikes_in_window = total_spikes_in_window + sum(mask_count);
         
         % Collect spikes for PSTH Visual
         all_psth_spikes = [all_psth_spikes; tt(tt >= psth_edges(1) & tt <= psth_edges(end))];
+    end
+    
+    if nTr > 0
+        count_val = total_spikes_in_window / nTr; 
+    else
+        count_val = NaN;
     end
     
     h_psth = histcounts(all_psth_spikes, psth_edges);

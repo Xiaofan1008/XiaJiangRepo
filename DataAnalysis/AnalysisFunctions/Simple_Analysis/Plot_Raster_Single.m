@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX017/Xia_ISI_Single4_260224_182028'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Single4_260210_204245'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single3_251106_131759';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -273,7 +273,7 @@ else
 
     load([base_name '.sp.mat']);
     sp_clipped = sp;
-
+    save([base_name '.sp_xia.mat'], 'sp_clipped', '-v7.3');
     % load([base_name '.sp_xia_FirstPulse.mat']);
     % sp_clipped = sp_seq;
 end

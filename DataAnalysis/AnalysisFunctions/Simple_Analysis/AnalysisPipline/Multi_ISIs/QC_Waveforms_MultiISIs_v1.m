@@ -3,16 +3,16 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ================= USER SETTINGS =================
 spike_chn_start = 1;
-spike_chn_end   = 31;   % nChn (Depth_s index)
+spike_chn_end   = 64;   % nChn (Depth_s index)
 Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_2';
 
 % [MODIFIED] Choose which amplitudes (uA) to plot (can be one or multiple)
 target_amps     = [10]; % e.g., [10, 20]
 
 % Select specific PTDs to plot (e.g. [0 5 10]). 
 % 0 = Simultaneous. Leave [] to plot ALL found in dataset.
-target_PTDs     = [8];   
+target_PTDs     = [5];   
 
 FS = 30000;            % Sampling frequency
 win_ms       = 100;    % total window after trigger (ms)

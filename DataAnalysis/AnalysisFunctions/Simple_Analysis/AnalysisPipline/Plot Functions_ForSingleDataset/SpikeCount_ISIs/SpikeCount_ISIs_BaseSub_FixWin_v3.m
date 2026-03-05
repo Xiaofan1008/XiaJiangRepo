@@ -9,15 +9,18 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_2'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze (e.g., [0, 5, 10, 15])
-target_ISIs = [5, 8, 10, 12, 15, 17, 20, 25]; 
+target_ISIs = [0, 5, 8, 10, 12, 15, 17, 20, 25]; 
 
 % Choose the FIXED macro window [start, end]
 % This wide window is used for EVERY condition to ensure 100% fairness
 fixed_macro_win_ms = [0, 40]; 
+
+% [MODIFIED] Added baseline window for spontaneous noise subtraction
+baseline_win_ms = [-50, -10]; 
 
 % Choose which amplitude to run the Statistical Comparison on
 target_Amp_Stats = 10; % uA
@@ -111,7 +114,7 @@ for ss = 1:nSets
 end
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
-% [MODIFIED] Init Output Arrays based on total channels (Classic approach)
+% Init Output Arrays based on total channels (Classic approach)
 SpikeCount_sim = nan(nCh_Total, length(Amps), nSets);
 SpikeCount_seq = nan(nCh_Total, length(Amps), nSets, numel(PTDs_ms));
 nBins = length(edges_psth)-1;
@@ -149,9 +152,9 @@ for ss = 1:nSets
                 
                 if isempty(tr_ids), continue; end
                 
-                % [MODIFIED] Collect mean count per trial for THIS channel
+                % [MODIFIED] Pass baseline_win_ms into the helper function
                 [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
-                    fixed_macro_win_ms, edges_psth, g_sym, bin_s, FS);
+                    fixed_macro_win_ms, baseline_win_ms, edges_psth, g_sym, bin_s, FS);
                     
                 SpikeCount_sim(ch_idx, ai, ss) = count_val;
                 PSTH_Sim(ch_idx, :, ai, ss)    = psth_curve;
@@ -170,9 +173,9 @@ for ss = 1:nSets
                 
                 if isempty(tr_ids), continue; end
                 
-                % [MODIFIED] Collect mean count per trial for THIS channel
+                % [MODIFIED] Pass baseline_win_ms into the helper function
                 [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
-                    fixed_macro_win_ms, edges_psth, g_sym, bin_s, FS);
+                    fixed_macro_win_ms, baseline_win_ms, edges_psth, g_sym, bin_s, FS);
                 
                 SpikeCount_seq(ch_idx, ai, ss, p) = count_val;
                 PSTH_Seq(ch_idx, :, ai, ss, p)    = psth_curve;
@@ -194,7 +197,7 @@ for ss = 1:nSets
     for p_idx = 1:length(target_ISIs)
         target_isi = target_ISIs(p_idx);
         
-        % [MODIFIED] Extract the array of channel means
+        % Extract the array of channel means
         if target_isi == 0
             data_set = squeeze(SpikeCount_sim(:, ai_target, ss));
         else
@@ -228,9 +231,9 @@ end
 
 % Formatting
 xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold', 'FontSize', 12); 
-% [MODIFIED] Updated Y label to reflect Mean Spikes per Channel
-ylabel(sprintf('Mean Spikes per Trial per Channel (%.1f uA, Win: %.1f to %.1f ms)', target_Amp_Stats, fixed_macro_win_ms(1), fixed_macro_win_ms(2)), 'FontWeight','bold', 'FontSize', 12);
-title('ISI Tuning Curve (Classic Method)', 'FontWeight','bold', 'FontSize', 14);
+% [MODIFIED] Updated Y label to reflect Net Mean Spikes (Baseline Subtracted)
+ylabel(sprintf('Spikes per Trial (%.1f uA)', target_Amp_Stats), 'FontWeight','bold', 'FontSize', 12);
+title('ISI Tuning Curve ( [0,40]ms, Baseline Subtracted)', 'FontWeight','bold', 'FontSize', 14);
 % Force X-ticks to exactly match the tested ISIs
 xticks(sort(target_ISIs));
 legend('Location','best','Box','off'); box off;
@@ -238,7 +241,6 @@ legend('Location','best','Box','off'); box off;
 %% ============================================================
 %   5. STATISTICS: ANOVA (Compare ISIs at TARGET AMPLITUDE)
 % ============================================================
-% [MODIFIED] Ignored ANOVA execution for single dataset, but kept structure.
 fprintf('\n=== ANOVA RESULTS (Amplitude: %.1f uA) ===\n', target_Amp_Stats);
 fprintf('ANOVA skipped for single dataset analysis (Requires multi-dataset pooling).\n');
 
@@ -255,13 +257,15 @@ out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_' char(isi_str) 'ms
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
-ResultFR.Metadata.Metric = 'Classic Fixed Macro-Window Spike Count (Mean per Channel)';
+ResultFR.Metadata.Metric = 'Classic Fixed Macro-Window Spike Count (Net Mean per Channel)';
 ResultFR.Metadata.FixedMacroWin = fixed_macro_win_ms;
+% [MODIFIED] Save the baseline window to metadata
+ResultFR.Metadata.BaselineWin = baseline_win_ms; 
 ResultFR.Metadata.Amps = Amps;
 ResultFR.Metadata.TargetISIs = target_ISIs;
 ResultFR.Metadata.BadTrialsExcluded = exclude_bad_trials;
 
-% [MODIFIED] Save the Channel arrays instead of Trial arrays
+% Save the Channel arrays instead of Trial arrays
 ResultFR.PeakFR.Sim = SpikeCount_sim; 
 ResultFR.PeakFR.Seq = SpikeCount_seq;
 ResultFR.PSTH.Sim = PSTH_Sim;
@@ -271,29 +275,41 @@ save(out_filename, 'ResultFR');
 fprintf('\n>>> Results Saved to: %s\n', out_filename);
 
 %% ==================== HELPER FUNCTIONS =========================
-% [MODIFIED] Helper function reverted to output the classic mean count per trial
+% [MODIFIED] Added base_win to inputs and implemented duration-normalized baseline subtraction
 function [count_val, psth_trace] = get_spike_count_macro(tr_ids, trig, sp_data, ...
-    count_win, psth_edges, g_sym, bin_s, FS)
+    count_win, base_win, psth_edges, g_sym, bin_s, FS)
     
     nTr = numel(tr_ids);
     all_psth_spikes = [];
-    total_spikes_in_window = 0;
+    total_net_spikes_in_window = 0;
+    
+    % Calculate durations to safely normalize counts even if windows are different sizes
+    dur_evoked = count_win(2) - count_win(1);
+    dur_base   = base_win(2) - base_win(1);
     
     for k = 1:nTr
         tr = tr_ids(k);
         t0 = trig(tr)/FS*1000;
         tt = sp_data(:,1) - t0;
         
-        % Count spikes strictly inside the provided static window
+        % Count Evoked Spikes
         mask_count = (tt >= count_win(1) & tt <= count_win(2));
-        total_spikes_in_window = total_spikes_in_window + sum(mask_count);
+        evoked_count = sum(mask_count);
+        
+        % Count Baseline Spikes
+        mask_base = (tt >= base_win(1) & tt <= base_win(2));
+        base_count = sum(mask_base);
+        
+        % Subtract normalized baseline to get net response
+        net_count = evoked_count - (base_count * (dur_evoked / dur_base));
+        total_net_spikes_in_window = total_net_spikes_in_window + net_count;
         
         % Collect spikes for PSTH Visual
         all_psth_spikes = [all_psth_spikes; tt(tt >= psth_edges(1) & tt <= psth_edges(end))];
     end
     
     if nTr > 0
-        count_val = total_spikes_in_window / nTr; 
+        count_val = total_net_spikes_in_window / nTr; 
     else
         count_val = NaN;
     end
@@ -305,7 +321,7 @@ end
 
 function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
-    f = dir('*_MultiISI_RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
+    f = dir('*MultiISI_RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
     R = load(f(1).name).Responding;
     
     f = dir('*sp_xia_SSD.mat'); if isempty(f), f=dir('*sp_xia.mat'); end

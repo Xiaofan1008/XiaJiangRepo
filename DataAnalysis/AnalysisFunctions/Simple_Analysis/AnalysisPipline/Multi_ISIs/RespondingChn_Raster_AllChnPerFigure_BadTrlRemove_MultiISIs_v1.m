@@ -7,10 +7,10 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_2';
 Electrode_Type   = 2;          
-raster_chn_start = 1;          
-raster_chn_end   = 31;
+raster_chn_start = 30;          
+raster_chn_end   = 63;
 
 % ---- plotting windows ----
 ras_win       = [-50 80];      
@@ -20,7 +20,7 @@ Plot_Amps = [10];
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [5 8 10 12 15 17 20 25];    
+Plot_PTDs = [0 5 8 10 12 15 17 20 25];    
 
 fig_position = [50 50 1600 900];
 

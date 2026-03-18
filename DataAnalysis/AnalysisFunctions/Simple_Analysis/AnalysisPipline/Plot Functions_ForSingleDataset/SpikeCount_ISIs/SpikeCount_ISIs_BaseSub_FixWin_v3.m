@@ -9,7 +9,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_2'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze (e.g., [0, 5, 10, 15])
@@ -232,8 +232,8 @@ end
 % Formatting
 xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold', 'FontSize', 12); 
 % [MODIFIED] Updated Y label to reflect Net Mean Spikes (Baseline Subtracted)
-ylabel(sprintf('Spikes per Trial (%.1f uA)', target_Amp_Stats), 'FontWeight','bold', 'FontSize', 12);
-title('ISI Tuning Curve ( [0,40]ms, Baseline Subtracted)', 'FontWeight','bold', 'FontSize', 14);
+ylabel(sprintf('Spikes Count (%.1f uA)', target_Amp_Stats), 'FontWeight','bold', 'FontSize', 12);
+title('Inter-Stimulus Interval ( [0,40]ms, Baseline Subtracted)', 'FontWeight','bold', 'FontSize', 14);
 % Force X-ticks to exactly match the tested ISIs
 xticks(sort(target_ISIs));
 legend('Location','best','Box','off'); box off;
@@ -301,7 +301,9 @@ function [count_val, psth_trace] = get_spike_count_macro(tr_ids, trig, sp_data, 
         base_count = sum(mask_base);
         
         % Subtract normalized baseline to get net response
-        net_count = evoked_count - (base_count * (dur_evoked / dur_base));
+        
+        % net_count = evoked_count - (base_count * (dur_evoked / dur_base)); % have negative count
+        net_count = max(0, evoked_count - (base_count * (dur_evoked / dur_base))); % make negative = 0; 
         total_net_spikes_in_window = total_net_spikes_in_window + net_count;
         
         % Collect spikes for PSTH Visual

@@ -1,26 +1,29 @@
-%% Raw / Denoised / Filtered Trace Viewer (sequence-sensitive sets, separate figs for set×amp, subplots for PTDs)
+%% Raw / Denoised / Filtered Trace Viewer (Averaged Artifact Overlay)
 clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim2';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 
-channels_to_plot = 23:25;                % channels to plot (Depth_s index)
-amps_to_plot     = [6];                 % amplitudes to include (µA)
-ptd_to_plot      = [0,5,10,12];                  % PTDs (ms), [] means all
-sets_to_plot     = [];                  % stimulation sets, [] means all
+channels_to_plot = 32;                   % channels to plot (Depth_s index)
+% Added multiple amplitudes to overlay on the same plot
+amps_to_plot     = [3,5,8];           % amplitudes to overlay (µA)
+% Defines the two plots you want: 0 (Simultaneous) and 5 (Sequential)
+ptd_to_plot      = [0, 5];               % PTDs (ms)
+sets_to_plot     = [];                   % stimulation sets, [] means all
 
-nTrials_to_plot  = 5;                  % how many trials to draw per condition
-plot_window_ms   = [-5 10];             % window around trigger
+% This now dictates how many trials are averaged together
+nTrials_to_plot  = 20;                   
+% Tightened window to closely match the artifact reference image
+plot_window_ms   = [-1 7];              
+y_axis_limits    = [-8000 8000];
 
-Electrode_Type   = 2;                   % 0 rigid, 1 flex, 2 4-shank flex
+Electrode_Type   = 2;                    % 0 rigid, 1 flex, 2 4-shank flex
 
 % 'raw'  = amplifier.dat
 % 'dn'   = amplifier_dn_sab.dat   (denoised)
 % 'mu'   = <base_name>.mu_sab.dat (filtered / MUA)
-% trace_type = 'raw';    % raw trace
-% trace_type = 'dn';    % artifact blanked trace
-trace_type = 'raw';    % bandpass filtered trace
+trace_type = 'raw';    % raw trace
 
 %% ====================== CHECK FOLDER ======================
 if ~isfolder(data_folder), error('Invalid folder'); end
@@ -155,20 +158,30 @@ for ich = 1:length(channels_to_plot)
         stimVec   = stimVec(stimVec>0);
         set_label = strjoin(arrayfun(@(x) sprintf('Ch%d',x), stimVec,'UniformOutput',false),'→');
 
-        for i_amp = 1:length(amps_sel)
-            amp_val = amps_sel(i_amp);
+        % Swapped the loop order: Create Figure per PTD first
+        for i_ptd = 1:length(ptd_sel)
+            ptd_val = ptd_sel(i_ptd);
+            
+            if ptd_val == 0
+                mode_str = 'Simultaneous';
+            else
+                mode_str = sprintf('Sequential (%d ms)', ptd_val/1000);
+            end
 
-            % ---- figure name + title depend on trace type ----
-            figName = sprintf('%sTrace_Ch%d_Set%s_Amp%d', ...
-                              data_label, ch_plot, set_label, amp_val);
-            figure('Name',figName,'Color','w','Position',[150 150 1400 800]);
+            figName = sprintf('%sTrace_Ch%d_Set%s_%s', data_label, ch_plot, set_label, mode_str);
+            % figure('Name',figName,'Color','w','Position',[150 150 800 600]);
+            figure('Name',figName,'Color','w','Units','centimeters','Position',[5 5 8.8 8.8]);
+            hold on;
+            
+            % Setup colors for the overlaid amplitudes (Grayscale gradient)
+            amp_colors = flipud(gray(length(amps_sel) + 2)); 
+            
+            legend_handles = gobjects(length(amps_sel), 1);
+            legend_labels  = cell(length(amps_sel), 1);
 
-            nPTD  = length(ptd_sel);
-            nRows = ceil(sqrt(nPTD));
-            nCols = ceil(nPTD / nRows);
-
-            for i_ptd = 1:nPTD
-                ptd_val = ptd_sel(i_ptd);
+            % Loop through Amplitudes inside the figure
+            for i_amp = 1:length(amps_sel)
+                amp_val = amps_sel(i_amp);
 
                 tidx_set = find(combClass_win == set_id);
                 tidx_ptd = find(ismember(postTrig, ptd_val));
@@ -178,30 +191,54 @@ for ich = 1:length(channels_to_plot)
 
                 if isempty(tlist), continue; end
                 tlist = tlist(1:min(nTrials_to_plot, numel(tlist)));
+                num_valid_trials = numel(tlist);
+                
+                % Pre-allocate matrix to store trial data for averaging
+                all_trial_data = zeros(num_valid_trials, Nsamp);
 
-                subplot(nRows, nCols, i_ptd); hold on
-
-                for k = 1:numel(tlist)
+                for k = 1:num_valid_trials
                     tr = tlist(k);
                     start_idx = trig(tr) + samp_win(1);
                     byte_pos  = start_idx * nChn * 2;
 
                     fseek(fid, byte_pos, 'bof');
                     data_block = fread(fid, [nChn, Nsamp], 'int16') * 0.195;
-
-                    plot(time_ms, data_block(ch_intan,:), 'LineWidth', 1);
+                    
+                    all_trial_data(k, :) = data_block(ch_intan,:);
                 end
-
-                xline(0,'r--');
-                title(sprintf('Inter-Stimulus-Interval %d ms (%d trials)', ...
-                      ptd_val/1000, numel(tlist)));
-                xlabel('Time (ms)');
-                ylabel('µV');
-                ylim([-7000,7000]);
+                
+                % Calculate the mean across the collected trials
+                mean_trace = mean(all_trial_data, 1);
+                
+                % Plot the averaged trace
+                col = amp_colors(i_amp + 1, :); 
+                legend_handles(i_amp) = plot(time_ms, mean_trace, 'LineWidth', 1.2, 'Color', col);
+                legend_labels{i_amp}  = sprintf('%d µA', amp_val);
             end
 
-            sgtitle(sprintf('%s Trace | Ch %d | Set %s | %d µA', ...
-                data_label, ch_plot, set_label, amp_val));
+            % Figure Formatting and dynamic legend
+            xline(0,'r-', 'LineWidth', 1.2, 'HandleVisibility', 'off');
+            % Draw a second red line for the Sequential delay
+            if ptd_val > 0
+                xline(ptd_val/1000, 'r-', 'LineWidth', 1.2, 'HandleVisibility', 'off');
+            end
+            % title(sprintf('%s Trace | %s | Rec: Ch %d', data_label, mode_str, ch_plot), 'FontWeight', 'bold', 'FontSize', 14);
+            % xlabel('Time (ms)', 'FontWeight', 'bold');
+            % ylabel('Voltage (µV)', 'FontWeight', 'bold');
+
+            xlabel('Time (ms)', 'FontSize', 10);
+            ylabel('Voltage (µV)', 'FontSize', 10);
+            
+            % Only show legend for amplitudes that actually existed in the data
+            valid_leg = ~arrayfun(@(x) isequal(class(x), 'matlab.graphics.GraphicsPlaceholder'), legend_handles);
+            legend(legend_handles(valid_leg), legend_labels(valid_leg), 'Location', 'northeast', 'Box', 'off');
+            box off;
+            axis square;
+            xlim(plot_window_ms);
+            ylim(y_axis_limits);
+            xticks(-1:1:7); 
+            yticks([-8000, -4000, 0, 4000, 8000]);
+            set(gca, 'FontSize', 8);
         end
     end
 end

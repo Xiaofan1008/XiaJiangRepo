@@ -5,7 +5,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Single4_260210_204245'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_Single1_260319_133224'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single3_251106_131759';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
@@ -26,7 +26,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 3
+if numel(underscores) >= 4
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores

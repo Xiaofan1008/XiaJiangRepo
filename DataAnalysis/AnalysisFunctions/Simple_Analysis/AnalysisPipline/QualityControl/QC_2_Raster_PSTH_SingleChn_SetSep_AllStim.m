@@ -6,14 +6,14 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ===================== USER INPUTS ===================== %%
-folder_single = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Single1';
-folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1'; 
+folder_single = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_Single1';
+folder_seq    = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % --- Analysis Settings ---
-target_channels = [1:32]; 
+target_channels = [1:5]; 
 plot_amps      = [10];       % Amplitudes to plot
-target_PTDs    = [0 5 8 10 12 15 17];  % Specific Seq PTDs to plot. Leave [] for ALL > 0.
+target_PTDs    = [0 3 5 7 9 11 13];  % Specific Seq PTDs to plot. Leave [] for ALL > 0.
 ras_win        = [-10 50];  % ms
 bin_ms         = 1;
 smooth_ms      = 5;

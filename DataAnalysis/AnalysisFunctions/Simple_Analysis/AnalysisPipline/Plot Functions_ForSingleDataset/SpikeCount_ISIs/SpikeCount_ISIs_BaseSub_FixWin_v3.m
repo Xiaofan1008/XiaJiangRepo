@@ -9,11 +9,11 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze (e.g., [0, 5, 10, 15])
-target_ISIs = [0, 5, 8, 10, 12, 15, 17, 20, 25]; 
+target_ISIs = [0, 3,4,5,6,7,8,9,10,11,12,13,14,15,17,20]; 
 
 % Choose the FIXED macro window [start, end]
 % This wide window is used for EVERY condition to ensure 100% fairness
@@ -247,7 +247,7 @@ fprintf('ANOVA skipped for single dataset analysis (Requires multi-dataset pooli
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 isi_str = strjoin(string(target_ISIs), '_');

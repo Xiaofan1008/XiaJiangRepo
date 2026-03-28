@@ -3,8 +3,8 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ====================== USER SETTINGS ======================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/strobe_LFP_2_260319_103140'; 
-raster_chn_start = 32;
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/strobe_LFP_260326_130620'; 
+raster_chn_start = 1;
 raster_chn_end   = 64; % nChn
 Electrode_Type   = 2;  %j 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
@@ -21,7 +21,7 @@ abs_max = 200;  % Absolute maximum voltage limit (+/- µV)
 ras_win         = [-50 200];   % ms (You can change this window length here)
 
 % Sliding PSTH Parameters
-win_ms  = 4;    % Sliding window size (ms)
+win_ms  = 5;    % Sliding window size (ms)
 step_ms = 1;    % Sliding step size (ms)
 
 %% ====================== LOAD DATA ======================

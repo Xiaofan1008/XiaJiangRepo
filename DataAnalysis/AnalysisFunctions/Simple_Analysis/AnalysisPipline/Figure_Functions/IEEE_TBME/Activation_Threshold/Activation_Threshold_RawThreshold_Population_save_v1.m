@@ -67,11 +67,12 @@ file_paths = {
 
 % [MODIFIED 1] Target is now in absolute units: Spikes per Trial
 % A value of 1.0 is a very strong, standard activation threshold.
-Target_Thresh = 0.35;   
+Target_Thresh = 0.5;   
 
 % [MODIFIED] Save Settings
+save_figure = true;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Activation_Threshold';
-save_name = 'Threshold_Unity_Scatter_RawSpike_0.35';
+save_name = 'Threshold_Unity_Scatter_RawSpike_0.5';
 
 % Plot Settings
 dot_size = 25;
@@ -162,25 +163,40 @@ scatter(Thresh_Sim_Pool, Thresh_Seq_Pool, dot_size, dot_color, 'filled', ...
     'MarkerFaceAlpha', dot_alpha,'MarkerEdgeColor', 'none');
 
 % Significance Formatting
-if p_val < 0.001, star = '***'; elseif p_val < 0.01, star = '**'; elseif p_val < 0.05, star = '*'; else, star = 'n.s.'; end
-title(['Activation Threshold (p < 0.001', star, ')'], 'FontSize', 9, 'FontName', 'Arial', 'FontWeight', 'normal');
+% if p_val < 0.001, star = '***'; elseif p_val < 0.01, star = '**'; elseif p_val < 0.05, star = '*'; else, star = 'n.s.'; end
+% title(['Activation Threshold (p < 0.001', star, ')'], 'FontSize', 9, 'FontName', 'Arial', 'FontWeight', 'normal');
+
+if p_val < 0.001
+    stat_text = '***';
+elseif p_val < 0.01
+    stat_text = '**';
+elseif p_val < 0.05
+    stat_text = '*';
+else
+    stat_text = 'n.s.';
+end
+text(max_val * 0.05, max_val * 0.95, stat_text, 'FontSize', 10, 'FontName', 'Arial');
+
 
 axis square; box off;
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.0);
 xlabel('Simultaneous Threshold (\muA)'); ylabel('Sequential Threshold (\muA)');
 xlim([0 max_val]); ylim([0 max_val]);
+xticks(0:2:max_val); yticks(0:2:max_val);
 hold off;
 
 %% =================== 7. [NEW] SAVE FIGURE ====================
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 full_path = fullfile(save_dir, save_name);
 
+if save_figure
 % Save as PNG for quick preview
-saveas(fig, [full_path '.tiff']);
-% Save as PDF for high-quality publication format
-% exportgraphics(fig, [full_path '.pdf'], 'ContentType', 'vector');
-
-fprintf('>>> Figure saved to: %s\n', save_dir);
+    saveas(fig, [full_path '.tiff']);
+    % Save as PDF for high-quality publication format
+    % exportgraphics(fig, [full_path '.pdf'], 'ContentType', 'vector');
+    
+    fprintf('>>> Figure saved to: %s\n', save_dir);
+end
 
 %% ==================== HELPER FUNCTIONS =========================
 function thresh = get_interpolated_threshold(amps, curve, target)

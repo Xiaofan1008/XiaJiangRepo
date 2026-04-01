@@ -4,7 +4,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 %% ================================================================
 %%                     USER SETTINGS
 %% ================================================================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1';
 raster_chn_start = 1;
 raster_chn_end   = 64;
 Electrode_Type   = 2;    % 0: 1-rigid, 1: 1-flex, 2: 4-shank flex

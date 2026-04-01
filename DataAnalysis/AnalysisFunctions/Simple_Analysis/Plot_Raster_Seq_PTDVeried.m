@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq1_260319_133634';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1_260326_132413';
 
 %% Choice
 Spike_filtering = 0;

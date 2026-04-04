@@ -5,7 +5,7 @@
 clear; 
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq9';
 Electrode_Type   = 1;          
 raster_chn_start = 1;          
 raster_chn_end   = 32;
@@ -13,7 +13,7 @@ raster_chn_end   = 32;
 ras_win       = [-50 80];      
 bin_ms_raster = 1;             
 smooth_ms     = 5;             
-Plot_Amps = [];     
+Plot_Amps = [6,8,10];     
 fig_position = [50 50 1600 900];
 %% ===================== INITIAL SETUP =========================
 if ~isfolder(data_folder)
@@ -24,7 +24,7 @@ fprintf('Raster+PSTH plotting in folder:\n%s\n\n', data_folder);
 parts       = split(data_folder, filesep);
 last_folder = parts{end};
 u           = strfind(last_folder, '_');
-if numel(u) >= 4
+if numel(u) > 4
     base_name = last_folder(1:u(end-1)-1);   
 else
     base_name = last_folder;

@@ -7,7 +7,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_1';
 Electrode_Type   = 2;          
 raster_chn_start = 1;          
 raster_chn_end   = 32;
@@ -16,11 +16,11 @@ raster_chn_end   = 32;
 ras_win       = [-50 80];      
 bin_ms_raster = 1; 
 smooth_ms     = 5;             
-Plot_Amps = [10];     
+Plot_Amps = [3,5,8,10];     
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
-Plot_PTDs = [];    
+Plot_PTDs = [0,5];    
 
 fig_position = [50 50 1600 900];
 
@@ -62,12 +62,12 @@ fprintf('loaded %d spike channels.\n', nCh);
 %% ===================== LOAD BadChannels & BadTrials ==========
 BadCh_perSet = {};
 BadTrialsPerCh = {};
-badch_file = [base_name '.MultiISIs_BadChannels.mat'];
+badch_file = [base_name '.MultiISIsBadChannels.mat'];
 if isfile(badch_file)
     tmp = load(badch_file);
     if isfield(tmp,'BadCh_perSet'), BadCh_perSet = tmp.BadCh_perSet; end
 end
-badtr_file = [base_name '.MultiISIs_BadTrials.mat'];
+badtr_file = [base_name '.MultiISIsBadTrials.mat'];
 if isfile(badtr_file)
     tmp = load(badtr_file);
     if isfield(tmp,'BadTrials'), BadTrialsPerCh = tmp.BadTrials; end
@@ -75,7 +75,7 @@ end
 
 %% ===================== LOAD Responding Channels ==============
 Resp = [];
-resp_file = [base_name '_MultiISI_RespondingChannels.mat'];
+resp_file = [base_name '_MultiISIRespondingChannels.mat'];
 hasResp = false;
 if isfile(resp_file)
     tmp = load(resp_file);

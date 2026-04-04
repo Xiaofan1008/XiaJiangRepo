@@ -5,15 +5,15 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% Choose Folder
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_10uA_Single1_260326_170527'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_10uA_Single1_260402_191513'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Single3_251106_131759';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Seq5_New_251014_194221';
 
 %% Choice
 Spike_filtering = 0;
-raster_chn_start = 1;
-raster_chn_end = 64; %nChn
-Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+raster_chn_start = 14;
+raster_chn_end = 14; %nChn
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% Load folder
 if ~isfolder(data_folder)

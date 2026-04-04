@@ -71,14 +71,14 @@ end
 nCh = numel(sp);
 
 %% ================= LOAD BAD CHANNELS & BAD TRIALS =================
-bad_file = [base_name '.BadChannels_MultiISIs.mat'];
+bad_file = [base_name '.MultiISIsBadChannels.mat'];
 if isfile(bad_file)
     BadCh_perSet = load(bad_file).BadCh_perSet;   % cell{si}
 else
     BadCh_perSet = {};
 end
 
-bad_trials_file = [base_name '.BadTrials_MultiISIs.mat'];
+bad_trials_file = [base_name '._MultiISIsBadTrials.mat'];
 if isfile(bad_trials_file)
     BadTrials = load(bad_trials_file).BadTrials;  % BadTrials{ich}
 else
@@ -285,7 +285,7 @@ end
 
 %% ================= SAVE RESULT =================
 % Use fullfile to enforce saving to data_folder
-outfile = sprintf('%s_MultiISI_RespondingChannels.mat', base_name);
+outfile = sprintf('%s_MultiISIRespondingChannels.mat', base_name);
 full_out_path = fullfile(data_folder, outfile); 
 
 save(full_out_path, 'Responding', ...

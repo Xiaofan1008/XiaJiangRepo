@@ -10,7 +10,7 @@ clear; close all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX013/Xia_Exp1_Seq_Sim8';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4';
 Seq_PTD_Target = 5; 
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Active_Percentage';
 
@@ -103,7 +103,7 @@ legend([h1, h2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box',
 %% ================= 7. SAVE RESULTS =================
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
-out_name = fullfile(save_dir, ['Result_ActivePercentage_DX013_' exp_id '.mat']);
+out_name = fullfile(save_dir, ['Result_ActivePercentage_DX016_' exp_id '.mat']);
 save(out_name, 'PotencyResults', 'Amps', 'active_N');
 fprintf('\n>>> Potency Data Saved: %s\n', out_name);
 
@@ -148,8 +148,8 @@ end
 
 function [R, S, QC] = load_experiment_data(folder)
     cd(folder);
-    f = dir('*RespondingChannels.mat'); R = load(f(1).name).Responding;
+    f = dir('*_RespondingChannels.mat'); R = load(f(1).name).Responding;
     f_exp = dir('*_exp_datafile_*.mat'); S = load(f_exp(1).name);
-    QC.BadCh = []; f_bc = dir('*.BadChannels.mat'); 
+    QC.BadCh = []; f_bc = dir('*._BadChannels.mat'); 
     if ~isempty(f_bc), tmp = load(f_bc(1).name); QC.BadCh = tmp.BadCh_perSet; end
 end

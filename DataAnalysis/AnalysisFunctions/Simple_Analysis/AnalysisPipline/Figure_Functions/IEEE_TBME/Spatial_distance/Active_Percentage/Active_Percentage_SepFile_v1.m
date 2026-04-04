@@ -10,10 +10,10 @@ clear; close all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS =================
-sim_folder = '/Volumes/MACData/Data/Data_Xia/DX005/Xia_Exp1_Sim'; 
-seq_folder = '/Volumes/MACData/Data/Data_Xia/DX005/Xia_Exp1_Seq';
+sim_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim5'; 
+seq_folder = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq5_5ms';
 
-Seq_PTD_Target = 5.5; 
+Seq_PTD_Target = 5; 
 save_dir     = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Active_Percentage';
 
 %% =================== 1. LOAD DATA (DUAL) ====================
@@ -116,7 +116,7 @@ legend([h1, h2], {'Sim', 'Seq'}, 'Location', 'northwest', 'Box', 'off');
 %% ================= 7. SAVE RESULTS =================
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(seq_folder, filesep); exp_id = parts{end};
-out_name = fullfile(save_dir, ['Result_ActivePercentage_DX005_' exp_id '.mat']);
+out_name = fullfile(save_dir, ['Result_ActivePercentage_DX011_' exp_id '.mat']);
 save(out_name, 'PotencyResults', 'Amps', 'active_N');
 fprintf('\n>>> Potency Data Saved: %s\n', out_name);
 

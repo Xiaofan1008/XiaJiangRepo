@@ -20,7 +20,7 @@ bin_ms_raster = 1;             % ms, PSTH bin size
 smooth_ms     = 5;             % ms, Gaussian smoothing width
 
 % Which amplitudes to plot (µA). If empty → plot ALL amplitudes.
-Plot_Amps = [10];     % e.g. [4 6 8];  [] = all
+Plot_Amps = [5];     % e.g. [4 6 8];  [] = all
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
@@ -72,7 +72,7 @@ fprintf('  -> loaded %d spike channels.\n', nCh);
 %% ===================== LOAD BadChannels & BadTrials ==========
 BadCh_perSet = {};
 BadTrialsPerCh = {};
-badch_file = [base_name '.MultiISIs_BadChannels.mat'];
+badch_file = [base_name '.MultiISIsBadChannels.mat'];
 if isfile(badch_file)
     tmp = load(badch_file);
     if isfield(tmp,'BadCh_perSet')
@@ -84,7 +84,7 @@ if isfile(badch_file)
 else
     fprintf('No BadChannels.mat found – no channels marked as bad.\n');
 end
-badtr_file = [base_name '.MultiISIs_BadTrials.mat'];
+badtr_file = [base_name '.MultiISIsBadTrials.mat'];
 if isfile(badtr_file)
     tmp = load(badtr_file);
     if isfield(tmp,'BadTrials')
@@ -99,7 +99,7 @@ end
 
 %% ===================== LOAD Responding Channels ==============
 Resp = [];
-resp_file = [base_name '_MultiISI_RespondingChannels.mat'];
+resp_file = [base_name '_MultiISIRespondingChannels.mat'];
 hasResp = false;
 if isfile(resp_file)
     tmp = load(resp_file);

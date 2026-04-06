@@ -8,7 +8,7 @@
 %       5. Plotting: Generates 1x2 spatial profiles per amplitude and 1 master D90 curve.
 %       6. Export: Saves high-resolution .tiff files for publication.
 % ============================================================
-clear; close all;
+clear; 
 
 %% ================= USER SETTINGS =================
 % Paste your specific list of .mat files here
@@ -68,7 +68,7 @@ file_paths = {
 
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Outer_Spatial_Analysis';
 save_figures = false; % Set to true to export .tiff files
-tiff_dpi     = 300;  % High resolution for IEEE publication
+tiff_dpi     = 600;  % High resolution for IEEE publication
 
 %% ================= 1. DYNAMIC DATA HARVESTING =================
 fprintf('Scanning explicitly provided .mat files...\n');
@@ -89,10 +89,17 @@ MasterAmps = unique(all_amps_collected);
 MasterAmps(MasterAmps == 0) = []; % Remove 0uA baseline if it exists
 
 % B. Load the spatial bins from the first file to establish the X-axes
-tmp = load(file_paths{1}, 'dist_bin_edges');
-dist_bin_edges = tmp.dist_bin_edges;
+% tmp = load(file_paths{1}, 'dist_bin_edges');
+% dist_bin_edges = tmp.dist_bin_edges;
+% bin_centers = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2;
+% num_bins = length(bin_centers);
+
+dist_bin_edges = 0 : 100 : 700; % Changed from 50 to 100
 bin_centers = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2;
 num_bins = length(bin_centers);
+
+fprintf('Loaded %d files. Bins set to 100um. Master Amplitudes: ', num_files);
+fprintf('%.1f ', MasterAmps); fprintf('uA\n');
 
 fprintf('Loaded %d files. Identified Master Amplitudes: ', num_files);
 fprintf('%.1f ', MasterAmps); fprintf('uA\n');
@@ -128,18 +135,43 @@ for f = 1:num_files
             if isempty(master_idx), continue; end
             
             % This prevents the vertcat crash if older files have different bin lengths
-            p_sim = D.Prob_Outer_Sim(:)'; p_seq = D.Prob_Outer_Seq(:)';
-            d_sim = D.Density_Outer_Sim(:)'; d_seq = D.Density_Outer_Seq(:)';
-            
-            % Pad with NaNs if the loaded array is shorter than master num_bins
-            if length(p_sim) < num_bins, p_sim = [p_sim, nan(1, num_bins - length(p_sim))]; end
-            if length(p_seq) < num_bins, p_seq = [p_seq, nan(1, num_bins - length(p_seq))]; end
-            if length(d_sim) < num_bins, d_sim = [d_sim, nan(1, num_bins - length(d_sim))]; end
-            if length(d_seq) < num_bins, d_seq = [d_seq, nan(1, num_bins - length(d_seq))]; end
-            
-            % Truncate if the loaded array is longer than master num_bins
-            p_sim = p_sim(1:num_bins); p_seq = p_seq(1:num_bins);
-            d_sim = d_sim(1:num_bins); d_seq = d_seq(1:num_bins);
+            % p_sim = D.Prob_Outer_Sim(:)'; p_seq = D.Prob_Outer_Seq(:)';
+            % d_sim = D.Density_Outer_Sim(:)'; d_seq = D.Density_Outer_Seq(:)';
+            % 
+            % % Pad with NaNs if the loaded array is shorter than master num_bins
+            % if length(p_sim) < num_bins, p_sim = [p_sim, nan(1, num_bins - length(p_sim))]; end
+            % if length(p_seq) < num_bins, p_seq = [p_seq, nan(1, num_bins - length(p_seq))]; end
+            % if length(d_sim) < num_bins, d_sim = [d_sim, nan(1, num_bins - length(d_sim))]; end
+            % if length(d_seq) < num_bins, d_seq = [d_seq, nan(1, num_bins - length(d_seq))]; end
+            % 
+            % % Truncate if the loaded array is longer than master num_bins
+            % p_sim = p_sim(1:num_bins); p_seq = p_seq(1:num_bins);
+            % d_sim = d_sim(1:num_bins); d_seq = d_seq(1:num_bins);
+
+            % Grab the raw 50um vectors saved in your .mat files
+            raw_p_sim = D.Prob_Outer_Sim(:)'; raw_p_seq = D.Prob_Outer_Seq(:)';
+            raw_d_sim = D.Density_Outer_Sim(:)'; raw_d_seq = D.Density_Outer_Seq(:)';
+
+            % Preallocate the new 100um vectors
+            p_sim = nan(1, num_bins); p_seq = nan(1, num_bins);
+            d_sim = nan(1, num_bins); d_seq = nan(1, num_bins);
+
+            for b = 1:num_bins
+                % Map the 100um bin back to the two 50um indices in the file
+                idx1 = (b*2) - 1; 
+                idx2 = b*2;
+                
+                % Check if these indices exist in the raw file
+                if idx2 <= length(raw_p_sim)
+                    % Probability: Average the two 50um windows
+                    p_sim(b) = mean([raw_p_sim(idx1), raw_p_sim(idx2)], 'omitnan');
+                    p_seq(b) = mean([raw_p_seq(idx1), raw_p_seq(idx2)], 'omitnan');
+                    
+                    % Density: Sum the two 50um windows (since it's a fraction of total)
+                    d_sim(b) = sum([raw_d_sim(idx1), raw_d_sim(idx2)], 'omitnan');
+                    d_seq(b) = sum([raw_d_seq(idx1), raw_d_seq(idx2)], 'omitnan');
+                end
+            end
             
             % Append spatial profile data safely
             Master_Prob_Sim{master_idx}    = [Master_Prob_Sim{master_idx}; p_sim];
@@ -210,120 +242,225 @@ end
 
 %% ================= 4. COMMAND WINDOW SUMMARY =================
 fprintf('\n====================================================================\n');
-fprintf('     POPULATION STATISTICS: D90 CONTAINMENT BOUNDARY (Sim vs Seq)   \n');
+fprintf('     PART A: D90 CONTAINMENT BOUNDARY SUMMARY (Sim vs Seq)          \n');
 fprintf('====================================================================\n');
 fprintf('%-6s | %-4s | %-15s | %-15s | %-10s | %-6s\n', 'Amp', 'N', 'D90 Sim (um)', 'D90 Seq (um)', 'p-value', 'Sig');
 fprintf('--------------------------------------------------------------------\n');
+
 for a = 1:length(MasterAmps)
     P = PopResults.Amp(a);
     if isempty(P.N) || P.N == 0, continue; end
     
-    sig_str = ''; if P.D90_pval < 0.05, sig_str = '*'; end
-    if P.D90_pval < 0.01, sig_str = '**'; end
-    if P.D90_pval < 0.001, sig_str = '***'; end
+    % Tiered Star Logic
+    sig_str = ''; 
+    if P.D90_pval < 0.001, sig_str = '***';
+    elseif P.D90_pval < 0.01, sig_str = '**';
+    elseif P.D90_pval < 0.05, sig_str = '*'; end
     
-    fprintf('%4.1fuA | %-4d | %5.1f ± %-5.1f | %5.1f ± %-5.1f | %-10.4f | %s\n', ...
+    fprintf('%4.1fuA | %-4d | %5.1f ± %-5.1f | %5.1f ± %-5.1f | %-10.6f | %s\n', ...
         P.Val, P.N, P.D90_Sim_Mean, P.D90_Sim_SEM, P.D90_Seq_Mean, P.D90_Seq_SEM, P.D90_pval, sig_str);
 end
-fprintf('\n');
 
-%% ================= 5. PLOTTING: 1x2 PER AMPLITUDE (TIFF EXPORT) =================
+fprintf('\n====================================================================\n');
+fprintf('     PART B: DETAILED SPATIAL PROFILES (100um Bins)                 \n');
+fprintf('====================================================================\n');
+
+for a = 1:length(MasterAmps)
+    P = PopResults.Amp(a);
+    if isempty(P.N) || P.N == 0, continue; end
+    
+    fprintf('\n--- AMPLITUDE: %.1f uA (N = %d) ---\n', P.Val, P.N);
+    fprintf('%-10s | %-20s | %-20s | %-10s | %-4s\n', 'Bin (um)', 'Prob Sim (%)', 'Prob Seq (%)', 'p-val', 'Sig');
+    fprintf('----------------------------------------------------------------------------\n');
+    
+    for b = 1:num_bins
+        % Probability Stars
+        p_prob = P.Prob_pvals(b);
+        s_prob = '';
+        % if p_prob < 0.001, s_prob = '***'; elseif p_prob < 0.01, s_prob = '**'; elseif p_prob < 0.05, s_prob = '*'; end
+        
+        % Note: We convert probability to % here to match your Figure 1
+        fprintf('%4.0f-%-4.0f | %5.1f ± %-5.1f       | %5.1f ± %-5.1f       | %-10.4f | %s\n', ...
+            dist_bin_edges(b), dist_bin_edges(b+1), ...
+            P.Prob_Sim_Mean(b)*100, P.Prob_Sim_SEM(b)*100, ...
+            P.Prob_Seq_Mean(b)*100, P.Prob_Seq_SEM(b)*100, ...
+            p_prob, s_prob);
+    end
+    
+    % Optional: Add a small gap or Density summary here if needed
+    fprintf('   [Spatial Density Mean (Sim vs Seq)]: ');
+    fprintf('%.2f vs %.2f at first bin.\n', P.Dens_Sim_Mean(1), P.Dens_Seq_Mean(1));
+end
+fprintf('\n======================= END OF STATISTICS ==========================\n');
+
+%% ================= 5. PLOTTING: SEPARATED IEEE FIGURES (Arial 9pt) =================
+% if save_figures && ~exist(save_dir, 'dir'), mkdir(save_dir); end
+% 
+% for a = 1:length(MasterAmps)
+%     P = PopResults.Amp(a);
+%     if isempty(P.N) || P.N < 2, continue; end 
+% 
+%     % --- FIGURE 1: LEAKAGE PROBABILITY (SHADED RIBBONS) ---
+%     fig1 = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8], 'Color', 'w', 'Name', sprintf('Prob_%.1fuA', P.Val));
+%     hold on;
+% 
+%     % Data Prep (convert to %)
+%     y_sim = P.Prob_Sim_Mean * 100; err_sim = P.Prob_Sim_SEM * 100;
+%     y_seq = P.Prob_Seq_Mean * 100; err_seq = P.Prob_Seq_SEM * 100;
+% 
+%     % Use standard errorbar with Caps
+%     errorbar(bin_centers, y_sim, err_sim, '--ok', 'LineWidth', 1.2, 'MarkerSize', 4, ...
+%         'MarkerFaceColor', 'w', 'CapSize', 4, 'DisplayName', 'Sim');
+% 
+%     errorbar(bin_centers, y_seq, err_seq, '-sk', 'LineWidth', 1.2, 'MarkerSize', 4, ...
+%         'MarkerFaceColor', 'k', 'CapSize', 4, 'DisplayName', 'Seq');
+% 
+%     % Tiered Significance Stars
+%     for b = 1:num_bins
+%         pval = P.Prob_pvals(b);
+%         sig_str = '';
+%         if pval < 0.001, sig_str = '***'; elseif pval < 0.01, sig_str = '**'; elseif pval < 0.05, sig_str = '*'; end
+% 
+%         if ~isempty(sig_str)
+%             y_pos = max([y_sim(b), y_seq(b)]) + 10;
+%             text(bin_centers(b), y_pos, sig_str, 'FontSize', 9, 'FontName', 'Arial', 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+%         end
+%     end
+% 
+%     % Formatting
+%     xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial');
+%     ylabel('Activation Probability (%)', 'FontSize', 9, 'FontName', 'Arial');
+%     set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off');
+%     xlim([0 700]); ylim([0 100]); axis square;
+%     legend('Location', 'northeast', 'Box', 'off');
+% 
+%     if save_figures
+%         exportgraphics(fig1, fullfile(save_dir, sprintf('Prob_Profile_%.1fuA.tiff', P.Val)), 'Resolution', tiff_dpi);
+%     end
+% 
+%     % --- FIGURE 2: SPATIAL DENSITY (CLEAR LEGEND & WIDE BARS) ---
+%     fig2 = figure('Units', 'centimeters', 'Position', [11, 2, 8.8, 8], 'Color', 'w', ...
+%                   'Name', sprintf('Dens_%.1fuA', P.Val));
+%     hold on;
+% 
+%     % 1. Increase BarWidth to 1.0 so bars fill the space better
+%     % 2. Explicitly set DisplayNames for a clear legend
+%     b_plot = bar(bin_centers, [P.Dens_Sim_Mean(:), P.Dens_Seq_Mean(:)], 'grouped', 'BarWidth', 1.0);
+% 
+%     % Simultaneous Style (Grey)
+%     b_plot(1).FaceColor = [0.8 0.8 0.8]; 
+%     b_plot(1).EdgeColor = 'k'; 
+%     b_plot(1).LineWidth = 0.8;
+%     b_plot(1).DisplayName = 'Simultaneous'; % <--- Change this for legend
+% 
+%     % Sequential Style (Black)
+%     b_plot(2).FaceColor = [0 0 0];       
+%     b_plot(2).EdgeColor = 'k'; 
+%     b_plot(2).LineWidth = 0.8;
+%     b_plot(2).DisplayName = 'Sequential';   % <--- Change this for legend
+% 
+%     % --- REFINED ERROR BARS: No Caps, Slightly Thicker ---
+%     errorbar(b_plot(1).XEndPoints, P.Dens_Sim_Mean, zeros(size(P.Dens_Sim_SEM)), P.Dens_Sim_SEM, ...
+%         'k', 'LineStyle', 'none', 'LineWidth', 1.0, 'CapSize', 0, 'HandleVisibility','off');
+% 
+%     errorbar(b_plot(2).XEndPoints, P.Dens_Seq_Mean, zeros(size(P.Dens_Seq_SEM)), P.Dens_Seq_SEM, ...
+%         'k', 'LineStyle', 'none', 'LineWidth', 1.0, 'CapSize', 0, 'HandleVisibility','off');
+% 
+%     % (Significance stars logic here remains the same)
+% 
+%     % --- FORMATTING (Arial 9pt) ---
+%     xlabel('Distance (\mum)', 'FontSize', 9, 'FontName', 'Arial');
+%     ylabel('Fraction of Total Response', 'FontSize', 9, 'FontName', 'Arial');
+%     set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.5, 'Box', 'off');
+%     set(gca, 'XTick', 0:100:700); % Finer X-axis ticks for wider bars
+%     xlim([0 700]); ylim([0 0.2]); % Extra headroom for stars
+%     axis square;
+% 
+%     % Legend with clear labels
+%     legend('Location', 'northeast', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
+% 
+%     if save_figures
+%         exportgraphics(fig2, fullfile(save_dir, sprintf('Dens_Profile_%.1fuA.tiff', P.Val)), 'Resolution', tiff_dpi);
+%     end
+% end
+
+
 if save_figures && ~exist(save_dir, 'dir'), mkdir(save_dir); end
 
 for a = 1:length(MasterAmps)
     P = PopResults.Amp(a);
-    if isempty(P.N) || P.N < 2, continue; end % Need at least N=2 for error bars
+    if isempty(P.N) || P.N < 2, continue; end 
     
-    fig = figure('Units', 'centimeters', 'Position', [2, 2, 20, 9], 'Color', 'w', ...
-                 'Name', sprintf('Pop Spatial - %.1fuA', P.Val));
-    t = tiledlayout(1, 2, 'TileSpacing', 'compact');
+    % --- FIGURE 1: LEAKAGE PROBABILITY (CAPPED ERROR BARS) ---
+    fig1 = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8], 'Color', 'w', ...
+                  'Name', sprintf('Prob_%.1fuA', P.Val));
+    hold on;
     
-    % --- PANEL A: PROBABILITY DECAY ---
-    nexttile; hold on;
-    % Plot lines and standard vertical error bars
-    errorbar(bin_centers, P.Prob_Sim_Mean, P.Prob_Sim_SEM, '--ok', 'LineWidth', 1.5, 'MarkerFaceColor', 'w', 'DisplayName', 'Sim');
-    errorbar(bin_centers, P.Prob_Seq_Mean, P.Prob_Seq_SEM, '-sk', 'LineWidth', 1.5, 'MarkerFaceColor', 'k', 'DisplayName', 'Seq');
+    y_sim = P.Prob_Sim_Mean * 100; err_sim = P.Prob_Sim_SEM * 100;
+    y_seq = P.Prob_Seq_Mean * 100; err_seq = P.Prob_Seq_SEM * 100;
     
-    % Add Significance Asterisks
+    % Use standard errorbar with Caps
+    errorbar(bin_centers, y_sim, err_sim, '--ok', 'LineWidth', 1.2, 'MarkerSize', 4, ...
+        'MarkerFaceColor', 'w', 'CapSize', 4, 'DisplayName', 'Simultaneous');
+    errorbar(bin_centers, y_seq, err_seq, '-sk', 'LineWidth', 1.2, 'MarkerSize', 4, ...
+        'MarkerFaceColor', 'k', 'CapSize', 4, 'DisplayName', 'Sequential');
+        
+    % Tiered Significance Stars
     for b = 1:num_bins
-        if P.Prob_pvals(b) < 0.05
-            y_pos = max([P.Prob_Sim_Mean(b), P.Prob_Seq_Mean(b)]) + 0.1;
-            text(bin_centers(b), y_pos, '*', 'FontSize', 16, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+        pval = P.Prob_pvals(b);
+        sig_str = '';
+        if pval < 0.001, sig_str = '***'; elseif pval < 0.01, sig_str = '**'; elseif pval < 0.05, sig_str = '*'; end
+        if ~isempty(sig_str)
+            y_pos = max([y_sim(b)+err_sim(b), y_seq(b)+err_seq(b)]) + 8;
+            text(bin_centers(b), y_pos, sig_str, 'FontSize', 9, 'FontName', 'Arial', 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
         end
     end
     
-    title(sprintf('A. Leakage Probability (%.1f \\muA, N=%d)', P.Val, P.N)); 
-    xlabel('Distance from Boundary (\mum)'); ylabel('Probability of Activation');
-    ylim([0 1.2]); xlim([0 800]); grid off; box off;
-    legend('Location', 'northeast', 'Box', 'off'); 
-
-    % --- PANEL B: DENSITY FOOTPRINT ---
-    nexttile; hold on;
-    bar_data = [P.Dens_Sim_Mean(:), P.Dens_Seq_Mean(:)];
-    b_plot = bar(bin_centers, bar_data, 'grouped');
-    b_plot(1).FaceColor = 'w'; b_plot(1).EdgeColor = 'k'; b_plot(1).LineWidth = 1.2;
-    b_plot(2).FaceColor = 'k'; b_plot(2).EdgeColor = 'k'; b_plot(2).LineWidth = 1.2;
-    
-    % Advanced Trick: Add error bars to grouped bars using XEndPoints
-    x1 = b_plot(1).XEndPoints; x2 = b_plot(2).XEndPoints;
-    errorbar(x1, P.Dens_Sim_Mean, P.Dens_Sim_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1);
-    errorbar(x2, P.Dens_Seq_Mean, P.Dens_Seq_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1);
-    
-    % Add Significance Asterisks
-    for b = 1:num_bins
-        if P.Dens_pvals(b) < 0.05
-            y_pos = max([P.Dens_Sim_Mean(b)+P.Dens_Sim_SEM(b), P.Dens_Seq_Mean(b)+P.Dens_Seq_SEM(b)]) + 0.05;
-            text(bin_centers(b), y_pos, '*', 'FontSize', 16, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
-        end
-    end
-    
-    title(sprintf('B. Spatial Density (%.1f \\muA, N=%d)', P.Val, P.N)); 
-    xlabel('Distance from Boundary (\mum)'); ylabel('Fraction of Total Response');
-    ylim([0 0.2]); xlim([0 800]); grid off; box off;
-    
-    % Export to TIFF
+    xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial');
+    ylabel('Activation Probability (%)', 'FontSize', 9, 'FontName', 'Arial');
+    set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off');
+    set(gca, 'XTick', 0:100:700);
+    xlim([0 700]); ylim([0 100]); % Extra headroom for stars
+    axis square; legend('Location', 'northeast', 'Box', 'off');
+   
     if save_figures
-        filename = fullfile(save_dir, sprintf('Pop_Spatial_Profile_%.1fuA.tiff', P.Val));
-        exportgraphics(fig, filename, 'Resolution', tiff_dpi);
+        exportgraphics(fig1, fullfile(save_dir, sprintf('Prob_Profile_%.1fuA.tiff', P.Val)), 'Resolution', tiff_dpi);
     end
-end
 
-%% ================= 6. PLOTTING: D90 TUNING CURVE (TIFF EXPORT) =================
-fig_d90 = figure('Units', 'centimeters', 'Position', [5, 5, 12, 10], 'Color', 'w', 'Name', 'Population D90 Curve');
-hold on; 
-
-% Extract valid data for plotting
-valid_amps = []; sim_means = []; sim_sems = []; seq_means = []; seq_sems = []; pvals = [];
-for a = 1:length(MasterAmps)
-    if isempty(PopResults.Amp(a).N) || PopResults.Amp(a).N < 2, continue; end
-    valid_amps = [valid_amps; PopResults.Amp(a).Val];
-    sim_means = [sim_means; PopResults.Amp(a).D90_Sim_Mean];
-    sim_sems  = [sim_sems; PopResults.Amp(a).D90_Sim_SEM];
-    seq_means = [seq_means; PopResults.Amp(a).D90_Seq_Mean];
-    seq_sems  = [seq_sems; PopResults.Amp(a).D90_Seq_SEM];
-    pvals     = [pvals; PopResults.Amp(a).D90_pval];
-end
-
-% Plot Lines with Error Bars
-errorbar(valid_amps, sim_means, sim_sems, '--ok', 'LineWidth', 1.5, 'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous');
-errorbar(valid_amps, seq_means, seq_sems, '-sk', 'LineWidth', 1.5, 'MarkerFaceColor', 'k', 'DisplayName', 'Sequential');
-
-% Add Significance Asterisks above the highest line at that amplitude
-for i = 1:length(valid_amps)
-    if pvals(i) < 0.05
-        y_pos = max([sim_means(i)+sim_sems(i), seq_means(i)+seq_sems(i)]) + 20; % Offset visually
-        text(valid_amps(i), y_pos, '*', 'FontSize', 16, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+    % --- FIGURE 2: SPATIAL DENSITY (WIDE BARS, NO CAPS) ---
+    fig2 = figure('Units', 'centimeters', 'Position', [11, 2, 8.8, 8], 'Color', 'w', ...
+                  'Name', sprintf('Dens_%.1fuA', P.Val));
+    hold on;
+    
+    b_plot = bar(bin_centers, [P.Dens_Sim_Mean(:), P.Dens_Seq_Mean(:)], 'grouped', 'BarWidth', 1.0);
+    b_plot(1).FaceColor = [0.8 0.8 0.8]; b_plot(1).EdgeColor = 'k'; b_plot(1).LineWidth = 0.8; b_plot(1).DisplayName = 'Simultaneous';
+    b_plot(2).FaceColor = [0 0 0];       b_plot(2).EdgeColor = 'k'; b_plot(2).LineWidth = 0.8; b_plot(2).DisplayName = 'Sequential';
+    
+    % Error Bars: No Caps, clean vertical lines
+    errorbar(b_plot(1).XEndPoints, P.Dens_Sim_Mean, zeros(size(P.Dens_Sim_SEM)), P.Dens_Sim_SEM, ...
+        'k', 'LineStyle', 'none', 'LineWidth', 1.0, 'CapSize', 0, 'HandleVisibility','off');
+    errorbar(b_plot(2).XEndPoints, P.Dens_Seq_Mean, zeros(size(P.Dens_Seq_SEM)), P.Dens_Seq_SEM, ...
+        'k', 'LineStyle', 'none', 'LineWidth', 1.0, 'CapSize', 0, 'HandleVisibility','off');
+    
+    % Tiered Significance Stars
+    % for b = 1:num_bins
+    %     pval = P.Dens_pvals(b);
+    %     sig_str = '';
+    %     if pval < 0.001, sig_str = '***'; elseif pval < 0.01, sig_str = '**'; elseif pval < 0.05, sig_str = '*'; end
+    %     if ~isempty(sig_str)
+    %         y_top = max([P.Dens_Sim_Mean(b)+P.Dens_Sim_SEM(b), P.Dens_Seq_Mean(b)+P.Dens_Seq_SEM(b)]) + 0.02;
+    %         text(bin_centers(b), y_top, sig_str, 'FontSize', 9, 'FontName', 'Arial', 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+    %     end
+    % end
+    
+    xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial');
+    ylabel('Fraction of Total Response', 'FontSize', 9, 'FontName', 'Arial');
+    set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off');
+    set(gca, 'XTick', 0:100:700);
+    xlim([0 700]); ylim([0 0.25]); % Increased limit for 100um binning
+    axis square; legend('Location', 'northeast', 'Box', 'off');
+    
+    if save_figures
+        exportgraphics(fig2, fullfile(save_dir, sprintf('Dens_Profile_%.1fuA.tiff', P.Val)), 'Resolution', tiff_dpi);
     end
-end
-
-xlabel('Current Amplitude (\muA)'); ylabel('Containment Boundary D_{90} (\mum)'); 
-title('Population Maximum Spatial Extent'); axis square;
-set(gca, 'TickDir', 'out', 'Box', 'off');
-legend('Location', 'northwest', 'Box', 'off');
-
-% Export to TIFF
-if save_figures
-    filename = fullfile(save_dir, 'Pop_D90_TuningCurve.tiff');
-    exportgraphics(fig_d90, filename, 'Resolution', tiff_dpi);
-    fprintf('\n>>> All High-Resolution .tiff Figures successfully saved to:\n%s\n', save_dir);
 end

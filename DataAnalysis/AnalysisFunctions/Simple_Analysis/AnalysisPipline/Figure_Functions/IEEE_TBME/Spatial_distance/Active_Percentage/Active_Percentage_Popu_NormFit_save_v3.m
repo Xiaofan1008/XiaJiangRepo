@@ -171,8 +171,8 @@ fName_Font = 'Arial';
 % --- PANEL 1: Standard Normalization ---
 figure('Color','w', 'Units', 'centimeters', 'Position', [2, 5, fig_Width, fig_Height], 'Name', 'Panel_A_Standard');
 hold on;
-errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1.2, 'MarkerFaceColor','w', 'DisplayName', 'Sim');
-errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1.2, 'MarkerFaceColor','k', 'DisplayName', 'Seq');
+errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
+errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
 ylabel('Normalized Active Percentage', 'FontName', fName_Font, 'FontSize', fSize); 
 xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fSize);
 % title('Standard (Max-Scaled)', 'FontName', fName_Font, 'FontSize', fSize); 
@@ -194,9 +194,9 @@ opts.Upper = [100, 15, 100];
 [fitobj, gof] = fit(sum_amps, mDelta(:,1), ft, opts);
 xq = linspace(0, 10, 100);
 yq = feval(fitobj, xq);
-plot(xq, yq, '-', 'Color', [0.4 0.4 0.4], 'LineWidth', 2.5); % The Trend Line
+plot(xq, yq, '-', 'Color', [0.4 0.4 0.4], 'LineWidth', 1.5); % The Trend Line
 % Plot Mean Markers (Black circles on top)
-errorbar(sum_amps, mDelta(:,1), mDelta(:,2), 'ok', 'LineWidth', 1.5, 'MarkerFaceColor', 'k', 'LineStyle', 'none');
+errorbar(sum_amps, mDelta(:,1), mDelta(:,2), 'ok', 'LineWidth', 1, 'MarkerFaceColor', 'k', 'LineStyle', 'none');
 
 % % Add ANOVA Spanning Bracket instead of point-by-point stars
 % y_bracket = max(mDelta(:,1) + mDelta(:,2)) + 2.5; % Set bracket above highest error bar
@@ -288,7 +288,7 @@ function add_sig_stars(x, y1, y2, y2_err, pvals)
         txt = ''; if p < 0.001, txt = '***'; elseif p < 0.01, txt = '**'; elseif p < 0.05, txt = '*'; end
         if ~isempty(txt)
             y_max = max(y1(i), y2(i) + y2_err(i));
-            text(x(i), y_max * 1.08, txt, 'FontSize', 9, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+            text(x(i), y_max * 1.05, txt, 'FontSize', 9, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
         end
     end
 end

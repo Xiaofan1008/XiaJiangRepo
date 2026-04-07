@@ -13,7 +13,7 @@ data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1';
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze (e.g., [0, 5, 10, 15])
-target_ISIs = [0, 3,4,5,6,7,8,9,10,11,12,13,14,15,17,20]; 
+target_ISIs = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,17,20]; 
 
 % Choose the FIXED macro window [start, end]
 % This wide window is used for EVERY condition to ensure 100% fairness
@@ -23,7 +23,7 @@ fixed_macro_win_ms = [0, 40];
 baseline_win_ms = [-50, -10]; 
 
 % Choose which amplitude to run the Statistical Comparison on
-target_Amp_Stats = 10; % uA
+target_Amp_Stats = 5; % uA
 
 % Choose whether to involve bad trials
 exclude_bad_trials = true; % true = remove them, false = keep all trials
@@ -253,7 +253,7 @@ parts = split(data_folder, filesep); exp_id = parts{end};
 isi_str = strjoin(string(target_ISIs), '_');
 
 % Rename save file to reflect Classic Fixed Macro-Window
-out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_' char(isi_str) 'ms_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_5uA_' char(isi_str) 'ms_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);
@@ -323,7 +323,7 @@ end
 
 function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
-    f = dir('*MultiISI_RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
+    f = dir('*MultiISIRespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
     R = load(f(1).name).Responding;
     
     f = dir('*sp_xia_SSD.mat'); if isempty(f), f=dir('*sp_xia.mat'); end
@@ -335,6 +335,6 @@ function [R, sp, trig, S, QC] = load_experiment_data(folder)
     S = load(dir('*_exp_datafile_*.mat').name);
     
     QC.BadCh = []; QC.BadTrials = [];
-    f_bc = dir('*.MultiISIs_BadChannels.mat'); if ~isempty(f_bc), tmp = load(f_bc(1).name); QC.BadCh = tmp.BadCh_perSet; end
-    f_bt = dir('*.MultiISIs_BadTrials.mat'); if ~isempty(f_bt), tmp = load(f_bt(1).name); QC.BadTrials = tmp.BadTrials; end
+    f_bc = dir('*.MultiISIsBadChannels.mat'); if ~isempty(f_bc), tmp = load(f_bc(1).name); QC.BadCh = tmp.BadCh_perSet; end
+    f_bt = dir('*.MultiISIsBadTrials.mat'); if ~isempty(f_bt), tmp = load(f_bt(1).name); QC.BadTrials = tmp.BadTrials; end
 end

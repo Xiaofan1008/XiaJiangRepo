@@ -9,8 +9,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-sim_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6';
-seq_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms';
+sim_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim1';
+seq_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq1';
 
 Electrode_Type = 1; 
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance';
@@ -148,7 +148,9 @@ Results.Amps = Amps;
 for ss = 1:nSets_seq
     stimCh = uniqueComb_seq(ss,:);
     shank1 = ceil(stimCh(1) / 16);
-    if ceil(stimCh(2) / 16) ~= shank1, continue; end
+    % if ceil(stimCh(2) / 16) ~= shank1, continue; end
+    % Only skip if it's a 4-shank probe (Type 2) AND stim electrodes are split
+    if Electrode_Type == 2 && ceil(stimCh(2) / 16) ~= shank1, continue; end
     C_idx = (stimCh(1) + stimCh(2)) / 2;
     
     Results.SpatialSets(ss).stimCh = stimCh;
@@ -170,7 +172,9 @@ for ss = 1:nSets_seq
         ax = nexttile; hold on;
         x_dist = []; y_sim = []; y_seq = [];
         for ch_idx = 1:nCh_Total
-            if ceil(ch_idx / 16) == shank1
+            % if ceil(ch_idx / 16) == shank1
+                % If single shank, plot all channels. If 4-shank, filter by shank ID.
+            if Electrode_Type == 1 || ceil(ch_idx / 16) == shank1
                 dist = (ch_idx - C_idx) * 50;
                 s_v = Raw_Sim_All(ch_idx, ai, ss); q_v = Raw_Seq_All(ch_idx, ai, ss);
                 if ~isnan(s_v) || ~isnan(q_v)
@@ -207,7 +211,7 @@ end
 %% =================== 4. SAVE ====================
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 [~, folder_name] = fileparts(seq_folder);
-out_name = fullfile(save_dir, ['SpikeCount_vs_Distance_DX012_' folder_name '.mat']);
+out_name = fullfile(save_dir, ['SpikeCount_vs_Distance_DX0010_' folder_name '.mat']);
 save(out_name, 'Results');
 fprintf('\n>>> Results Saved to: %s\n', out_name);
 

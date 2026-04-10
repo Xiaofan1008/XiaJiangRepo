@@ -17,7 +17,7 @@ raster_chn_end   = 64;         % Depth_s index end
 
 % ---- Counting Windows (Relative to 1st Pulse Trigger) ----
 baseline_win_ms  = [-50 0];    % Window to count baseline spikes
-post_win_ms      = [2 50];   % Window to count evoked/response spikes
+post_win_ms      = [2 20];   % Window to count evoked/response spikes
 
 FS = 30000;                    % Sampling rate
 
@@ -210,7 +210,7 @@ for si = 1:nSets
 end % End Set Loop
 
 %% ===================== SAVE RESULTS ==========================
-save_name = sprintf('%s_ISI_TrialSpikeCounts.mat', base_name);
+save_name = sprintf('%s_SimvsSeq_TrialSpikeCounts.mat', base_name);
 full_save_path = fullfile(data_folder, save_name);
 
 save(full_save_path, 'SpikeCounts', 'baseline_win_ms', 'post_win_ms', ...

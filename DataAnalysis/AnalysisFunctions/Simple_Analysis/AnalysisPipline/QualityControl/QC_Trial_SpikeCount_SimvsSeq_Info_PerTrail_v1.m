@@ -1,9 +1,8 @@
 %% ========================================================================
-%  Spike Count Summary Extractor (All Trials & Channels)
+%  Spike Count Summary Extractor (Trial-Centric)
 %  Extracts baseline and post-stimulus spike counts per trial,
-%  grouped strictly by Set -> Amp -> PTD -> Channel.
-%  Includes Metadata Labels at every level to prevent click-fatigue,
-%  and groups trial data into a single readable MATLAB Table.
+%  grouped strictly by Set -> Amp -> PTD -> Trial.
+%  Shows all 64 channels in a single table per trial.
 % ========================================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
@@ -17,7 +16,7 @@ raster_chn_end   = 64;         % Depth_s index end
 
 % ---- Counting Windows (Relative to 1st Pulse Trigger) ----
 baseline_win_ms  = [-50 0];    % Window to count baseline spikes
-post_win_ms      = [2 50];   % Window to count evoked/response spikes
+post_win_ms      = [2 20];   % Window to count evoked/response spikes
 
 FS = 30000;                    % Sampling rate
 
@@ -149,68 +148,70 @@ for si = 1:nSets
                 continue;
             end
             
-            for idxDepth = 1:numel(depth_range)
+            nTr_cond = numel(trials_this_condition);
+            nChns    = numel(depth_range);
+            
+            % [MODIFIED] SWAPPED LOOP ORDER: Loop by Trial first
+            for k = 1:nTr_cond
                 
-                ich = depth_range(idxDepth);   % Depth index (1-64)
-                ch  = d(ich);                  % Intan hardware channel
+                tr = trials_this_condition(k); % Absolute trial ID
+                t0 = trig(tr) / FS * 1000;     % Trigger time of 1st pulse in ms
                 
-                % [METADATA LEVEL 4: CHANNEL]
-                SpikeCounts.set(si).amp(ai).ptd(pi).channel(ich).depth_index   = ich;
-                SpikeCounts.set(si).amp(ai).ptd(pi).channel(ich).intan_channel = ch;
+                % Define exact windows anchored to the 1st pulse
+                win_base_start = t0 + baseline_win_ms(1);
+                win_base_end   = t0 + baseline_win_ms(2);
                 
-                % Handle dead/empty channels cleanly by creating an empty table
-                if ch < 1 || ch > nCh || isempty(sp{ch})
-                    empty_table = table([], [], [], [], 'VariableNames', ...
-                        {'Absolute_Trial', 'Relative_Trial', 'Baseline_Spikes', 'Post_Spikes'});
-                    SpikeCounts.set(si).amp(ai).ptd(pi).channel(ich).Trial_Results = empty_table;
-                    continue;
-                end
+                win_post_start = t0 + post_win_ms(1);
+                win_post_end   = t0 + post_win_ms(2);
                 
-                sp_times = sp{ch}(:,1); % All spike times for this channel in ms
-                nTr_cond = numel(trials_this_condition);
+                % [METADATA LEVEL 4: TRIAL]
+                SpikeCounts.set(si).amp(ai).ptd(pi).trial(k).relative_trial_ID = k;
+                SpikeCounts.set(si).amp(ai).ptd(pi).trial(k).absolute_trial_ID = tr;
                 
-                % Pre-allocate arrays to hold the counts
-                abs_trials = zeros(nTr_cond, 1);
-                rel_trials = zeros(nTr_cond, 1);
-                base_cnts  = zeros(nTr_cond, 1);
-                post_cnts  = zeros(nTr_cond, 1);
+                % Pre-allocate 64-row arrays for this specific trial's channels
+                % Using zeros() ensures dead channels will automatically have 0 spikes
+                depth_idx_arr = zeros(nChns, 1);
+                intan_ch_arr  = zeros(nChns, 1);
+                base_spikes   = zeros(nChns, 1);
+                post_spikes   = zeros(nChns, 1);
                 
-                % Loop through the trials to count the spikes
-                for k = 1:nTr_cond
-                    tr = trials_this_condition(k); % Absolute trial ID
-                    t0 = trig(tr) / FS * 1000;     % Trigger time of 1st pulse in ms
+                % [MODIFIED] Loop through all Channels for this specific trial
+                for idxDepth = 1:nChns
                     
-                    % Define exact windows anchored to the 1st pulse
-                    win_base_start = t0 + baseline_win_ms(1);
-                    win_base_end   = t0 + baseline_win_ms(2);
+                    ich = depth_range(idxDepth);   % Depth index (1-64)
+                    ch  = d(ich);                  % Intan hardware channel
                     
-                    win_post_start = t0 + post_win_ms(1);
-                    win_post_end   = t0 + post_win_ms(2);
+                    depth_idx_arr(idxDepth) = ich;
+                    intan_ch_arr(idxDepth)  = ch;
+                    
+                    % If channel is dead/empty, it skips counting and leaves the array at 0
+                    if ch < 1 || ch > nCh || isempty(sp{ch})
+                        continue;
+                    end
+                    
+                    sp_times = sp{ch}(:,1); % All spike times for this channel in ms
                     
                     % Count spikes falling in the baseline window
-                    base_cnts(k) = sum(sp_times >= win_base_start & sp_times < win_base_end);
+                    base_spikes(idxDepth) = sum(sp_times >= win_base_start & sp_times < win_base_end);
                     
                     % Count spikes falling in the post-stimulus window
-                    post_cnts(k) = sum(sp_times >= win_post_start & sp_times < win_post_end);
+                    post_spikes(idxDepth) = sum(sp_times >= win_post_start & sp_times < win_post_end);
                     
-                    % Record trial identifiers
-                    abs_trials(k) = tr; 
-                    rel_trials(k) = k;  
-                end
+                end % End Channel Loop
                 
-                % [THE UPGRADE] Convert the 4 arrays into a single beautiful MATLAB Table
-                Trial_Results = table(abs_trials, rel_trials, base_cnts, post_cnts, ...
-                    'VariableNames', {'Absolute_Trial', 'Relative_Trial', 'Baseline_Spikes', 'Post_Spikes'});
+                % Combine the 64 channel rows into a single table for this trial
+                Channel_Results = table(depth_idx_arr, intan_ch_arr, base_spikes, post_spikes, ...
+                    'VariableNames', {'Depth_Index', 'Intan_Channel', 'Baseline_Spikes', 'Post_Spikes'});
                 
-                SpikeCounts.set(si).amp(ai).ptd(pi).channel(ich).Trial_Results = Trial_Results;
+                SpikeCounts.set(si).amp(ai).ptd(pi).trial(k).Channel_Results = Channel_Results;
                 
-            end % End Channel Loop
+            end % End Trial Loop
         end % End PTD Loop
     end % End Amp Loop
 end % End Set Loop
 
 %% ===================== SAVE RESULTS ==========================
-save_name = sprintf('%s_ISI_TrialSpikeCounts.mat', base_name);
+save_name = sprintf('%s_SimvsSeq_TrialSpikeCounts_PerTrial.mat', base_name);
 full_save_path = fullfile(data_folder, save_name);
 
 save(full_save_path, 'SpikeCounts', 'baseline_win_ms', 'post_win_ms', ...

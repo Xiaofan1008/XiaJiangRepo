@@ -11,7 +11,7 @@ clear; close all;
 
 %% ================= USER SETTINGS =================
 % 1. Toggle Bin Size Here (Set to 50 or 100)
-bin_size = 50; 
+bin_size = 100; 
 
 % 2. File Paths
 file_paths = {
@@ -65,7 +65,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Outer_Spatial_Percentage/Result_Spatial_D90_DX016_Xia_Exp1_Seq_Full_4.mat';
 };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Outer_Spatial_Analysis_50um';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Outer_Spatial_Analysis_100um_to600um';
 save_figures = true; % Switch to true to export .tiff
 tiff_dpi     = 600; 
 
@@ -84,7 +84,7 @@ MasterAmps = unique(all_amps);
 MasterAmps(MasterAmps == 0) = []; 
 
 % B. Establish New Dynamic Bins
-dist_bin_edges = 0 : bin_size : 700; 
+dist_bin_edges = 0 : bin_size : 600; 
 bin_centers    = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2;
 num_bins       = length(bin_centers);
 stride         = bin_size / raw_res; 
@@ -221,7 +221,7 @@ for a = 1:length(MasterAmps)
     end
     xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); ylabel('Activation Probability (%)', 'FontSize', 9, 'FontName', 'Arial');
     set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off', 'XTick', 0:100:700);
-    xlim([0 700]); ylim([0 100]); axis square; legend('Location', 'northeast', 'Box', 'off');
+    xlim([0 600]); ylim([0 100]); axis square; legend('Location', 'northeast', 'Box', 'off');
 
     % --- FIGURE 2: DENSITY (WIDE BARS, NO CAPS) ---
     fig2 = figure('Units', 'centimeters', 'Position', [11, 2, 8.8, 8], 'Color', 'w','Name', sprintf('Dens_%.1fuA', P.Val)); hold on;
@@ -238,7 +238,7 @@ for a = 1:length(MasterAmps)
     % end
     xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); ylabel('Fraction of Total Response', 'FontSize', 9, 'FontName', 'Arial');
     set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off', 'XTick', 0:100:700);
-    xlim([0 700]); ylim([0 0.15]); axis square; legend('Location', 'northeast', 'Box', 'off');
+    xlim([0 600]); ylim([0 0.25]); axis square; legend('Location', 'northeast', 'Box', 'off');
 
     if save_figures
         % Ensure the directory exists

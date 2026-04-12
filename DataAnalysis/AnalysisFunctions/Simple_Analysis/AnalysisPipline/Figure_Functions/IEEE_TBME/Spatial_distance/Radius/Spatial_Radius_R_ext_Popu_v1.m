@@ -200,7 +200,7 @@ fprintf('\n');
 
 %% ================= 5. PLOTTING: R_ext TUNING CURVE =================
 % fig = figure('Units', 'centimeters', 'Position', [5, 5, 12, 11], 'Color', 'w', 'Name', 'Population R_ext');
-fig = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8], 'Color', 'w', 'Name', 'Population R_ext');
+fig = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'Name', 'Population R_ext');
 hold on; 
 
 % Extract valid data for plotting

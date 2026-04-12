@@ -173,7 +173,7 @@ end
 
 %% ================= 5. PLOTTING: AUC TUNING CURVE =================
 % fig = figure('Units', 'centimeters', 'Position', [5, 5, 12, 11], 'Color', 'w', 'Name', 'Population Spatial AUC');
-fig = figure('Units', 'centimeters', 'Position', [5, 5, 8.8, 8], 'Color', 'w', 'Name', 'Population Spatial AUC');
+fig = figure('Units', 'centimeters', 'Position', [5, 5, 8.8, 8.8], 'Color', 'w', 'Name', 'Population Spatial AUC');
 hold on; 
 
 v_amps = []; sim_m = []; sim_s = []; seq_m = []; seq_s = []; p_list = [];

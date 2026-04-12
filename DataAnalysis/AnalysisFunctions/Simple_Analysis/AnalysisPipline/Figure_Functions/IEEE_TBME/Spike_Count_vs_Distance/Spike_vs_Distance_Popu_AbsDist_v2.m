@@ -1,0 +1,344 @@
+%% ============================================================
+%   GRAND AVERAGE: SPATIAL CROSSTALK (FOLDED ABSOLUTE DISTANCE)
+%   - Metric: Baseline-Subtracted Spikes, Normalized to Sim Peak (Efficiency).
+%   - Visual: Separated Grayscale Figures (Bars & Shaded Line Cloud).
+%   - Stats: Point-by-Point (100 um wide bins, Stars directly over data).
+%   - Loop: Automatically detects all amplitudes and generates figures.
+%   - Standard: IEEE TBME (8.89 cm wide figures, Grayscale).
+% ============================================================
+clear;
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
+
+%% ================= 1. USER SETTINGS =================
+% --- A. File Paths ---
+file_paths = {
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX005_Xia_Exp1_Seq.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX006_Xia_Exp1_Seq.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX006_Xia_Exp1_Seq2.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX006_Xia_Exp1_Seq3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX006_Xia_Exp1_Seq4.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX009_Xia_Exp1_Seq3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX009_Xia_Exp1_Seq5.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq1.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq2.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq4_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq5_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq6_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq7_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX010_Xia_Exp1_Seq8_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq1_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq2_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq4_5ms_new.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq5_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq6_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq7.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq8.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX011_Xia_Exp1_Seq9.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX012_Xia_Exp1_Seq1_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX012_Xia_Exp1_Seq4_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX012_Xia_Exp1_Seq6_5ms.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX013_Xia_Exp1_Seq_Sim1.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX013_Xia_Exp1_Seq_Sim2.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX013_Xia_Exp1_Seq_Sim3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX013_Xia_Exp1_Seq_Sim4.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX013_Xia_Exp1_Seq_Sim5.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim1.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim2.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim4.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim5.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX014_Xia_Seq_Sim6.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX015_Xia_Seq_Sim3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX015_Xia_Seq_Sim4.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX015_Xia_Seq_Sim5.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX015_Xia_Seq_Sim6.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX015_Xia_Seq_Sim7.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX016_Xia_Exp1_Seq_Full_1.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX016_Xia_Exp1_Seq_Full_2.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX016_Xia_Exp1_Seq_Full_3.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount_vs_Distance/SpikeCount_vs_Distance_DX016_Xia_Exp1_Seq_Full_4.mat';
+};
+
+% --- B. Spatial & Normalization Settings ---
+visual_bin_width = 100;  
+stats_zone_width = 100;  
+top_n_peak       = 3;    
+min_n_threshold  = 5;    
+
+% --- C. Plot Settings ---
+save_figure = true;
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/SpikeCount_vs_Distance';
+
+%% ================= PRE-SCAN: FIND ALL AMPLITUDES =================
+fprintf('Scanning datasets to dynamically find all unique amplitudes...\n');
+All_Amps = [];
+for i = 1:length(file_paths)
+    if ~exist(file_paths{i}, 'file'), continue; end
+    tmp = load(file_paths{i}, 'Results');
+    if isfield(tmp, 'Results')
+        All_Amps = [All_Amps, tmp.Results.Amps(:)'];
+    end
+end
+Unique_Amps = unique(All_Amps);
+Unique_Amps(Unique_Amps < 0.001) = []; 
+fprintf('Found %d valid amplitudes to process.\n', length(Unique_Amps));
+
+All_Cosine_Similarities = [];
+
+%% ================= MASTER AMPLITUDE LOOP =================
+for aa = 1:length(Unique_Amps)
+    target_amp = Unique_Amps(aa);
+    
+    fprintf('\n============================================================\n');
+    fprintf('>>> PROCESSING AMPLITUDE: %.1f uA (%d of %d) <<<\n', target_amp, aa, length(Unique_Amps));
+    fprintf('============================================================\n');
+    
+    bin_edges = -50 : visual_bin_width : 750; 
+    bin_centers = 0 : visual_bin_width : 700;
+    num_bins = length(bin_centers);
+    
+    Binned_Sim_All = []; 
+    Binned_Seq_All = [];
+    dataset_count = 0; 
+    
+    %% ---------------- 2. THE HARVESTER ----------------
+    for i = 1:length(file_paths)
+        if ~exist(file_paths{i}, 'file'), continue; end
+        D = load(file_paths{i}); 
+        if ~isfield(D, 'Results'), continue; end
+        R = D.Results;
+        
+        amp_idx = find(abs(R.Amps - target_amp) < 0.001, 1);
+        if isempty(amp_idx), continue; end
+        
+        for ss = 1:length(R.SpatialSets)
+            if isempty(R.SpatialSets(ss).stimCh), continue; end
+            SetData = R.SpatialSets(ss).Amp(amp_idx);
+            
+            dist = SetData.distances;
+            sim_raw = SetData.Sim_Spikes;
+            seq_raw = SetData.Seq_Spikes;
+            if isempty(dist), continue; end
+            
+            abs_dist = abs(dist);
+            
+            b_sim = nan(1, num_bins); 
+            b_seq = nan(1, num_bins);
+            idx_bin = discretize(abs_dist, bin_edges);
+            
+            for b = 1:num_bins
+                hit = (idx_bin == b);
+                if any(hit)
+                    b_sim(b) = mean(sim_raw(hit), 'omitnan');
+                    b_seq(b) = mean(seq_raw(hit), 'omitnan');
+                end
+            end
+            
+            valid_sim = b_sim(~isnan(b_sim));
+            valid_sim_sorted = sort(valid_sim, 'descend');
+            if isempty(valid_sim_sorted), continue; end
+            
+            n_take = min(top_n_peak, length(valid_sim_sorted));
+            norm_factor = mean(valid_sim_sorted(1:n_take));
+            if norm_factor <= 0, continue; end 
+            
+            Binned_Sim_All(end+1, :) = b_sim / norm_factor;
+            Binned_Seq_All(end+1, :) = b_seq / norm_factor;
+            dataset_count = dataset_count + 1;
+        end
+    end
+    fprintf('Successfully extracted %d valid sets for %.1f uA.\n', dataset_count, target_amp);
+    
+    if dataset_count == 0
+        fprintf('No valid data found. Skipping figure generation.\n');
+        continue; 
+    end
+    
+    %% ---------------- 3. GRAND MEAN & STATS ENGINE ----------------
+    Grand_Sim_Mean = mean(Binned_Sim_All, 1, 'omitnan');
+    Grand_Sim_SEM  = std(Binned_Sim_All, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Binned_Sim_All), 1));
+    
+    Grand_Seq_Mean = mean(Binned_Seq_All, 1, 'omitnan');
+    Grand_Seq_SEM  = std(Binned_Seq_All, 0, 1, 'omitnan') ./ sqrt(sum(~isnan(Binned_Seq_All), 1));
+    
+    zone_edges = -50 : stats_zone_width : 850;
+    n_zones = length(zone_edges) - 1;
+    Stat_Results = struct();
+    
+    for z = 1:n_zones
+        z_min = zone_edges(z);
+        z_max = zone_edges(z+1);
+        
+        bin_hits = find(bin_centers >= z_min & bin_centers < z_max);
+        if isempty(bin_hits), continue; end
+        
+        zone_sim_vals = mean(Binned_Sim_All(:, bin_hits), 2, 'omitnan');
+        zone_seq_vals = mean(Binned_Seq_All(:, bin_hits), 2, 'omitnan');
+        
+        valid_pairs = ~isnan(zone_sim_vals) & ~isnan(zone_seq_vals);
+        data_s = zone_sim_vals(valid_pairs);
+        data_q = zone_seq_vals(valid_pairs);
+        n_pairs = length(data_s);
+        
+        if n_pairs < min_n_threshold, continue; end
+        
+        p_val = signrank(data_s, data_q);
+        mean_s = mean(data_s);
+        mean_q = mean(data_q);
+        perc_diff = ((mean_q - mean_s) / mean_s) * 100;
+        
+        txt = '';
+        if p_val < 0.001, txt = '***';
+        elseif p_val < 0.01, txt = '**';
+        elseif p_val < 0.05, txt = '*';
+        else, txt = 'n.s.';
+        end
+        
+        fprintf('Zone: %4.0f to %4.0f um | N: %2d | Sim: %.2f | Seq: %.2f | Diff: %+5.1f%% | p = %.4f (%s)\n', ...
+                z_min, z_max, n_pairs, mean_s, mean_q, perc_diff, p_val, txt);
+                
+        Stat_Results(z).z_min = z_min;
+        Stat_Results(z).z_max = z_max;
+        Stat_Results(z).txt = txt;
+        Stat_Results(z).p_val = p_val;
+        Stat_Results(z).bin_hits = bin_hits;
+    end
+    
+    % Area Under Curve (AUC)
+    valid_auc = ~isnan(Grand_Sim_Mean) & ~isnan(Grand_Seq_Mean);
+    auc_sim = trapz(bin_centers(valid_auc), Grand_Sim_Mean(valid_auc));
+    auc_seq = trapz(bin_centers(valid_auc), Grand_Seq_Mean(valid_auc));
+    
+    fprintf('\n--- EFFICIENCY CHECK (Area Under Curve) ---\n');
+    fprintf('Simultaneous Spatial AUC: %.2f\n', auc_sim);
+    fprintf('Sequential Spatial AUC  : %.2f\n', auc_seq);
+    fprintf('Overall Efficiency Gain : %+5.1f%%\n', ((auc_seq - auc_sim)/auc_sim)*100);
+    
+    % SHAPE SIMILARITY METRICS 
+    prob_sim = Grand_Sim_Mean / sum(Grand_Sim_Mean, 'omitnan');
+    prob_seq = Grand_Seq_Mean / sum(Grand_Seq_Mean, 'omitnan');
+    cos_sim = dot(prob_sim, prob_seq) / (norm(prob_sim) * norm(prob_seq));
+    
+    fprintf('\n--- SHAPE SIMILARITY (For Paper Text) ---\n');
+    fprintf('Cosine Similarity Score : %.3f (1.0 = mathematically identical shape)\n', cos_sim);
+    fprintf('-------------------------------------------\n\n');
+    
+    All_Cosine_Similarities(end+1) = cos_sim;
+
+    %% ---------------- 4. TBME-STYLE PLOTTER (SEPARATE GRAYSCALE FIGURES) ----------------
+    
+    fig_name_bar = sprintf('Spike_vs_Distance_%.1fuA_Bar.tiff', target_amp);
+    fig_name_line = sprintf('Spike_vs_Distance_%.1fuA_Line.tiff', target_amp);
+    
+    % ----------------------------------------------------
+    % FIGURE 1: BAR PLOT (Grayscale)
+    % ----------------------------------------------------
+    figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'Name', fig_name_bar); 
+    hold on;
+    
+    % ---> CHANGED: Added visual_offset to push bars rightward from the Y-axis <---
+    visual_offset = 25; 
+    
+    b = bar(bin_centers + visual_offset, [Grand_Sim_Mean', Grand_Seq_Mean'], 'grouped', 'BarWidth', 1);
+    b(1).FaceColor = [0.6 0.6 0.6]; b(1).EdgeColor = [0 0 0]; b(1).DisplayName = 'Simultaneous';
+    b(2).FaceColor = [0.2 0.2 0.2]; b(2).EdgeColor = [0 0 0]; b(2).DisplayName = 'Sequential';
+    
+    x1 = b(1).XEndPoints; x2 = b(2).XEndPoints;
+    errorbar(x1, Grand_Sim_Mean, Grand_Sim_SEM, 'k', 'linestyle', 'none', 'LineWidth', 0.8, 'CapSize', 0, 'HandleVisibility', 'off');
+    errorbar(x2, Grand_Seq_Mean, Grand_Seq_SEM, 'k', 'linestyle', 'none', 'LineWidth', 0.8, 'CapSize', 0, 'HandleVisibility', 'off');
+    
+    for z = 1:length(Stat_Results)
+        if isempty(Stat_Results(z).txt) || strcmp(Stat_Results(z).txt, 'n.s.'), continue; end
+        hits = Stat_Results(z).bin_hits;
+        max_err_sim = max(Grand_Sim_Mean(hits) + Grand_Sim_SEM(hits));
+        max_err_seq = max(Grand_Seq_Mean(hits) + Grand_Seq_SEM(hits));
+        y_top = max(max_err_sim, max_err_seq) + 0.05; 
+        
+        % ---> CHANGED: Shifted the statistical stars to perfectly match the shifted bars <---
+        text(bin_centers(hits)+20 + visual_offset, y_top, Stat_Results(z).txt, 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
+    end
+    
+    box off; set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.0);
+    xlabel('Distance (µm)'); ylabel('Normalized Spike Count');
+    % title(sprintf('Grouped Bar Chart (%.1f \\muA)', target_amp));
+    
+    xlim([0 750]); 
+    ylim([0 2]); 
+    set(gca, 'XTick', 0:100:700);
+    set(gca, 'YTick', 0:0.4:2.0);
+    % legend('Location', 'northeast', 'Box', 'off', 'FontSize', 8, 'FontName', 'Arial');
+    legend( 'Box', 'off', 'FontSize', 8, 'FontName', 'Arial');
+    axis square;
+    if save_figure
+        if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+        print(gcf, fullfile(save_dir, fig_name_bar), '-dtiff', '-r300');
+    end
+    
+    % ----------------------------------------------------
+    % FIGURE 2: SHADED LINE CLOUD (Grayscale)
+    % ----------------------------------------------------
+    figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'Name', fig_name_line); 
+    hold on;
+    
+    valid_s = ~isnan(Grand_Sim_Mean) & ~isnan(Grand_Sim_SEM);
+    x_s = bin_centers(valid_s); y_s = Grand_Sim_Mean(valid_s); sem_s = Grand_Sim_SEM(valid_s);
+    
+    valid_q = ~isnan(Grand_Seq_Mean) & ~isnan(Grand_Seq_SEM);
+    x_q = bin_centers(valid_q); y_q = Grand_Seq_Mean(valid_q); sem_q = Grand_Seq_SEM(valid_q);
+    
+    % Sim = Medium Grey, Open Circles
+    fill([x_s, fliplr(x_s)], [y_s + sem_s, fliplr(y_s - sem_s)], ...
+         [0.6 0.6 0.6], 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+    plot(x_s, y_s, '-o', 'Color', [0.5 0.5 0.5], 'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous');
+    
+    % Seq = Bold Black, Open Squares
+    fill([x_q, fliplr(x_q)], [y_q + sem_q, fliplr(y_q - sem_q)], ...
+         [0.2 0.2 0.2], 'FaceAlpha', 0.2, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+    plot(x_q, y_q, '-s', 'Color', [0 0 0], 'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerFaceColor', 'w', 'DisplayName', 'Sequential');
+    
+    for z = 1:length(Stat_Results)
+        if isempty(Stat_Results(z).txt) || strcmp(Stat_Results(z).txt, 'n.s.'), continue; end
+        hits = Stat_Results(z).bin_hits;
+        max_err_sim = max(Grand_Sim_Mean(hits) + Grand_Sim_SEM(hits));
+        max_err_seq = max(Grand_Seq_Mean(hits) + Grand_Seq_SEM(hits));
+        y_top = max(max_err_sim, max_err_seq) + 0.05; 
+        
+        text(bin_centers(hits)+30, y_top, Stat_Results(z).txt, 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
+       
+    end
+    
+    box off; set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.0);
+    xlabel('Distance (µm)'); ylabel('Normalized Spike Count');
+    % title(sprintf('Shaded Line Cloud (%.1f \\muA)', target_amp));
+    % legend('Location', 'northeast', 'Box', 'off', 'FontSize', 8);
+    legend('Box', 'off', 'FontSize', 8);
+    
+    xlim([0 750]); 
+    ylim([0 2]); 
+    axis square;
+
+    set(gca, 'XTick', 0:100:700);
+    set(gca, 'YTick', 0:0.4:2.0);
+    if save_figure
+        if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+        print(gcf, fullfile(save_dir, fig_name_line), '-dtiff', '-r300');
+    end
+end 
+fprintf('\n>>> All Amplitudes Processed <<<\n');
+
+%% 5. GLOBAL SHAPE INVARIANCE (For Paper Copy-Paste)
+fprintf('\n============================================================\n');
+fprintf('>>> MANUSCRIPT TEXT: GLOBAL SHAPE INVARIANCE SUMMARY <<<\n');
+fprintf('============================================================\n');
+if ~isempty(All_Cosine_Similarities)
+    mean_sim = mean(All_Cosine_Similarities);
+    std_sim  = std(All_Cosine_Similarities);
+    
+    fprintf('Copy and paste this sentence into your Results section:\n\n');
+    fprintf('"Spatial recruitment profiles demonstrated highly consistent shapes across all tested amplitudes,\n maintaining a mean Cosine Similarity of %.3f ± %.3f between the Sequential and Simultaneous stimulation strategies."\n', mean_sim, std_sim);
+else
+    fprintf('No similarity scores were calculated.\n');
+end
+fprintf('============================================================\n\n');

@@ -64,7 +64,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Active_Percentage/Result_ActivePercentage_DX016_Xia_Exp1_Seq_Full_4.mat';
 };
 
-save_figs = true; 
+save_figs = false; 
 save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Active_Percentage';
 
 %% =================== 1. AGGREGATE POOLED DATA =================
@@ -171,9 +171,13 @@ fName_Font = 'Arial';
 % --- PANEL 1: Standard Normalization ---
 figure('Color','w', 'Units', 'centimeters', 'Position', [2, 5, fig_Width, fig_Height], 'Name', 'Panel_A_Standard');
 hold on;
-errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
-errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
-ylabel('Normalized Active Percentage', 'FontName', fName_Font, 'FontSize', fSize); 
+% errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
+% errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
+% MODIFY: Multiply Mean and SEM by 100
+errorbar(sum_amps, mSimStd(:,1)*100, mSimStd(:,2)*100, '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
+errorbar(sum_amps, mSeqStd(:,1)*100, mSeqStd(:,2)*100, '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
+
+ylabel('Normalized Active Percentage (%)', 'FontName', fName_Font, 'FontSize', fSize); 
 xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fSize);
 % title('Standard (Max-Scaled)', 'FontName', fName_Font, 'FontSize', fSize); 
 set(gca, 'FontSize', fSize, 'FontName', fName_Font, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1);
@@ -219,7 +223,7 @@ text(mean([x_left, x_right]), y_bracket + 1, anova_star, 'FontSize', 12, 'Horizo
 
 ylim([0, y_bracket + 3.5]); % Dynamically adjust limits so bracket fits nicely
 
-ylabel('Increase in Active Percentage', 'FontName', fName_Font, 'FontSize', fSize); 
+ylabel('Increase in Active Percentage (%)', 'FontName', fName_Font, 'FontSize', fSize); 
 xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fSize);
 % title('Delta Change (Naka-Rushton)', 'FontName', fName_Font, 'FontSize', fSize); 
 set(gca, 'FontSize', fSize, 'FontName', fName_Font, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1);
@@ -287,7 +291,8 @@ function add_sig_stars(x, y1, y2, y2_err, pvals)
         p = pvals(i); if isnan(p), continue; end
         txt = ''; if p < 0.001, txt = '***'; elseif p < 0.01, txt = '**'; elseif p < 0.05, txt = '*'; end
         if ~isempty(txt)
-            y_max = max(y1(i), y2(i) + y2_err(i));
+            % y_max = max(y1(i), y2(i) + y2_err(i));
+            y_max = max(y1(i)*100, (y2(i) + y2_err(i))*100);
             text(x(i), y_max * 1.05, txt, 'FontSize', 9, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
         end
     end

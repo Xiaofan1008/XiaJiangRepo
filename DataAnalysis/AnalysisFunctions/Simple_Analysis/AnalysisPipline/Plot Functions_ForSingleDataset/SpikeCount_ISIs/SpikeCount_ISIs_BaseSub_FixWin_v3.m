@@ -23,7 +23,7 @@ fixed_macro_win_ms = [0, 40];
 baseline_win_ms = [-50, -10]; 
 
 % Choose which amplitude to run the Statistical Comparison on
-target_Amp_Stats = 10; % uA
+target_Amp_Stats = 5; % uA
 
 % Choose whether to involve bad trials
 exclude_bad_trials = true; % true = remove them, false = keep all trials

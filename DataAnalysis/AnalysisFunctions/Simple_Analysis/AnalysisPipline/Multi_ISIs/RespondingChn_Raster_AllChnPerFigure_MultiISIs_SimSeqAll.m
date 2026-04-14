@@ -9,10 +9,10 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq2';
 Electrode_Type   = 2;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
-raster_chn_start = 1;          % Depth_s index
-raster_chn_end   = 32;
+raster_chn_start = 32;          % Depth_s index
+raster_chn_end   = 64;
 
 % ---- plotting windows ----
 ras_win       = [-50 80];      % ms, time relative to first pulse
@@ -20,7 +20,7 @@ bin_ms_raster = 1;             % ms, PSTH bin size
 smooth_ms     = 5;             % ms, Gaussian smoothing width
 
 % Which amplitudes to plot (µA). If empty → plot ALL amplitudes.
-Plot_Amps = [5];     % e.g. [4 6 8];  [] = all
+Plot_Amps = [5,10];     % e.g. [4 6 8];  [] = all
 
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]

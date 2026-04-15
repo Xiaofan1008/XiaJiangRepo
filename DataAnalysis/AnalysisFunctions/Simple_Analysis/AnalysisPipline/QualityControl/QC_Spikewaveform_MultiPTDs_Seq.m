@@ -3,9 +3,9 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ================= USER SETTINGS =================
 spike_chn_start = 1;
-spike_chn_end   = 64;   % nChn (Depth_s index)
-Electrode_Type  = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX022/Xia_ISI_SimSeq1';
+spike_chn_end   = 32;   % nChn (Depth_s index)
+Electrode_Type  = 1;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq1';
 
 % [NEW] Select specific PTDs to plot (e.g. [0 5 10]). 
 % 0 = Simultaneous. Leave [] to plot ALL found in dataset.

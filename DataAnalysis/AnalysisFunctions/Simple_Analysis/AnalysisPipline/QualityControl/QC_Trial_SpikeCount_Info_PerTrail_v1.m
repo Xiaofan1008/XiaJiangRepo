@@ -8,11 +8,11 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq2';
-Electrode_Type   = 2;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq1';
+Electrode_Type   = 1;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
 
 raster_chn_start = 1;          % Depth_s index start
-raster_chn_end   = 64;         % Depth_s index end
+raster_chn_end   = 32;         % Depth_s index end
 
 % ---- Counting Windows (Relative to 1st Pulse Trigger) ----
 baseline_win_ms  = [-50 0];    % Window to count baseline spikes

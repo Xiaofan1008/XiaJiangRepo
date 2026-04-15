@@ -148,7 +148,7 @@ overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 %% ============== Condition 2 ==============
 % --- Oms
-idx = 1;
+idx = 17;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;          % 10 µA
 overrides{idx}.target_ptd_ms  = 0;           % 0 ms (Simultaneous)
@@ -156,7 +156,7 @@ overrides{idx}.force_silent   = [1:64]; % Channels to turn OFF (noise)
 overrides{idx}.force_respond  = [37,38,40:45,48,52,54,56,58:63];          % Channels to turn ON (rescue)
 
 % --- 3ms
-idx = 2;
+idx = 18;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 3;           % 5 ms (Sequential)
@@ -164,7 +164,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:48,50:64];        % Turn ON
 
 % ---4ms 
-idx = 3;
+idx = 19;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 4;           % 5 ms (Sequential)
@@ -172,7 +172,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32,34,36:48,50:56,58:60,62,64];        % Turn ON
 
 % --- 5ms
-idx = 4;
+idx = 20;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 5;           % 5 ms (Sequential)
@@ -180,7 +180,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:48,50:64];        % Turn ON
 
 % --- 6ms
-idx = 5;
+idx = 21;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 6;           % 5 ms (Sequential)
@@ -188,7 +188,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];        % Turn ON
 
 % --- 7ms
-idx = 6;
+idx = 22;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 7;           % 5 ms (Sequential)
@@ -196,7 +196,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 8ms
-idx = 7;
+idx = 23;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 8;           % 5 ms (Sequential)
@@ -204,7 +204,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:60,62:64];
 
 % --- 9ms
-idx = 8;
+idx = 24;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 9;           % 5 ms (Sequential)
@@ -212,7 +212,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 10ms
-idx = 9;
+idx = 25;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 10;           % 5 ms (Sequential)
@@ -220,7 +220,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 11ms
-idx = 10;
+idx = 26;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 11;           % 5 ms (Sequential)
@@ -228,7 +228,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 12ms
-idx = 11;
+idx = 27;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 12;           % 5 ms (Sequential)
@@ -236,7 +236,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 13ms
-idx = 12;
+idx = 28;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 13;           % 5 ms (Sequential)
@@ -244,7 +244,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 14ms
-idx = 13;
+idx = 29;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 14;           %  ms (Sequential)
@@ -252,7 +252,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 15ms
-idx = 14;
+idx = 30;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 15;           % 5 ms (Sequential)
@@ -260,7 +260,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 17ms
-idx = 15;
+idx = 31;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 17;           %  ms (Sequential)
@@ -268,7 +268,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 20ms
-idx = 16;
+idx = 32;
 overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 20;           %  ms (Sequential)
@@ -278,7 +278,7 @@ overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 %% =========== Condition 3 ============
 % --- Oms
-idx = 1;
+idx = 33;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;          % 10 µA
 overrides{idx}.target_ptd_ms  = 0;           % 0 ms (Simultaneous)
@@ -286,7 +286,7 @@ overrides{idx}.force_silent   = [1:64]; % Channels to turn OFF (noise)
 overrides{idx}.force_respond  = [33,34,37:49,51:54,56:60,62:64];          % Channels to turn ON (rescue)
 
 % --- 3ms
-idx = 2;
+idx = 34;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 3;           % 5 ms (Sequential)
@@ -294,7 +294,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:44,46:48,50:53,55:64];        % Turn ON
 
 % ---4ms 
-idx = 3;
+idx = 35;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 4;           % 5 ms (Sequential)
@@ -302,7 +302,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:64];        % Turn ON
 
 % --- 5ms
-idx = 4;
+idx = 36;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 5;           % 5 ms (Sequential)
@@ -310,7 +310,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:48,50:64];        % Turn ON
 
 % --- 6ms
-idx = 5;
+idx = 37;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 6;           % 5 ms (Sequential)
@@ -318,7 +318,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:64];        % Turn ON
 
 % --- 7ms
-idx = 6;
+idx = 38;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 7;           % 5 ms (Sequential)
@@ -326,7 +326,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 8ms
-idx = 7;
+idx = 39;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 8;           % 5 ms (Sequential)
@@ -334,7 +334,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 9ms
-idx = 8;
+idx = 40;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 9;           % 5 ms (Sequential)
@@ -342,7 +342,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 10ms
-idx = 9;
+idx = 41;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 10;           % 5 ms (Sequential)
@@ -350,7 +350,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 11ms
-idx = 10;
+idx = 42;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 11;           % 5 ms (Sequential)
@@ -358,7 +358,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 12ms
-idx = 11;
+idx = 43;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 12;           % 5 ms (Sequential)
@@ -366,7 +366,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 13ms
-idx = 12;
+idx = 44;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 13;           % 5 ms (Sequential)
@@ -374,7 +374,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 14ms
-idx = 13;
+idx = 45;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           %  µA
 overrides{idx}.target_ptd_ms  = 14;           %  ms (Sequential)
@@ -382,7 +382,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 15ms
-idx = 14;
+idx = 46;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 15;           % 5 ms (Sequential)
@@ -390,7 +390,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 17ms
-idx = 15;
+idx = 47;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           %  µA
 overrides{idx}.target_ptd_ms  = 17;           %  ms (Sequential)
@@ -398,7 +398,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 20ms
-idx = 16;
+idx = 48;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           %  µA
 overrides{idx}.target_ptd_ms  = 20;           %  ms (Sequential)
@@ -407,7 +407,7 @@ overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 %% ================== Condition 4 =================
 % --- Oms
-idx = 1;
+idx = 49;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;          % 10 µA
 overrides{idx}.target_ptd_ms  = 0;           % 0 ms (Simultaneous)
@@ -415,7 +415,7 @@ overrides{idx}.force_silent   = [1:64]; % Channels to turn OFF (noise)
 overrides{idx}.force_respond  = [36:52,54:56,58:60,62:64];          % Channels to turn ON (rescue)
 
 % --- 3ms
-idx = 2;
+idx = 50;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 3;           % 5 ms (Sequential)
@@ -423,7 +423,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:64];        % Turn ON
 
 % ---4ms 
-idx = 3;
+idx = 51;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 4;           % 5 ms (Sequential)
@@ -431,7 +431,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:48,50:52,54:56,58:64];        % Turn ON
 
 % --- 5ms
-idx = 4;
+idx = 52;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 5;           % 5 ms (Sequential)
@@ -439,7 +439,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];        % Turn ON
 
 % --- 6ms
-idx = 5;
+idx = 53;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 6;           % 5 ms (Sequential)
@@ -447,7 +447,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [33:64];        % Turn ON
 
 % --- 7ms
-idx = 6;
+idx = 54;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 7;           % 5 ms (Sequential)
@@ -455,7 +455,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 8ms
-idx = 7;
+idx = 55;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 8;           % 5 ms (Sequential)
@@ -463,7 +463,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 9ms
-idx = 8;
+idx = 56;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 9;           % 5 ms (Sequential)
@@ -471,7 +471,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 10ms
-idx = 9;
+idx = 57;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 10;           % 5 ms (Sequential)
@@ -479,7 +479,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 11ms
-idx = 10;
+idx = 58;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 11;           % 5 ms (Sequential)
@@ -487,7 +487,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 12ms
-idx = 11;
+idx = 59;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 12;           % 5 ms (Sequential)
@@ -495,7 +495,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 13ms
-idx = 12;
+idx = 60;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 13;           % 5 ms (Sequential)
@@ -503,7 +503,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 14ms
-idx = 13;
+idx = 61;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 14;           %  ms (Sequential)
@@ -511,7 +511,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 15ms
-idx = 14;
+idx = 62;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           % 4 µA
 overrides{idx}.target_ptd_ms  = 15;           % 5 ms (Sequential)
@@ -519,7 +519,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];
 
 % --- 17ms
-idx = 15;
+idx = 63;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 17;           %  ms (Sequential)
@@ -527,7 +527,7 @@ overrides{idx}.force_silent   = [1:64];        % Turn OFF
 overrides{idx}.force_respond  = [32:64];    % Turn ON
 
 % --- 20ms
-idx = 16;
+idx = 64;
 overrides{idx}.target_set_idx = 2;           % Set 1
 overrides{idx}.target_amp_uA  = 10;           %  µA
 overrides{idx}.target_ptd_ms  = 20;           %  ms (Sequential)

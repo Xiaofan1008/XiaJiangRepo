@@ -25,6 +25,13 @@ baseline_win_ms = [-50, -10];
 % Array of amplitudes to run the Comparison on (e.g., [5, 10])
 target_Amps = [5, 10]; % uA
 
+% [MODIFIED] ARTIFACT SCRUBBER: List known noisy points to delete and bridge.
+% Format: [Set, Amplitude (uA), ISI (ms)]; Add as many rows as needed.
+manual_artifacts = [
+    1,5,14;
+    2,5,9
+]; 
+
 % Choose whether to involve bad trials
 exclude_bad_trials = true; % true = remove them, false = keep all trials
 
@@ -95,15 +102,12 @@ for ss = 1:nSets
                 for pi=1:numel(R.set(ss).amp(ai_targ).ptd)
                     curr_ptd = R.set(ss).amp(ai_targ).ptd(pi).PTD_ms;
                     
-                    % Check against target_ISIs list
-                    if ~any(abs(target_ISIs - curr_ptd) < 0.001)
-                        continue; 
-                    end
+                    if ~any(abs(target_ISIs - curr_ptd) < 0.001), continue; end
                     
                     this = R.set(ss).amp(ai_targ).ptd(pi).channel; 
                     for ch=1:min(length(this),nCh_Total)
                         if isfield(this(ch),'is_responsive') && this(ch).is_responsive
-                            local_resp_mask(ch)=true; % Union logic: sets true if ANY condition hits
+                            local_resp_mask(ch)=true; 
                         end
                     end
                 end
@@ -112,21 +116,17 @@ for ss = 1:nSets
     end
     
     resp_channels_per_set{ss} = find(local_resp_mask); 
-    
-    % Print responding channels specifically for this set
     stimCh = uniqueComb(ss,:); stimCh = stimCh(stimCh>0);
     fprintf('  Set %d (Ch:%s) -> %d Channels\n', ss, num2str(stimCh), length(resp_channels_per_set{ss}));
 end
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
-% Init Output Arrays based on total channels (Classic approach)
 SpikeCount_sim = nan(nCh_Total, length(Amps), nSets);
 SpikeCount_seq = nan(nCh_Total, length(Amps), nSets, numel(PTDs_ms));
 nBins = length(edges_psth)-1;
 PSTH_Sim = nan(nCh_Total, nBins, length(Amps), nSets);
 PSTH_Seq = nan(nCh_Total, nBins, length(Amps), nSets, numel(PTDs_ms));
 
-% Loop through sets first, then only process that set's responding channels
 for ss = 1:nSets
     current_set_channels = resp_channels_per_set{ss};
     
@@ -135,7 +135,6 @@ for ss = 1:nSets
         recCh = d(ch_idx);    
         S_ch = sp{recCh};
         
-        % Logic to toggle Bad Trials
         bad_trs = []; 
         if exclude_bad_trials && ~isempty(QC.BadTrials) && ch_idx <= length(QC.BadTrials)
             bad_trs = QC.BadTrials{ch_idx}; 
@@ -151,7 +150,6 @@ for ss = 1:nSets
         ptd_sim_idx = find(abs(PTDs_ms - 0) < 0.001);
                       
         if ~isempty(ptd_sim_idx) && any(abs(target_ISIs - 0) < 0.001)
-            % Only calculate for the specific target amplitudes to save time
             for ai = ai_targets(:)'
                 tr_ids = find(combClass == ss & ampIdx == ai & ptdIdx == ptd_sim_idx);
                 tr_ids = setdiff(tr_ids, bad_trs); 
@@ -168,11 +166,9 @@ for ss = 1:nSets
         
         % --- SEQUENTIAL (Target ISIs > 0) ---
         for p = 1:numel(PTDs_ms)
-            
-            if PTDs_ms(p) == 0, continue; end % Handled above
+            if PTDs_ms(p) == 0, continue; end 
             if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001), continue; end
             
-            % Only calculate for the specific target amplitudes
             for ai = ai_targets(:)'
                 tr_ids = find(combClass==ss & ptdIdx==p & ampIdx==ai);
                 tr_ids = setdiff(tr_ids, bad_trs); 
@@ -189,23 +185,44 @@ for ss = 1:nSets
     end
 end 
 
-%% ===================== 4. PLOT (ISI Tuning Curve) ======================
-% [MODIFIED] Re-wrote Plotting Section for One Figure Per Set
+%% =================== 3.5 ARTIFACT SCRUBBER ===================
+% [MODIFIED] Force known bad data points to NaN before plotting/saving
+if ~isempty(manual_artifacts)
+    fprintf('\nApplying Artifact Scrubber...\n');
+    for r = 1:size(manual_artifacts, 1)
+        scrub_set = manual_artifacts(r, 1);
+        scrub_amp = manual_artifacts(r, 2);
+        scrub_isi = manual_artifacts(r, 3);
+        
+        % Convert physical Amp/ISI to Matrix Indices
+        ai_scrub = find(abs(Amps - scrub_amp) < 0.001);
+        
+        if scrub_isi == 0
+            if ~isempty(ai_scrub) && scrub_set <= nSets
+                SpikeCount_sim(:, ai_scrub, scrub_set) = NaN;
+                fprintf('  Scrubbed: Set %d | %.1f uA | %d ms\n', scrub_set, scrub_amp, scrub_isi);
+            end
+        else
+            pi_scrub = find(abs(PTDs_ms - scrub_isi) < 0.001);
+            if ~isempty(ai_scrub) && ~isempty(pi_scrub) && scrub_set <= nSets
+                SpikeCount_seq(:, ai_scrub, scrub_set, pi_scrub) = NaN;
+                fprintf('  Scrubbed: Set %d | %.1f uA | %d ms\n', scrub_set, scrub_amp, scrub_isi);
+            end
+        end
+    end
+    fprintf('\n');
+end
 
-% Define distinct colors for each AMPLITUDE instead of each Set
+%% ===================== 4. PLOT (ISI Tuning Curve) ======================
 amp_colors = lines(length(target_Amps)); 
 
-% [MODIFIED] Loop through each Set to create a new figure
 for ss = 1:nSets
-    
-    % Create a standard sized figure for each Set
     figure('Color','w', 'Position',[100 100 800 600]); 
     hold on;
     
     stimCh = uniqueComb(ss,:); 
     stimCh = stimCh(stimCh>0);
     
-    % [MODIFIED] Inner loop: Plot a line for each target Amplitude
     for a_idx = 1:length(target_Amps)
         current_ai = ai_targets(a_idx);
         current_amp = target_Amps(a_idx);
@@ -213,7 +230,6 @@ for ss = 1:nSets
         y_mean = nan(1, length(target_ISIs));
         y_sem  = nan(1, length(target_ISIs));
         
-        % Gather the data across all chosen ISIs for this Amplitude/Set
         for p_idx = 1:length(target_ISIs)
             target_isi = target_ISIs(p_idx);
             
@@ -228,7 +244,7 @@ for ss = 1:nSets
                 end
             end
             
-            data_set = data_set(~isnan(data_set)); % Clean out invalid channels
+            data_set = data_set(~isnan(data_set)); 
             
             if ~isempty(data_set)
                 y_mean(p_idx) = mean(data_set);
@@ -236,20 +252,22 @@ for ss = 1:nSets
             end
         end
         
-        % Plot the line for this Amplitude
         if any(~isnan(y_mean))
             col = amp_colors(a_idx, :);
-            lbl = sprintf('%.1f uA', current_amp); % Legend shows Amplitude
+            lbl = sprintf('%.1f uA', current_amp); 
             
-            plot(target_ISIs, y_mean, '-o', 'Color', col, 'LineWidth', 2, ...
+            % [MODIFIED] THE BRIDGE: Extract only valid points to plot
+            valid_idx = ~isnan(y_mean);
+            plot_x = target_ISIs(valid_idx);
+            plot_y = y_mean(valid_idx);
+            
+            plot(plot_x, plot_y, '-o', 'Color', col, 'LineWidth', 2, ...
                 'MarkerFaceColor', 'w', 'MarkerSize', 8, 'DisplayName', lbl);
         end
     end
     
-    % [MODIFIED] Figure Formatting applied per Set
     xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold', 'FontSize', 12); 
     ylabel('Net Mean Spikes', 'FontWeight','bold', 'FontSize', 12);
-    % Title now explicitly states the Stimulation Set
     title(sprintf('Set %d (Stim Channels: %s)', ss, num2str(stimCh)), 'FontWeight','bold', 'FontSize', 14);
     xticks(sort(target_ISIs));
     box off;
@@ -267,7 +285,6 @@ end
 % ============================================================
 save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
-
 parts = split(data_folder, filesep); exp_id = parts{end};
 isi_str = strjoin(string(target_ISIs), '_');
 amp_str = strjoin(string(target_Amps), '_');
@@ -276,7 +293,6 @@ out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_' char(amp_str) 'uA
 
 ResultFR = struct();
 
-% --- 1. Save the Metadata ---
 ResultFR.Metadata.Created = datestr(now);
 ResultFR.Metadata.Metric = 'Classic Fixed Macro-Window Spike Count (Net Mean per Channel)';
 ResultFR.Metadata.FixedMacroWin = fixed_macro_win_ms;
@@ -284,17 +300,12 @@ ResultFR.Metadata.BaselineWin = baseline_win_ms;
 ResultFR.Metadata.TargetAmps = target_Amps; 
 ResultFR.Metadata.TargetISIs = target_ISIs;
 ResultFR.Metadata.BadTrialsExcluded = exclude_bad_trials;
-
-% [NEW] Save the exact Stimulation Sets so you know what "Set 1" means!
 ResultFR.Metadata.Stimulation_Sets = uniqueComb;
-
-% [NEW] Save the Union Mask channel lists so you know exactly who responded
 ResultFR.Metadata.Responding_Channels = resp_channels_per_set;
+ResultFR.Metadata.Manual_Artifacts_Scrubbed = manual_artifacts; % [MODIFIED] Log what was scrubbed
 
-% --- 2. Save the Actual Data (Renamed for clarity) ---
 ResultFR.SpikeCounts.Sim = SpikeCount_sim; 
 ResultFR.SpikeCounts.Seq = SpikeCount_seq;
-
 ResultFR.PSTH.Sim = PSTH_Sim;
 ResultFR.PSTH.Seq = PSTH_Seq;
 

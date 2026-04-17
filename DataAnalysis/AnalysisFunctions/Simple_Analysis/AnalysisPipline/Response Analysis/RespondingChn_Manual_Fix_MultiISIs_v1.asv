@@ -72,7 +72,7 @@ overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 8;           % 5 ms (Sequential)
 overrides{idx}.force_silent   = [1:32];        % Turn OFF
-overrides{idx}.force_respond  = [1,4,6,10:15,19:21,23:26];
+overrides{idx}.force_respond  = [10:16,18:21,23,24,26:29];
 
 % --- 9ms
 idx = 8;
@@ -80,7 +80,7 @@ overrides{idx}.target_set_idx = 1;           % Set 1
 overrides{idx}.target_amp_uA  = 5;           % 4 µA
 overrides{idx}.target_ptd_ms  = 9;           % 5 ms (Sequential)
 overrides{idx}.force_silent   = [1:32];        % Turn OFF
-overrides{idx}.force_respond  = [1,4,6,10:15,19:21,23:26];
+overrides{idx}.force_respond  = [10:16,19:24,26:29];
 
 % --- 10ms
 idx = 9;

@@ -15,7 +15,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% === User Input ===
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq2';
 
 win_ms = 10;       % window length after PTD (ms)
 FS = 30000;        % sampling rate

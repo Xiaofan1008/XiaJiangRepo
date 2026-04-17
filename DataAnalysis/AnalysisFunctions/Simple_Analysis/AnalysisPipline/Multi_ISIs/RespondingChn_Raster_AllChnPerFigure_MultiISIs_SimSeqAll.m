@@ -9,7 +9,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq2';
 Electrode_Type   = 1;          % 0 rigid, 1 single-shank flex, 2 four-shank flex
 raster_chn_start = 1;          % Depth_s index
 raster_chn_end   = 32;
@@ -25,7 +25,7 @@ Plot_Amps = [5,10];     % e.g. [4 6 8];  [] = all
 % [NEW] Which PTDs to plot (ms). If empty -> plot ALL PTDs.
 % 0 = Simultaneous. Example: [0 5 10]
 Plot_PTDs = [];     
-
+% Plot_PTDs = [11,12,13,14,15,17,20]; 
 % Fixed figure size (all figures the same)
 fig_position = [50 50 1600 900];
 

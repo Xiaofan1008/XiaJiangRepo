@@ -9,7 +9,7 @@ clear;
 data_folder  = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq2';
 
 % Paste the exact path to your saved results file here:
-results_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_5_10uA_Xia_ISI_SimSeq2.mat';
+results_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
 
 amp_A = 5;  % The first reversed amplitude
 amp_B = 10; % The second reversed amplitude
@@ -71,4 +71,4 @@ if ~isfile(backup_path)
 end
 
 save(results_path, 'ResultFR');
-fprintf('\nSUCCESS! Amplitudes swapped and file updated.\n');
+fprintf('\nAmplitudes swapped and file updated.\n');

@@ -10,11 +10,12 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq2'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
-% Select which ISIs (PTDs) you want to analyze (e.g., [0, 5, 10, 15])
-target_ISIs = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,17,20]; 
+% Select which ISIs (PTDs) you want to analyze. 
+% [MODIFIED] Leave as [] to automatically process ALL tested ISIs.
+target_ISIs = []; 
 
 % Choose the FIXED macro window [start, end]
 fixed_macro_win_ms = [0, 40]; 
@@ -22,17 +23,14 @@ fixed_macro_win_ms = [0, 40];
 % Added baseline window for spontaneous noise subtraction
 baseline_win_ms = [-50, -10]; 
 
-% Array of amplitudes to run the Comparison on (e.g., [5, 10])
-target_Amps = [5, 10]; % uA
+% Array of amplitudes to run the Comparison on. 
+% [MODIFIED] Leave as [] to automatically process ALL tested Amplitudes.
+target_Amps = [10]; % uA
 
-% [MODIFIED] ARTIFACT SCRUBBER: List known noisy points to delete and bridge.
+% ARTIFACT SCRUBBER: List known noisy points to delete and bridge.
 % Format: [Set, Amplitude (uA), ISI (ms)]; Add as many rows as needed.
-manual_artifacts = [ 1,5,6;
-                    1,5,13;
-                    1,5,20;
-                    2,5,9;
-                    2,5,13;
-                    
+manual_artifacts = [ 
+  
 ]; 
 
 % Choose whether to involve bad trials
@@ -81,6 +79,20 @@ for t = 1:nTr, rr = (t-1)*simN + (1:simN); v = idx_all(rr); v = v(v>0); comb(t,1
 [uniqueComb,~,combClass] = unique(comb,'rows','stable'); 
 nSets = size(uniqueComb,1);
 
+% =====================================================================
+% [NEW MODIFICATION] AUTO-DETECT EMPTY TARGET ARRAYS
+% =====================================================================
+if isempty(target_Amps)
+    target_Amps = Amps(:)';
+    fprintf('Auto-detected target_Amps: %s uA\n', num2str(target_Amps));
+end
+
+if isempty(target_ISIs)
+    % Ensure 0 is always included for Sim trials alongside sequential ISIs
+    target_ISIs = sort(unique([0; PTDs_ms(:)]))'; 
+    fprintf('Auto-detected target_ISIs: %s ms\n', num2str(target_ISIs));
+end
+
 %% ================= 2. IDENTIFY POPULATION PER SET =============
 d = Depth_s(Electrode_Type); nCh_Total = length(d);
 resp_channels_per_set = cell(nSets, 1);
@@ -97,7 +109,6 @@ for ss = 1:nSets
     local_resp_mask = false(nCh_Total, 1);
     
     if ss <= numel(R.set)
-        % Loop through ALL target amplitudes to build the Union Mask
         for a_idx = 1:length(ai_targets)
             ai_targ = ai_targets(a_idx);
             
@@ -124,11 +135,13 @@ for ss = 1:nSets
 end
 
 %% =================== 3. COMPUTE SPIKE COUNTS =================
-SpikeCount_sim = nan(nCh_Total, length(Amps), nSets);
-SpikeCount_seq = nan(nCh_Total, length(Amps), nSets, numel(PTDs_ms));
+% Matrices are tightly condensed to match your Targets exactly
+SpikeCount_sim = nan(nCh_Total, length(target_Amps), nSets);
+SpikeCount_seq = nan(nCh_Total, length(target_Amps), nSets, length(target_ISIs));
+
 nBins = length(edges_psth)-1;
-PSTH_Sim = nan(nCh_Total, nBins, length(Amps), nSets);
-PSTH_Seq = nan(nCh_Total, nBins, length(Amps), nSets, numel(PTDs_ms));
+PSTH_Sim = nan(nCh_Total, nBins, length(target_Amps), nSets);
+PSTH_Seq = nan(nCh_Total, nBins, length(target_Amps), nSets, length(target_ISIs));
 
 for ss = 1:nSets
     current_set_channels = resp_channels_per_set{ss};
@@ -142,38 +155,44 @@ for ss = 1:nSets
         if exclude_bad_trials && ~isempty(QC.BadTrials) && ch_idx <= length(QC.BadTrials)
             bad_trs = QC.BadTrials{ch_idx}; 
         end
-        
-        is_bad_ch = false;
         if exclude_bad_trials && ~isempty(QC.BadCh) && ss <= length(QC.BadCh) && ismember(ch_idx, QC.BadCh{ss})
-            is_bad_ch = true;
+            continue; 
         end
-        if is_bad_ch, continue; end
         
         % --- SIMULTANEOUS (PTD = 0) ---
-        ptd_sim_idx = find(abs(PTDs_ms - 0) < 0.001);
-                      
-        if ~isempty(ptd_sim_idx) && any(abs(target_ISIs - 0) < 0.001)
-            for ai = ai_targets(:)'
-                tr_ids = find(combClass == ss & ampIdx == ai & ptdIdx == ptd_sim_idx);
-                tr_ids = setdiff(tr_ids, bad_trs); 
-                
-                if isempty(tr_ids), continue; end
-                
-                [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
-                    fixed_macro_win_ms, baseline_win_ms, edges_psth, g_sym, bin_s, FS);
+        p_sim_idx = find(target_ISIs == 0); 
+        if ~isempty(p_sim_idx)
+            ptd_sim_raw = find(abs(PTDs_ms - 0) < 0.001);
+            if ~isempty(ptd_sim_raw)
+                for a_idx = 1:length(target_Amps)
+                    ai_raw = ai_targets(a_idx);
                     
-                SpikeCount_sim(ch_idx, ai, ss) = count_val;
-                PSTH_Sim(ch_idx, :, ai, ss)    = psth_curve;
+                    tr_ids = find(combClass == ss & ampIdx == ai_raw & ptdIdx == ptd_sim_raw);
+                    tr_ids = setdiff(tr_ids, bad_trs); 
+                    
+                    if isempty(tr_ids), continue; end
+                    
+                    [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
+                        fixed_macro_win_ms, baseline_win_ms, edges_psth, g_sym, bin_s, FS);
+                        
+                    SpikeCount_sim(ch_idx, a_idx, ss) = count_val;
+                    PSTH_Sim(ch_idx, :, a_idx, ss)    = psth_curve;
+                end
             end
         end
         
         % --- SEQUENTIAL (Target ISIs > 0) ---
-        for p = 1:numel(PTDs_ms)
-            if PTDs_ms(p) == 0, continue; end 
-            if ~any(abs(target_ISIs - PTDs_ms(p)) < 0.001), continue; end
+        for p_idx = 1:length(target_ISIs)
+            curr_isi = target_ISIs(p_idx);
+            if curr_isi == 0, continue; end 
             
-            for ai = ai_targets(:)'
-                tr_ids = find(combClass==ss & ptdIdx==p & ampIdx==ai);
+            p_raw = find(abs(PTDs_ms - curr_isi) < 0.001);
+            if isempty(p_raw), continue; end
+            
+            for a_idx = 1:length(target_Amps)
+                ai_raw = ai_targets(a_idx);
+                
+                tr_ids = find(combClass==ss & ptdIdx==p_raw & ampIdx==ai_raw);
                 tr_ids = setdiff(tr_ids, bad_trs); 
                 
                 if isempty(tr_ids), continue; end
@@ -181,15 +200,14 @@ for ss = 1:nSets
                 [count_val, psth_curve] = get_spike_count_macro(tr_ids, trig, S_ch, ...
                     fixed_macro_win_ms, baseline_win_ms, edges_psth, g_sym, bin_s, FS);
                 
-                SpikeCount_seq(ch_idx, ai, ss, p) = count_val;
-                PSTH_Seq(ch_idx, :, ai, ss, p)    = psth_curve;
+                SpikeCount_seq(ch_idx, a_idx, ss, p_idx) = count_val;
+                PSTH_Seq(ch_idx, :, a_idx, ss, p_idx)    = psth_curve;
             end
         end
     end
 end 
 
 %% =================== 3.5 ARTIFACT SCRUBBER ===================
-% [MODIFIED] Force known bad data points to NaN before plotting/saving
 if ~isempty(manual_artifacts)
     fprintf('\nApplying Artifact Scrubber...\n');
     for r = 1:size(manual_artifacts, 1)
@@ -197,18 +215,19 @@ if ~isempty(manual_artifacts)
         scrub_amp = manual_artifacts(r, 2);
         scrub_isi = manual_artifacts(r, 3);
         
-        % Convert physical Amp/ISI to Matrix Indices
-        ai_scrub = find(abs(Amps - scrub_amp) < 0.001);
+        a_scrub_idx = find(abs(target_Amps - scrub_amp) < 0.001);
+        p_scrub_idx = find(abs(target_ISIs - scrub_isi) < 0.001);
+        
+        if isempty(a_scrub_idx) || isempty(p_scrub_idx), continue; end
         
         if scrub_isi == 0
-            if ~isempty(ai_scrub) && scrub_set <= nSets
-                SpikeCount_sim(:, ai_scrub, scrub_set) = NaN;
+            if scrub_set <= nSets
+                SpikeCount_sim(:, a_scrub_idx, scrub_set) = NaN;
                 fprintf('  Scrubbed: Set %d | %.1f uA | %d ms\n', scrub_set, scrub_amp, scrub_isi);
             end
         else
-            pi_scrub = find(abs(PTDs_ms - scrub_isi) < 0.001);
-            if ~isempty(ai_scrub) && ~isempty(pi_scrub) && scrub_set <= nSets
-                SpikeCount_seq(:, ai_scrub, scrub_set, pi_scrub) = NaN;
+            if scrub_set <= nSets
+                SpikeCount_seq(:, a_scrub_idx, scrub_set, p_scrub_idx) = NaN;
                 fprintf('  Scrubbed: Set %d | %.1f uA | %d ms\n', scrub_set, scrub_amp, scrub_isi);
             end
         end
@@ -227,7 +246,6 @@ for ss = 1:nSets
     stimCh = stimCh(stimCh>0);
     
     for a_idx = 1:length(target_Amps)
-        current_ai = ai_targets(a_idx);
         current_amp = target_Amps(a_idx);
         
         y_mean = nan(1, length(target_ISIs));
@@ -237,14 +255,9 @@ for ss = 1:nSets
             target_isi = target_ISIs(p_idx);
             
             if target_isi == 0
-                data_set = squeeze(SpikeCount_sim(:, current_ai, ss));
+                data_set = squeeze(SpikeCount_sim(:, a_idx, ss));
             else
-                p = find(abs(PTDs_ms - target_isi) < 0.001);
-                if isempty(p)
-                    data_set = NaN;
-                else
-                    data_set = squeeze(SpikeCount_seq(:, current_ai, ss, p));
-                end
+                data_set = squeeze(SpikeCount_seq(:, a_idx, ss, p_idx));
             end
             
             data_set = data_set(~isnan(data_set)); 
@@ -259,7 +272,6 @@ for ss = 1:nSets
             col = amp_colors(a_idx, :);
             lbl = sprintf('%.1f uA', current_amp); 
             
-            % [MODIFIED] THE BRIDGE: Extract only valid points to plot
             valid_idx = ~isnan(y_mean);
             plot_x = target_ISIs(valid_idx);
             plot_y = y_mean(valid_idx);
@@ -279,23 +291,28 @@ for ss = 1:nSets
 end
 
 %% ============================================================
-%   5. STATISTICS: ANOVA 
-% ============================================================
-% fprintf('\nANOVA skipped for single dataset analysis (Requires multi-dataset pooling).\n');
-
-%% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
-isi_str = strjoin(string(target_ISIs), '_');
-amp_str = strjoin(string(target_Amps), '_');
 
-out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_' char(amp_str) 'uA_' exp_id '.mat']);
+% [MODIFIED] Smart Filename Generator to prevent OS Path Limit Crashes
+if length(target_Amps) > 4
+    amp_str = 'AllAmps';
+else
+    amp_str = strjoin(string(target_Amps), '_');
+end
+
+if length(target_ISIs) > 4
+    isi_str = 'AllISIs';
+else
+    isi_str = strjoin(string(target_ISIs), '_');
+end
+
+out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_DX016_' char(amp_str) 'uA_' exp_id '.mat']);
 
 ResultFR = struct();
-
 ResultFR.Metadata.Created = datestr(now);
 ResultFR.Metadata.Metric = 'Classic Fixed Macro-Window Spike Count (Net Mean per Channel)';
 ResultFR.Metadata.FixedMacroWin = fixed_macro_win_ms;
@@ -305,7 +322,9 @@ ResultFR.Metadata.TargetISIs = target_ISIs;
 ResultFR.Metadata.BadTrialsExcluded = exclude_bad_trials;
 ResultFR.Metadata.Stimulation_Sets = uniqueComb;
 ResultFR.Metadata.Responding_Channels = resp_channels_per_set;
-ResultFR.Metadata.Manual_Artifacts_Scrubbed = manual_artifacts; % [MODIFIED] Log what was scrubbed
+ResultFR.Metadata.Manual_Artifacts_Scrubbed = manual_artifacts; 
+ResultFR.Metadata.HardwareAmps = Amps;
+ResultFR.Metadata.HardwarePTDs = PTDs_ms;
 
 ResultFR.SpikeCounts.Sim = SpikeCount_sim; 
 ResultFR.SpikeCounts.Seq = SpikeCount_seq;

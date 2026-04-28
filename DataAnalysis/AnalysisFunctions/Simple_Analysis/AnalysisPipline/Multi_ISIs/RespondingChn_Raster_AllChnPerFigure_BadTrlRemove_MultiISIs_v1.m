@@ -8,7 +8,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ========================
 data_folder      = '/Volumes/MACData/Data/Data_Xia/DX021/Xia_ISI_SimSeq1';
-Electrode_Type   = 1;          
+Electrode_Type   = 2;          
 raster_chn_start = 1;          
 raster_chn_end   = 32;
 

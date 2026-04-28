@@ -10,7 +10,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_10uA_SimSeq1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze. 
@@ -25,7 +25,7 @@ baseline_win_ms = [-50, -10];
 
 % Array of amplitudes to run the Comparison on. 
 % [MODIFIED] Leave as [] to automatically process ALL tested Amplitudes.
-target_Amps = [10]; % uA
+target_Amps = []; % uA
 
 % ARTIFACT SCRUBBER: List known noisy points to delete and bridge.
 % Format: [Set, Amplitude (uA), ISI (ms)]; Add as many rows as needed.
@@ -293,7 +293,7 @@ end
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 
@@ -310,7 +310,7 @@ else
     isi_str = strjoin(string(target_ISIs), '_');
 end
 
-out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_DX016_' char(amp_str) 'uA_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_DX020_' char(amp_str) 'uA_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);

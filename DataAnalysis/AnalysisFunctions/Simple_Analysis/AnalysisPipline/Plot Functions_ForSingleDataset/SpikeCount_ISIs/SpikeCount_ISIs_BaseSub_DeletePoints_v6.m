@@ -10,7 +10,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_10uA_SimSeq1'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_10uA_SimSeq3'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze. 

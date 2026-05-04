@@ -7,12 +7,12 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX024/Xia_ISI_10uA_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq2';
 
 %% Choice
 Spike_filtering = 0;
 raster_chn_start = 1;
-raster_chn_end = 32; %nChn
+raster_chn_end = 1; %nChn
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [5];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;

@@ -6,10 +6,10 @@
 clear;
 
 % --- 1. USER SETTINGS ---
-data_folder  = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_ISI_SimSeq2';
+data_folder  = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq3';
 
 % Paste the EXACT path to the file you just swapped here:
-results_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
+results_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq3.mat';
 
 % --- 2. LOAD DATA ---
 fprintf('Loading saved results...\n');

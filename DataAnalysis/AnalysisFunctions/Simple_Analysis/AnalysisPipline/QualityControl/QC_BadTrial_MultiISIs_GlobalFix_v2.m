@@ -10,7 +10,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim3';
 Electrode_Type = 2;       
 
 % --- MANUAL BAD TRIALS LIST (GROUPED FORMAT) ---
@@ -23,21 +23,22 @@ Bad_Groups(c).Amp = 5;
 Bad_Groups(c).Trials = {
     % PTD (ms),  [List of Relative Bad Trial Indices]
       0, [];
-      3, [6,7,8]; % Good
-      4, [10,11,13]; % Bad
-      5, [3,5,6,7]; % Good
-      6, [12,17,18,20,21]; % Bad
-      7, [8,9,11,14,15,16]; % Bad
-      8, [];
-      9, [1,6,8,13,15,17,18]; % Bad ,20,21,28
-      10,[4,14,15,19,20,22,23,25]; % Bad ,26,27,28
-      11,[]; % Good 1,2,11,14,15,21,22,23,25
-      12,[]; 
+      3, [];
+      4, [];
+      5, [1:4,14,18,24]; % Good
+      6, [];
+      7, [];
+      8, [1:4,8,9,11,14,22];
+      9, [];
+      10,[2,3,5,7,9,16,18,19,21,24];
+      11,[];
+      12,[3:5,9,17,18,22,24];
       13,[];
-      14,[1,3,5,7,8,9,10]; % Good ,11,14,16
-      15,[1,3,4,6,7]; % Good ,8,10,12,14,17,19
-      17,[1:7]; % Good ,10,17,21,24,26
-      20,[1:3,5,6,8,10,12,13,14,16,17,19,21,22,23,28,30]; % Good
+      14,[];
+      15,[3,7,9,16,18,20];
+      17,[1,3,9,14,16:18,20,22,24];
+      20,[1:4,6:9,16,18,20];
+      25,[1,3:4,6:9,14,20,21];
 };
 
 % ================ Condition 2: Set 1, 10 uA ================
@@ -45,22 +46,23 @@ c = 2;
 Bad_Groups(c).Set = 1;
 Bad_Groups(c).Amp = 10;
 Bad_Groups(c).Trials = {
-      0, [1,3,5,8,9]; % Bad 10,14,16
-      3, [4,12,13,19,21,22]; % Bad ,15,16,18
-      4, [1,17,18,24,25,27:30]; % Bad ,2,6,9
-      5, [7,9,11:13,14,16:20,24,30]; % Bad
-      6, [1,10,12,18,25,28]; % Bad ,19,23,29,30
-      7, [3,12,13,18,27,29,30]; % Bad  ,7,9,23,24
-      8, [6,10,14,18,19,29]; % Bad ,17,21,22,25,27
-      9, [6,10,14,17:19,29]; % Bad 25,27,28,
-      10,[1,3,6,8,12,17,28]; % Bad ,21,27
-      11,[11,16,20,21,27,30]; % Bad 10,18,22,23
-      12,[5,17]; % Bad ,16,19,26,18,22,27,29,30
-      13,[1:6,8,16,20]; % Good ,11:14,21,22,23
-      14,[2:5,8,10:14]; % Good ,16:18,20,24,
-      15,[1,2,4,6,8,9,10,11,12,14,27]; % Good 17,19,21
-      17,[1:3,5:7,9:11,13]; % Good ,16,18,22,26:27,
-      20,[4,5,7,8,10:14,18:19]; % Good 21,22,28,29
+      0, [];
+      3, [];
+      4, [];
+      5, [];
+      6, [];
+      7, [];
+      8, [];
+      9, [];
+      10,[21];
+      11,[];
+      12,[2:4,8,10:12];
+      13,[];
+      14,[];
+      15,[4,5,8,10:12,16];
+      17,[1:3,5,6,8:12,14,18];
+      20,[1:10,14];
+      25,[1:5,7,9,14,17:19,22:25];
 };
 % ================ Condition 3: Set 2, 5 uA ================
 c = 3;
@@ -70,19 +72,20 @@ Bad_Groups(c).Trials = {
       0, [];
       3, [];
       4, [];
-      5, [8,13,16,17,21]; % Bad ,27,29 ,10,5,28
-      6, [9,10,13,14,25,26,27,29]; % Bad 16,20,23,
-      7, [10,16,18,25,]; % Bad 7,26,27,30
+      5, [];
+      6, [];
+      7, [];
       8, [];
-      9, [5,22,28]; % Bad 11,17,29
-      10,[]; % Bad
+      9, [];
+      10,[];
       11,[];
       12,[];
-      13,[]; % Good
-      14,[]; % Good
-      15,[]; % Good
-      17,[]; % Good
-      20,[]; % Good
+      13,[];
+      14,[];
+      15,[];
+      17,[];
+      20,[];
+      25,[];
 };
 
 % ================ Condition 4: Set 2, 10 uA ================
@@ -106,6 +109,7 @@ Bad_Groups(c).Trials = {
       15,[];
       17,[];
       20,[];
+      25,[];
 };
 
 
@@ -166,7 +170,8 @@ save_file_path = fullfile(data_folder, bad_filename);
 if isfile(save_file_path)
     fprintf('Found existing file: %s\nLoading previous bad trials...\n', bad_filename);
     tmp = load(save_file_path);
-    if isfield(tmp, 'MultiISIsBadTrials'), BadTrials = tmp.BadTrials;
+    % if isfield(tmp, 'MultiISIsBadTrials'), BadTrials = tmp.BadTrials;
+        if isfield(tmp, 'BadTrials'), BadTrials = tmp.BadTrials;
     else, BadTrials = cell(nCh_Total, 1); end
 else
     fprintf('Creating new BadTrials file: %s\n', bad_filename);

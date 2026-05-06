@@ -1,8 +1,7 @@
 %% ============================================================
-%   Population Spike Count Analysis (Target Time & Amp Normalized)
-%   - Normalization: Each animal is divided by its own specific Amp/ISI value
+%   Population Spike Count Analysis (Raw Average)
 %   - Logic: Union of Amplitudes and ISIs from CONDENSED .mat files
-%   - Metric: Pooled Sets -> Mean ± SEM across animals (N)
+%   - Metric: Pooled Sets -> Mean ± SEM across animals (N) (No Normalization)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
@@ -15,13 +14,12 @@ dataset_files = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_10uA_Xia_ISI_SimSeq1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX019/Result_SpikeCount_FixWin_DX019_5_10uA_Xia_ISI_SimSeq1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq2.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/Result_SpikeCount_FixWin_DX021_5_10uA_Xia_ISI_SimSeq1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/Result_SpikeCount_FixWin_DX021_5_10uA_Xia_ISI_SimSeq2.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX022/Result_SpikeCount_FixWin_DX022_10uA_Xia_ISI_10uA_SimSeq1.mat';
@@ -30,16 +28,12 @@ dataset_files = {
 };
 
 % 2. Plotting Aesthetics
-line_width = 2;
-marker_size = 6;
-cap_size = 3; 
+line_width = 2.5;
+marker_size = 5;
+cap_size = 3.5; % Size of the error bar caps
 
 % 3. Statistical Settings
-stats_target_Amp = 10; 
-
-% [MODIFIED] 4. Normalization Settings
-norm_target_Amp = 10; % Amplitude to use for maximum normalization
-norm_target_ISI = 9;  % ISI time (ms) to use for maximum normalization
+stats_target_Amp = 10; % Select the specific Amplitude to run the LMM on
 
 %% =================== 1. SCOUT LOOP (Build Master Union) ====================
 fprintf('Scanning datasets to build Union Map...\n');
@@ -47,6 +41,7 @@ Union_Amps = [];
 Union_ISIs = [];
 max_Sets   = 0;
 nFiles     = length(dataset_files);
+
 for k = 1:nFiles
     load(dataset_files{k}, 'ResultFR');
     
@@ -62,10 +57,12 @@ end
 fprintf('Union Amplitudes found: %s uA\n', num2str(Union_Amps));
 fprintf('Union ISIs found: %s ms\n', num2str(Union_ISIs));
 
+% Pre-allocate the Master Population Array
 Pop_Data = nan(length(Union_Amps), length(Union_ISIs), max_Sets, nFiles);
 
-%% ================= 2. GATHER & NORMALIZE (The Core Engine) =============
-fprintf('\nExtracting and Normalizing Data...\n');
+%% ================= 2. GATHER & ASSEMBLE (The Core Engine) =============
+% [MODIFIED] Removed Normalization logic. Now strictly extracting raw means.
+fprintf('\nExtracting Raw Data (No Normalization)...\n');
 for k = 1:nFiles
     fprintf('  Processing File %d/%d...\n', k, nFiles);
     
@@ -102,32 +99,9 @@ for k = 1:nFiles
         end
     end
     
-    % [MODIFIED] 3. Normalize to Variable Target Amp and Target ISI
-    idx_normAmp = find(abs(Union_Amps - norm_target_Amp) < 0.001);
-    idx_normISI = find(abs(Union_ISIs - norm_target_ISI) < 0.001);
+    % [MODIFIED] Drop the raw, un-normalized animal_means directly into the Pop_Data master array
+    Pop_Data(:, :, 1:nSets_this, k) = animal_means;
     
-    if ~isempty(idx_normAmp) && ~isempty(idx_normISI)
-        % Extract data for Target Amp at Target ISI across all valid Sets for this animal
-        data_target = animal_means(idx_normAmp, idx_normISI, :);
-        valid_target = data_target(~isnan(data_target));
-        
-        if ~isempty(valid_target)
-            % Find the peak response at the target ISI across the valid sets
-            Denominator_Target = max(valid_target);
-            
-            if Denominator_Target > 0
-                Pop_Data(:, :, 1:nSets_this, k) = animal_means / Denominator_Target;
-            else
-                fprintf('    -> Warning: %.1fuA at %.1fms is 0. Skipping normalization.\n', norm_target_Amp, norm_target_ISI);
-            end
-        else
-            % Failsafe: Animal was tested, but the target trial was scrubbed/NaN
-            fprintf('    -> Warning: No valid %.1fuA data at %.1fms found. Excluded from average.\n', norm_target_Amp, norm_target_ISI);
-        end
-    else
-        % Failsafe: Animal didn't test either the Target Amp or the Target ISI at all
-        fprintf('    -> Warning: %.1fuA or %.1fms missing from dataset. Excluded from average.\n', norm_target_Amp, norm_target_ISI);
-    end
 end
 
 %% =================== 3. POPULATION STATISTICS =================
@@ -172,9 +146,8 @@ end
 num_amps = length(Union_Amps);
 gray_shades = linspace(0.6, 0, num_amps)'; 
 colors = [gray_shades, gray_shades, gray_shades]; 
-
-line_styles = {'--','-', ':', '-.'}; 
-markers = {'o', 's','^', 'd'};
+line_styles = {'-', '--', ':', '-.'}; 
+markers = {'s', 'o', '^', 'd'};
 
 figure('Color','w', 'Position',[100 100 800 600]); 
 hold on;
@@ -193,32 +166,28 @@ for a = 1:length(Union_Amps)
         mk  = markers{mod(a-1, length(markers))+1};
         lbl = sprintf('%.1f uA', current_amp); 
         
-        x_idx    = find(valid_idx); 
+        plot_x   = Union_ISIs(valid_idx);
         plot_y   = y_mean(valid_idx);
         plot_err = y_sem(valid_idx);
         
-        errorbar(x_idx, plot_y, plot_err, 'LineStyle', ls, 'Marker', mk, 'Color', col, ...
+        errorbar(plot_x, plot_y, plot_err, 'LineStyle', ls, 'Marker', mk, 'Color', col, ...
             'LineWidth', line_width, 'MarkerFaceColor', 'w', 'MarkerSize', marker_size, ...
             'CapSize', cap_size, 'DisplayName', lbl);
     end
 end
 
 % Figure Formatting
-xticks(1:length(Union_ISIs));
-xticklabels(Union_ISIs);
-xlim([1, length(Union_ISIs)]);
-
 xlabel('Inter-Stimulus Interval (ms)', 'FontSize', 12); 
 
-% [MODIFIED] Dynamic Y-axis label based on user settings
-ylabel_str = sprintf('Normalized Spike Count (%.1fuA at %.1fms)', norm_target_Amp, norm_target_ISI);
-ylabel(ylabel_str, 'FontSize', 12);
+% [MODIFIED] Updated Y-axis label to reflect raw data
+ylabel('Raw Spike Count', 'FontSize', 12);
 
 title_str = sprintf('ISI Population Average');
 title(title_str, 'FontSize', 14);
 
+xticks(sort(Union_ISIs));
 box off;
-lgd = legend('Location','southeast','Box','off'); 
+lgd = legend('Location','best','Box','off'); 
 title(lgd, 'Amplitudes'); 
 
 fprintf('Figure generated.\n');

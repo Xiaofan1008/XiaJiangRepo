@@ -1,7 +1,7 @@
 %% ========================================================================
 %  Data Patch: Swap Reversed Amplitude Data in Saved Results
 %  This script swaps the data slices for two specific amplitudes
-%  without needing to re-run the spike counting logic.
+%  for SPECIFIC TARGET SETS without needing to re-run spike counting.
 % ========================================================================
 clear;
 
@@ -14,6 +14,10 @@ results_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_Spike
 amp_A = 5;  % The first reversed amplitude
 amp_B = 10; % The second reversed amplitude
 
+% [MODIFIED] Define the specific sets you want to swap. 
+% You can use a single number or an array (e.g., [1, 3]).
+target_sets = [2]; 
+
 % --- 2. LOAD HARDWARE AMPS TO FIND INDICES ---
 % We load the exp_datafile just to figure out which matrix index corresponds to 5 and 10
 cd(data_folder);
@@ -23,6 +27,7 @@ if isempty(fileDIR)
 end
 S_exp = load(fileDIR(1).name, 'StimParams', 'simultaneous_stim');
 simN  = S_exp.simultaneous_stim;
+
 amps_all  = cell2mat(S_exp.StimParams(2:end,16)); 
 trialAmps = amps_all(1:simN:end);
 [Amps, ~, ~] = unique(trialAmps); 
@@ -41,26 +46,27 @@ fprintf('Loading results file...\n');
 load(results_path, 'ResultFR');
 
 fprintf('Swapping data between %.1f uA (Index %d) and %.1f uA (Index %d)...\n', amp_A, idx_A, amp_B, idx_B);
+fprintf('Applying swap ONLY to Target Set(s): %s\n', num2str(target_sets));
 
-% 1. Swap SpikeCounts.Sim [Channels x Amps x Sets]
-temp = ResultFR.SpikeCounts.Sim(:, idx_A, :);
-ResultFR.SpikeCounts.Sim(:, idx_A, :) = ResultFR.SpikeCounts.Sim(:, idx_B, :);
-ResultFR.SpikeCounts.Sim(:, idx_B, :) = temp;
+% [MODIFIED] 1. Swap SpikeCounts.Sim [Channels x Amps x Sets]
+temp = ResultFR.SpikeCounts.Sim(:, idx_A, target_sets);
+ResultFR.SpikeCounts.Sim(:, idx_A, target_sets) = ResultFR.SpikeCounts.Sim(:, idx_B, target_sets);
+ResultFR.SpikeCounts.Sim(:, idx_B, target_sets) = temp;
 
-% 2. Swap SpikeCounts.Seq [Channels x Amps x Sets x PTDs]
-temp = ResultFR.SpikeCounts.Seq(:, idx_A, :, :);
-ResultFR.SpikeCounts.Seq(:, idx_A, :, :) = ResultFR.SpikeCounts.Seq(:, idx_B, :, :);
-ResultFR.SpikeCounts.Seq(:, idx_B, :, :) = temp;
+% [MODIFIED] 2. Swap SpikeCounts.Seq [Channels x Amps x Sets x PTDs]
+temp = ResultFR.SpikeCounts.Seq(:, idx_A, target_sets, :);
+ResultFR.SpikeCounts.Seq(:, idx_A, target_sets, :) = ResultFR.SpikeCounts.Seq(:, idx_B, target_sets, :);
+ResultFR.SpikeCounts.Seq(:, idx_B, target_sets, :) = temp;
 
-% 3. Swap PSTH.Sim [Channels x Bins x Amps x Sets]
-temp = ResultFR.PSTH.Sim(:, :, idx_A, :);
-ResultFR.PSTH.Sim(:, :, idx_A, :) = ResultFR.PSTH.Sim(:, :, idx_B, :);
-ResultFR.PSTH.Sim(:, :, idx_B, :) = temp;
+% [MODIFIED] 3. Swap PSTH.Sim [Channels x Bins x Amps x Sets]
+temp = ResultFR.PSTH.Sim(:, :, idx_A, target_sets);
+ResultFR.PSTH.Sim(:, :, idx_A, target_sets) = ResultFR.PSTH.Sim(:, :, idx_B, target_sets);
+ResultFR.PSTH.Sim(:, :, idx_B, target_sets) = temp;
 
-% 4. Swap PSTH.Seq [Channels x Bins x Amps x Sets x PTDs]
-temp = ResultFR.PSTH.Seq(:, :, idx_A, :, :);
-ResultFR.PSTH.Seq(:, :, idx_A, :, :) = ResultFR.PSTH.Seq(:, :, idx_B, :, :);
-ResultFR.PSTH.Seq(:, :, idx_B, :, :) = temp;
+% [MODIFIED] 4. Swap PSTH.Seq [Channels x Bins x Amps x Sets x PTDs]
+temp = ResultFR.PSTH.Seq(:, :, idx_A, target_sets, :);
+ResultFR.PSTH.Seq(:, :, idx_A, target_sets, :) = ResultFR.PSTH.Seq(:, :, idx_B, target_sets, :);
+ResultFR.PSTH.Seq(:, :, idx_B, target_sets, :) = temp;
 
 % --- 4. RE-SAVE THE FILE ---
 % Create a backup just in case
@@ -71,4 +77,4 @@ if ~isfile(backup_path)
 end
 
 save(results_path, 'ResultFR');
-fprintf('\nAmplitudes swapped and file updated.\n');
+fprintf('\nAmplitudes swapped for specified sets and file updated.\n');

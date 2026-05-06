@@ -6,7 +6,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER INPUT =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim3';
 Electrode_Type = 2;    % 0 = rigid, 1 = single-shank flex, 2 = four-shank flex
 
 % ---- Choose detection mode ----

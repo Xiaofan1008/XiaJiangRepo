@@ -1,6 +1,6 @@
 %% ============================================================
-%   Population Spike Count Analysis (Target Time & Amp Normalized)
-%   - Normalization: Each animal is divided by its own specific Amp/ISI value
+%   Population Spike Count Analysis (Independent Set Normalized)
+%   - Normalization: Each SET is divided independently by its own target Amp/ISI
 %   - Logic: Union of Amplitudes and ISIs from CONDENSED .mat files
 %   - Metric: Pooled Sets -> Mean ± SEM across animals (N)
 % ============================================================
@@ -10,6 +10,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= USER SETTINGS ============================
 % 1. Define your datasets here. 
 dataset_files = {
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_4.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
@@ -47,6 +48,7 @@ Union_Amps = [];
 Union_ISIs = [];
 max_Sets   = 0;
 nFiles     = length(dataset_files);
+
 for k = 1:nFiles
     load(dataset_files{k}, 'ResultFR');
     
@@ -61,7 +63,6 @@ for k = 1:nFiles
 end
 fprintf('Union Amplitudes found: %s uA\n', num2str(Union_Amps));
 fprintf('Union ISIs found: %s ms\n', num2str(Union_ISIs));
-
 Pop_Data = nan(length(Union_Amps), length(Union_ISIs), max_Sets, nFiles);
 
 %% ================= 2. GATHER & NORMALIZE (The Core Engine) =============
@@ -102,27 +103,23 @@ for k = 1:nFiles
         end
     end
     
-    % [MODIFIED] 3. Normalize to Variable Target Amp and Target ISI
+    % [MODIFIED] 3. Independent Within-Set Normalization
     idx_normAmp = find(abs(Union_Amps - norm_target_Amp) < 0.001);
     idx_normISI = find(abs(Union_ISIs - norm_target_ISI) < 0.001);
     
     if ~isempty(idx_normAmp) && ~isempty(idx_normISI)
-        % Extract data for Target Amp at Target ISI across all valid Sets for this animal
-        data_target = animal_means(idx_normAmp, idx_normISI, :);
-        valid_target = data_target(~isnan(data_target));
-        
-        if ~isempty(valid_target)
-            % Find the peak response at the target ISI across the valid sets
-            Denominator_Target = max(valid_target);
+        % Loop through each set independently
+        for ss = 1:nSets_this
+            % Extract the denominator strictly for THIS specific set
+            Denominator_Target = animal_means(idx_normAmp, idx_normISI, ss);
             
-            if Denominator_Target > 0
-                Pop_Data(:, :, 1:nSets_this, k) = animal_means / Denominator_Target;
+            % Check if the target exists and is valid for this set
+            if ~isnan(Denominator_Target) && Denominator_Target > 0
+                % Divide ONLY this set's data by its own denominator
+                Pop_Data(:, :, ss, k) = animal_means(:, :, ss) / Denominator_Target;
             else
-                fprintf('    -> Warning: %.1fuA at %.1fms is 0. Skipping normalization.\n', norm_target_Amp, norm_target_ISI);
+                fprintf('    -> Warning: Set %d has invalid or 0 baseline at %.1fuA, %.1fms. Skipping normalization for this set.\n', ss, norm_target_Amp, norm_target_ISI);
             end
-        else
-            % Failsafe: Animal was tested, but the target trial was scrubbed/NaN
-            fprintf('    -> Warning: No valid %.1fuA data at %.1fms found. Excluded from average.\n', norm_target_Amp, norm_target_ISI);
         end
     else
         % Failsafe: Animal didn't test either the Target Amp or the Target ISI at all
@@ -172,7 +169,6 @@ end
 num_amps = length(Union_Amps);
 gray_shades = linspace(0.6, 0, num_amps)'; 
 colors = [gray_shades, gray_shades, gray_shades]; 
-
 line_styles = {'--','-', ':', '-.'}; 
 markers = {'o', 's','^', 'd'};
 
@@ -207,7 +203,6 @@ end
 xticks(1:length(Union_ISIs));
 xticklabels(Union_ISIs);
 xlim([1, length(Union_ISIs)]);
-
 xlabel('Inter-Stimulus Interval (ms)', 'FontSize', 12); 
 
 % [MODIFIED] Dynamic Y-axis label based on user settings

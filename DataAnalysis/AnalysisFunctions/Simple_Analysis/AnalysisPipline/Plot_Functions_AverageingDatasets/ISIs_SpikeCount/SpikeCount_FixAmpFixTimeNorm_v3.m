@@ -11,6 +11,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 % 1. Define your datasets here. 
 dataset_files = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim1.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_4.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
@@ -40,7 +41,7 @@ stats_target_Amp = 10;
 
 % [MODIFIED] 4. Normalization Settings
 norm_target_Amp = 10; % Amplitude to use for maximum normalization
-norm_target_ISI = 9;  % ISI time (ms) to use for maximum normalization
+norm_target_ISI = 0;  % ISI time (ms) to use for maximum normalization
 
 %% =================== 1. SCOUT LOOP (Build Master Union) ====================
 fprintf('Scanning datasets to build Union Map...\n');

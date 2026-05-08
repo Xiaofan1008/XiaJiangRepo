@@ -58,7 +58,7 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
+save_figures = false;
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Duration_3SD';
 
 % --- Black and White Settings ---

@@ -136,11 +136,11 @@ for k = 1:length(Unique_Amps)
     
     vs = Pool_Sim(Pool_Sim(:,1)==amp, 2);
     if isempty(vs) && amp==0, vs=0; end
-    Grand_Sim_Mean(k) = mean(vs); Grand_Sim_SEM(k) = std(vs)/sqrt(9);
+    Grand_Sim_Mean(k) = mean(vs); Grand_Sim_SEM(k) = std(vs)/sqrt(10);
     
     vq = Pool_Seq(Pool_Seq(:,1)==amp, 2);
     if isempty(vq) && amp==0, vq=0; end
-    Grand_Seq_Mean(k) = mean(vq); Grand_Seq_SEM(k) = std(vq)/sqrt(9);
+    Grand_Seq_Mean(k) = mean(vq); Grand_Seq_SEM(k) = std(vq)/sqrt(10);
 end
 
 %% ================= 4. PLOT =================

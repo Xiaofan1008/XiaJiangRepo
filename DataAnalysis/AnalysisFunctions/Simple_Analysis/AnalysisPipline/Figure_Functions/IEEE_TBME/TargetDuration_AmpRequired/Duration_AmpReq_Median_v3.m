@@ -60,8 +60,8 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = false;
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Duration_3SD';
+save_figures = true;
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure3/Duration_AmpRequired';
 
 % --- Black and White Settings ---
 color_sim    = 'k'; 
@@ -70,7 +70,7 @@ IQR_out_parm = 1.5; % Strict IQR filter to drop intra-set noise
 stats_min_n_threshold = 2;
 
 % --- Small swapped-axis test: selected matched durations ---
-target_durations = [4:0.5:10];
+target_durations = [5:0.25:8];
 enforce_monotonic = true;
 
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
@@ -200,15 +200,33 @@ Plot_Del_SEM  = [0, SEM_Del];
 fprintf('Generating exact amplitude duration plot...\n');
 figure('Color','w', 'Units', 'centimeters', 'Position', [5, 5, 8.8, 8.8], 'Name', 'ExactAmplitude_Duration'); hold on;
 
-errorbar(Plot_AmpVals, Plot_Sim_Mean, Plot_Sim_SEM, '.', 'Color', color_sim, ...
+errorbar(AmpVals, Mean_Sim, SEM_Sim, '.', 'Color', color_sim, ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p1 = plot(Plot_AmpVals, Plot_Sim_Mean, '--o', 'Color', color_sim, 'LineWidth', 1.5, ...
+p1 = plot(AmpVals, Mean_Sim, '--o', 'Color', color_sim, 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'w', 'MarkerSize', 5, 'DisplayName', 'Simultaneous');
 
-errorbar(Plot_AmpVals, Plot_Seq_Mean, Plot_Seq_SEM, '.', 'Color', color_seq, ...
+errorbar(AmpVals, Mean_Seq, SEM_Seq, '.', 'Color', color_seq, ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p2 = plot(Plot_AmpVals, Plot_Seq_Mean, '-s', 'Color', color_seq, 'LineWidth', 1.5, ...
+p2 = plot(AmpVals, Mean_Seq, '-s', 'Color', color_seq, 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sequential');
+
+% jitter_w = 0.20;
+% for k = 1:length(AmpVals)
+%     curr_amp = AmpVals(k);
+% 
+%     sim_vals = AmpStats(k).Sim;
+%     seq_vals = AmpStats(k).Seq;
+% 
+%     for i = 1:length(sim_vals)
+%         scatter(curr_amp + (rand-0.5)*jitter_w, sim_vals(i), 12, [0.8 0.8 0.8], 'o', ...
+%             'LineWidth', 0.7, 'MarkerEdgeAlpha', 0.5, 'HandleVisibility', 'off');
+%     end
+% 
+%     for i = 1:length(seq_vals)
+%         scatter(curr_amp + (rand-0.5)*jitter_w, seq_vals(i), 12, [0.7 0.7 0.7], 's', ...
+%             'filled', 'MarkerFaceAlpha', 0.5, 'HandleVisibility', 'off');
+%     end
+% end
 
 % Stats stars
 fprintf('\n=== EXACT AMPLITUDE DURATION STATS (Paired Signed Rank) ===\n');
@@ -245,16 +263,18 @@ end
 
 ylabel('Mean Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 xlabel('Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
-legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
+legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'southwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([0, max(AmpVals)]);
-set(gca, 'XTick', 0:2:max(AmpVals));
-ylim([0, ceil(max([Plot_Sim_Mean + Plot_Sim_SEM, Plot_Seq_Mean + Plot_Seq_SEM]) + 1.2)]);
+xlim([min(AmpVals)-0.3, max(AmpVals)]);
+% set(gca, 'XTick', 0:2:max(AmpVals));
+set(gca, 'XTick', AmpVals);
+
+ylim([0, ceil(max([Mean_Sim + SEM_Sim, Mean_Seq + SEM_Seq]) + 1.2)]);
 box off; axis square;
 
 if save_figures
-    exportgraphics(gcf, fullfile(save_dir, 'ExactAmplitude_Duration.tiff'), 'ContentType', 'vector', 'Resolution', 300);
+    exportgraphics(gcf, fullfile(save_dir, 'MeanDuration_Amp.tiff'), 'ContentType', 'vector', 'Resolution', 300);
 end
 
 %% ================= 4. PLOT 2: DELTA DURATION VS EXACT AMPLITUDE =================
@@ -262,65 +282,88 @@ fprintf('Generating exact amplitude delta duration plot...\n');
 figure('Color','w', 'Units', 'centimeters', 'Position', [10, 5, 8.8, 8.8], 'Name', 'ExactAmplitude_DeltaDuration'); hold on;
 
 % Scatter background
-jitter_w = 0.20;
-for k = 1:length(AmpVals)
-    curr_amp = AmpVals(k);
-    delta_vals = AmpStats(k).Delta;
-    
-    for i = 1:length(delta_vals)
-        scatter(curr_amp + (rand-0.5)*jitter_w, delta_vals(i), 12, [0.7 0.7 0.7], 'o', ...
-            'filled', 'MarkerFaceAlpha', 0.5, 'HandleVisibility', 'off');
-    end
-end
+% jitter_w = 0.20;
+% for k = 1:length(AmpVals)
+%     curr_amp = AmpVals(k);
+%     delta_vals = AmpStats(k).Delta;
+% 
+%     for i = 1:length(delta_vals)
+%         scatter(curr_amp + (rand-0.5)*jitter_w, delta_vals(i), 12, [0.7 0.7 0.7], 'o', ...
+%             'filled', 'MarkerFaceAlpha', 0.5, 'HandleVisibility', 'off');
+%     end
+% end
 
-errorbar(Plot_AmpVals, Plot_Del_Mean, Plot_Del_SEM, '.', 'Color', 'k', ...
+errorbar(AmpVals, Mean_Del, SEM_Del, '.', 'Color', 'k', ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p3 = plot(Plot_AmpVals, Plot_Del_Mean, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
+p3 = plot(AmpVals, Mean_Del, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Seq - Sim');
 
 yline(0, '--k', 'LineWidth', 1, 'HandleVisibility', 'off');
 
 % Stats stars
+% fprintf('\n=== EXACT AMPLITUDE DELTA DURATION STATS (Paired Signed Rank) ===\n');
+% 
+% for k = 1:length(AmpVals)
+%     curr_amp = AmpVals(k);
+%     n_pairs = AmpStats(k).N;
+% 
+%     if n_pairs < stats_min_n_threshold
+%         fprintf('Amp %.1f uA: Skipped (Low N=%d)\n', curr_amp, n_pairs);
+%         continue;
+%     end
+% 
+%     p = AmpStats(k).P;
+%     txt = '';
+%     if p < 0.001
+%         txt = '***';
+%     elseif p < 0.01
+%         txt = '**';
+%     elseif p < 0.05
+%         txt = '*';
+%     end
+% 
+%     if ~isempty(txt)
+%         y_top = Mean_Del(k) + SEM_Del(k);
+%         text(curr_amp, y_top + 0.20, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', ...
+%             'FontWeight', 'bold', 'FontName', 'Arial');
+%     end
+% end
+
+% Command window stats printout (No stars on plot)
 fprintf('\n=== EXACT AMPLITUDE DELTA DURATION STATS (Paired Signed Rank) ===\n');
+fprintf('%-10s | %-6s | %-12s | %-12s | %-12s\n', 'Amp', 'N', 'Mean Delta', 'SEM Delta', 'P-Value');
+fprintf('--------------------------------------------------------------------------\n');
 
 for k = 1:length(AmpVals)
     curr_amp = AmpVals(k);
     n_pairs = AmpStats(k).N;
+    mean_delta = Mean_Del(k);
+    sem_delta = SEM_Del(k);
+    p = AmpStats(k).P;
     
     if n_pairs < stats_min_n_threshold
-        fprintf('Amp %.1f uA: Skipped (Low N=%d)\n', curr_amp, n_pairs);
+        fprintf('%-10.1f | %-6d | %-12.3f | %-12.3f | Skipped (Low N)\n', ...
+            curr_amp, n_pairs, mean_delta, sem_delta);
         continue;
     end
     
-    p = AmpStats(k).P;
-    txt = '';
-    if p < 0.001
-        txt = '***';
-    elseif p < 0.01
-        txt = '**';
-    elseif p < 0.05
-        txt = '*';
-    end
-    
-    if ~isempty(txt)
-        y_top = Mean_Del(k) + SEM_Del(k);
-        text(curr_amp, y_top + 0.20, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', ...
-            'FontWeight', 'bold', 'FontName', 'Arial');
-    end
+    fprintf('%-10.1f | %-6d | %-12.3f | %-12.3f | %s\n', ...
+        curr_amp, n_pairs, mean_delta, sem_delta, format_p(p));
 end
 
-ylabel('\Delta Duration (Sequential - Simultaneous) (ms)', 'FontSize', 9, 'FontName', 'Arial');
-xlabel('Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
-legend([p3], {'Seq - Sim'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Duration difference (Sequential - Simultaneous) (ms)', 'FontSize', 9, 'FontName', 'Arial');
+xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
+legend([p3], {'Sequential - Simultaneous'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([0, max(AmpVals)]);
-set(gca, 'XTick', 0:2:max(AmpVals));
-ylim([floor(min([Plot_Del_Mean - Plot_Del_SEM, 0]) - 0.5), ceil(max([Plot_Del_Mean + Plot_Del_SEM]) + 0.8)]);
+xlim([min(AmpVals)-0.3, max(AmpVals)]);
+% set(gca, 'XTick', 0:2:max(AmpVals));
+set(gca, 'XTick', AmpVals);
+ylim([floor(min([Mean_Del - SEM_Del, 0]) - 0.5), ceil(max([Mean_Del + SEM_Del]) + 0.8)]);
 box off; axis square;
 
 if save_figures
-    exportgraphics(gcf, fullfile(save_dir, 'ExactAmplitude_DeltaDuration.tiff'), 'ContentType', 'vector', 'Resolution', 300);
+    exportgraphics(gcf, fullfile(save_dir, 'MeanDurationDiff_Amp.tiff'), 'ContentType', 'vector', 'Resolution', 300);
 end
 
 %% ================= 5. SMALL SWAPPED-AXIS TEST: SELECTED MATCHED DURATIONS =================
@@ -484,14 +527,6 @@ for k = 1:length(Unique_Targets)
     Grand_Target_N(k)        = length(delta_vals);
 end
 
-Plot_Targets2    = [0; Unique_Targets];
-Plot_Target_Sim  = [0, Grand_Target_Sim_Mean];
-Plot_Target_SimE = [0, Grand_Target_Sim_SEM];
-Plot_Target_Seq  = [0, Grand_Target_Seq_Mean];
-Plot_Target_SeqE = [0, Grand_Target_Seq_SEM];
-Plot_Target_Del  = [0, Grand_Target_Del_Mean];
-Plot_Target_DelE = [0, Grand_Target_Del_SEM];
-
 %% ================= 6. PLOT 3: REQUIRED AMPLITUDE AT SELECTED MATCHED DURATIONS =================
 figure('Color','w', 'Units', 'centimeters', 'Position', [15, 5, 8.8, 8.8], 'Name', 'SelectedMatchedDuration_RequiredAmplitude'); hold on;
 
@@ -505,14 +540,14 @@ for i = 1:size(Pool_Sim_Target, 1)
         'LineWidth', 0.7, 'MarkerEdgeAlpha', 0.5, 'HandleVisibility', 'off');
 end
 
-errorbar(Plot_Targets2, Plot_Target_Sim, Plot_Target_SimE, '.', 'Color', color_sim, ...
+errorbar(Unique_Targets, Grand_Target_Sim_Mean, Grand_Target_Sim_SEM, '.', 'Color', color_sim, ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p4 = plot(Plot_Targets2, Plot_Target_Sim, '--o', 'Color', color_sim, 'LineWidth', 1.5, ...
+p4 = plot(Unique_Targets, Grand_Target_Sim_Mean, '--o', 'Color', color_sim, 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'w', 'MarkerSize', 5, 'DisplayName', 'Simultaneous');
 
-errorbar(Plot_Targets2, Plot_Target_Seq, Plot_Target_SeqE, '.', 'Color', color_seq, ...
+errorbar(Unique_Targets, Grand_Target_Seq_Mean, Grand_Target_Seq_SEM, '.', 'Color', color_seq, ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p5 = plot(Plot_Targets2, Plot_Target_Seq, '-s', 'Color', color_seq, 'LineWidth', 1.5, ...
+p5 = plot(Unique_Targets, Grand_Target_Seq_Mean, '-s', 'Color', color_seq, 'LineWidth', 1.5, ...
     'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sequential');
 
 ylabel('Required Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
@@ -520,21 +555,31 @@ xlabel('Matched Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([0, max(target_durations)]);
-set(gca, 'XTick', 0:2:max(target_durations));
-ylim([0, ceil(max([Plot_Target_Sim + Plot_Target_SimE, Plot_Target_Seq + Plot_Target_SeqE]) + 1.0)]);
+xlim([min(Unique_Targets)-0.2, max(target_durations)]);
+% set(gca, 'XTick', 4:2:max(target_durations));
+set(gca, 'XTick', 4:1:max(target_durations));
+ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]) + 1.0)]);
 box off; axis square;
 
 if save_figures
-    exportgraphics(gcf, fullfile(save_dir, 'SelectedMatchedDuration_RequiredAmplitude.tiff'), 'ContentType', 'vector', 'Resolution', 300);
+    exportgraphics(gcf, fullfile(save_dir, 'ReqAmp_Duration.tiff'), 'ContentType', 'vector', 'Resolution', 300);
 end
 
 %% ================= 7. PLOT 4: DELTA REQUIRED AMPLITUDE AT SELECTED MATCHED DURATIONS =================
 figure('Color','w', 'Units', 'centimeters', 'Position', [20, 5, 8.8, 8.8], 'Name', 'SelectedMatchedDuration_DeltaAmplitude'); hold on;
 
+% Remove 8 ms point from Plot 4 only
+keep_idx_plot4 = abs(Unique_Targets - 8) > 0.001;
+
+Plot4_Targets   = Unique_Targets(keep_idx_plot4);
+Plot4_Del_Mean  = Grand_Target_Del_Mean(keep_idx_plot4);
+Plot4_Del_SEM   = Grand_Target_Del_SEM(keep_idx_plot4);
+
 jitter_w = 0.20;
-for k = 1:length(Unique_Targets)
-    target_val = Unique_Targets(k);
+% for k = 1:length(Unique_Targets)
+%     target_val = Unique_Targets(k);
+for k = 1:length(Plot4_Targets)
+    target_val = Plot4_Targets(k);
     current_pairs = Pool_Paired_Target(abs(Pool_Paired_Target(:,1)-target_val)<0.001, :);
     delta_vals = current_pairs(:,2) - current_pairs(:,3);   % Sim - Seq
     
@@ -544,25 +589,33 @@ for k = 1:length(Unique_Targets)
     end
 end
 
-errorbar(Plot_Targets2, Plot_Target_Del, Plot_Target_DelE, '.', 'Color', 'k', ...
+% errorbar(Unique_Targets, Grand_Target_Del_Mean, Grand_Target_Del_SEM, '.', 'Color', 'k', ...
+%     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
+% p6 = plot(Unique_Targets, Grand_Target_Del_Mean, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
+%     'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sim - Seq');
+
+
+errorbar(Plot4_Targets, Plot4_Del_Mean, Plot4_Del_SEM, '.', 'Color', 'k', ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p6 = plot(Plot_Targets2, Plot_Target_Del, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
-    'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sim - Seq');
+p6 = plot(Plot4_Targets, Plot4_Del_Mean, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
+    'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Simultaneous - Sequential');
 
 yline(0, '--k', 'LineWidth', 1, 'HandleVisibility', 'off');
 
-ylabel('\Delta Required Amplitude (Sim - Seq, \muA)', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Required Amplitude Difference (Sim - Seq, µA)', 'FontSize', 9, 'FontName', 'Arial');
 xlabel('Matched Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p6], {'Sim - Seq'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([0, max(target_durations)]);
-set(gca, 'XTick', 0:2:max(target_durations));
-ylim([floor(min([Plot_Target_Del - Plot_Target_DelE, 0]) - 0.5), ceil(max([Plot_Target_Del + Plot_Target_DelE]) + 0.8)]);
+xlim([min(Unique_Targets)-0.2, max(target_durations)]);
+% set(gca, 'XTick', 4:2:max(target_durations));
+set(gca, 'XTick', 4:1:max(target_durations));
+% ylim([floor(min([Grand_Target_Del_Mean - Grand_Target_Del_SEM, 0]) - 0.5), ceil(max([Grand_Target_Del_Mean + Grand_Target_Del_SEM]) + 0.8)]);
+ylim([floor(min([Plot4_Del_Mean - Plot4_Del_SEM, 0]) - 0.5), ceil(max([Plot4_Del_Mean + Plot4_Del_SEM]) + 0.8)]);
 box off; axis square;
 
 if save_figures
-    exportgraphics(gcf, fullfile(save_dir, 'SelectedMatchedDuration_DeltaAmplitude.tiff'), 'ContentType', 'vector', 'Resolution', 300);
+    exportgraphics(gcf, fullfile(save_dir, 'ReqAmpDiff_Duration.tiff'), 'ContentType', 'vector', 'Resolution', 300);
 end
 
 %% ================= 8. COMMAND WINDOW PRINTOUTS =================

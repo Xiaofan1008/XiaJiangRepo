@@ -222,7 +222,7 @@ end
 
 % --- IEEE FORMATTING ---
 xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Effective Activation Spread (µm)', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Effective Spatial Spread Index (a.u.)', 'FontSize', 9, 'FontName', 'Arial');
 set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1, 'FontSize', 9, 'FontName', 'Helvetica');
 legend('Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 % xlim([0, max(v_amps)+1]); 

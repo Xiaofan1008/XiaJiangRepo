@@ -259,7 +259,7 @@ end
 
 % --- IEEE FORMATTING ---
 xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Maximal Activation Spread (µm)', 'FontSize', 9, 'FontName', 'Arial'); 
+ylabel('Maximal Active Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); 
 
 set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1, 'FontSize', 9, 'FontName', 'Arial');
 lgd = legend('Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');

@@ -41,7 +41,7 @@ stats_target_Amp = 10;
 
 % [MODIFIED] 4. Normalization Settings
 norm_target_Amp = 10; % Amplitude to use for maximum normalization
-norm_target_ISI = 0;  % ISI time (ms) to use for maximum normalization
+norm_target_ISI = 9;  % ISI time (ms) to use for maximum normalization
 
 %% =================== 1. SCOUT LOOP (Build Master Union) ====================
 fprintf('Scanning datasets to build Union Map...\n');
@@ -135,6 +135,8 @@ Pop_Mean = nanmean(Pop_Data_Pooled, 4);
 Pop_N = sum(~isnan(Pop_Data_Pooled), 4);
 Pop_Std = nanstd(Pop_Data_Pooled, 0, 4);
 Pop_SEM = Pop_Std ./ sqrt(Pop_N);
+% Pop_SEM = Pop_Std./ sqrt(4);
+
 
 %% =================== 3.5 STATISTICAL TEST (LMM) =================
 target_a_idx = find(abs(Union_Amps - stats_target_Amp) < 0.001);

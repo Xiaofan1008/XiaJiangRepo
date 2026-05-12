@@ -23,10 +23,10 @@ stats_min_n_threshold = 2;
 enforce_monotonic = true;
 
 % Plot Settings
-save_figure = true;
+save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/AmpRequired_vs_SpikeCount';
-fig_name_inverse = 'RequiredAmplitude_vs_TargetSpikeCount_v1.tiff';
-fig_name_delta   = 'DeltaAmplitude_vs_TargetSpikeCount_v1.tiff';
+fig_name_inverse = 'ReqAmp_vs_TargetSpikeCount_v2_MaxAt1.tiff';
+fig_name_delta   = 'DeltaAmp_vs_TargetSpikeCount_v2_MaxAt1.tiff';
 
 % List all result files to include in the Grand Average
 file_paths = {
@@ -298,11 +298,11 @@ end
 
 % --- Formatting ---
 box off;
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.5);
+set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
 axis square;
 
 xlabel('Matched Response Level (a.u.)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Required Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Required Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
 
 legend([p1, p2], 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
@@ -385,11 +385,11 @@ end
 
 % --- Formatting ---
 box off;
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.5);
+set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
 axis square;
 
 xlabel('Matched Response Level (a.u.)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('\Delta Required Amplitude (Sim - Seq, \muA)', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Required Amplitude Difference (Sim - Seq, µA)', 'FontSize', 9, 'FontName', 'Arial');
 
 legend([p3], 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 

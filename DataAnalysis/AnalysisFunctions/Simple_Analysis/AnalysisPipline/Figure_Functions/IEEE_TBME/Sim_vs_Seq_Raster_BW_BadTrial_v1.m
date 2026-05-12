@@ -5,15 +5,15 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 % Plot Settings
-save_figure = true;
+save_figure = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Sim_vs_Seq_Raster';
-fig_name    = 'Sim_vs_Seq_Raster_DX011_S4_ch21_v1.tiff';
+fig_name    = 'Sim_vs_Seq_Raster_DX011_S1_ch30_v1.tiff';
 
 %% =============== USER SETTINGS ==============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim4';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq4_5ms_new';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 Electrode_Type   = 1;
-target_channels  = [21];
+target_channels  = [1:32];
 plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;      % ms (Time of second pulse)
 stim_set_id_Sim = 1;      
@@ -174,12 +174,12 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     max_rate = max([max(r_sim), max(r_seq)]) * 1.2; 
     if max_rate == 0 || isnan(max_rate), max_rate = 10; end
 
-    max_rate = 550;
-    y_lims = [0, max_rate];
+    % max_rate = 550;
+    % y_lims = [0, max_rate];
     
     yyaxis left
-    ylim(y_lims);
-    yticks(0:100:ceil(y_lims(2)));
+    % ylim(y_lims);
+    % yticks(0:100:ceil(y_lims(2)));
     hold on;
     
     patch([ras_win(1) ras_win(2) ras_win(2) ras_win(1)], ...

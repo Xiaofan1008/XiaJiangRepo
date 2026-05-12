@@ -70,7 +70,7 @@ file_paths = {
 Target_Thresh = 0.5;   
 
 % [MODIFIED] Save Settings
-save_figure = true;
+save_figure = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Activation_Threshold';
 save_name = 'Threshold_Unity_Scatter_RawSpike_0.5';
 

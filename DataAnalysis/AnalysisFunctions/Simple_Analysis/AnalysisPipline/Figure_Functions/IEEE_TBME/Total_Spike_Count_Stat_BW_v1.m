@@ -12,7 +12,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= 1. USER SETTINGS =================
 % --- STATISTICAL FILTERS ---
 % 1. Physiological Threshold: Ignore amps below this (e.g., < 1.5 uA)
-stats_phys_threshold = 2; 
+stats_phys_threshold = 1; 
 
 % 2. Magnitude Threshold: Ignore if difference (Seq - Sim) is small
 %    Suggestion: 0.2 (Filters out 1.0uA where diff is ~0.19)
@@ -83,8 +83,8 @@ file_paths = {
 
 % Plot Settings
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Total_Spike_Count';
-fig_name    = 'Total_Spike_Count_SignedRank_v1.tiff';
+save_dir    = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/AnalysisPipline/Figure_Functions/IEEE_TBME/SpikeCount_Amp';
+fig_name    = 'Total_Spike_Count_SignedRank_v2_FormatChanged.tiff';
 
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
@@ -198,8 +198,8 @@ for k = 1:length(Unique_Amps)
     p = signrank(data_s, data_q);
     
     txt = '';
-    if p < (0.001) && amp >=6, txt = '***';
-    elseif p < (0.01) && amp >=5, txt = '**';
+    if p < (0.001) && amp >=4, txt = '***';
+    elseif p < (0.01) && amp >=2, txt = '**';
     elseif p < (0.05), txt = '*';
     end
     
@@ -217,11 +217,11 @@ end
 box off; 
 
 % Changed axes font to Arial 9pt, and thinned axis LineWidth to 1.0
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.5);
+set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
 axis square;
 
 % Changed X/Y labels to Arial 9pt
-xlabel('Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
+xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
 ylabel('Normalized Spike Count (a.u.)', 'FontSize', 9,  'FontName', 'Arial');
 
 % Changed legend to Arial 9pt

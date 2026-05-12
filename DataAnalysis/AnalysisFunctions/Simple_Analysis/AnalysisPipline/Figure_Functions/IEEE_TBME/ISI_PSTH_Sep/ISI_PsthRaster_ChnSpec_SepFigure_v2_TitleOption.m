@@ -7,6 +7,7 @@
 %   - EXCLUDES bad trials from Plot and PSTH calculation
 %   - Can plot all responsive channels OR only user-selected channels
 %   - Paper-style export formatting
+%   - [NEW] Optional figure title
 % =============================================================
 clear; 
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
@@ -26,7 +27,7 @@ target_amp  = 10;
 
 % ---- select channels to plot ----
 plot_all_responsive_channels = false;   % true = plot all responsive channels
-Plot_Channels = [20];                % only used when plot_all_responsive_channels = false
+Plot_Channels = [19];                % only used when plot_all_responsive_channels = false
 
 % ---- plotting windows ----
 ras_win       = [-40 40];      
@@ -39,8 +40,12 @@ Plot_PTDs = [];
 
 % ---- export settings ----
 save_figures   = false;
-save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/ISI_PSTH_Raster';
+save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure5/ISI_PSTH_Raster/DX021_Ch19_YAxisFix';
 tiff_dpi       = 600;
+
+% ---- figure title settings ----
+show_figure_title = false;     % true = show title in figure, false = no title
+title_fontsize    = 7;
 
 % ---- paper figure formatting ----
 fig_width_cm   = 6;
@@ -56,8 +61,8 @@ psth_color   = [0 0 0];          % black PSTH
 raster_color = [0.35 0.35 0.35]; % dark gray raster
 stim1_color  = [0 0 0];          % black dashed line at 0 ms
 stim2_color  = [0 0 0];          % black dotted line at 2nd pulse
-raster_msize = 3;
-psth_lw      = 1;
+raster_msize = 3.5;
+psth_lw      = 1.3;
 
 %% ===================== INITIAL SETUP =========================
 if ~isfolder(data_folder)
@@ -396,11 +401,6 @@ for target_set = sets_to_plot
             % =====================================================
             % CREATE FIGURE FOR THIS ISI
             % =====================================================
-            % fig = figure('Color', fig_bg_color, ...
-            %              'Units','centimeters', ...
-            %              'Position',[5 5 fig_width_cm fig_height_cm]);
-
-            safe_setLabel = regexprep(setLabel, '[^a-zA-Z0-9]+', '_');
             fig_name = sprintf('StimSet%d_Ch%d_Amp%.1fuA_ISI%.1fms', ...
                 target_set, ich, target_amp, PTD_ms);
             
@@ -424,7 +424,7 @@ for target_set = sets_to_plot
             end
             xlim(ax, ras_win); 
             ylim(ax, [0 yMaxPSTH]); 
-            ylabel(ax,'Rate (sp/s)', 'FontSize', label_fontsize, 'FontName', font_name);
+            % ylabel(ax,'Rate (sp/s)', 'FontSize', label_fontsize, 'FontName', font_name);
             
             % ---- Raster axis (right) ----
             yyaxis(ax,'right');
@@ -444,6 +444,15 @@ for target_set = sets_to_plot
                 xline(ax, PTD_ms, ':', 'Color', stim2_color, 'LineWidth', 1);
             end
             xlim(ax, ras_win);
+            
+            % ---- [NEW] Optional title ----
+            if show_figure_title
+                title(ax, sprintf('Set %d | Amp %.1f uA | Ch %d | ISI %.1f ms', ...
+                    target_set, target_amp, ich, PTD_ms), ...
+                    'FontSize', title_fontsize, ...
+                    'FontName', font_name, ...
+                    'FontWeight', 'normal');
+            end
             
             % ---- Axis labels / format ----
             xlabel(ax,'Time (ms)', 'FontSize', label_fontsize, 'FontName', font_name);

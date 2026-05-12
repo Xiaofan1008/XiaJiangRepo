@@ -87,7 +87,7 @@ file_paths = {
 
 };
 
-save_figures = true;
+save_figures = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/SpikeCount_Duration';
 dot_size = 18;
 jitter_w = 0.10;
@@ -389,8 +389,11 @@ end
 fprintf('Generating binned mean plot...\n');
 
 % bin_edges = 0:0.5:max(ceil(AllSpike*4))/4;
-bin_edges = 0:0.2:max(ceil(1.2*4))/4;
+% bin_edges = 0:0.2:max(ceil(1.2*4))/4;
+% bin_edges = 0:0.2:max(ceil(1*4))/4;
+% bin_centers = bin_edges(1:end-1) + diff(bin_edges)/2;
 
+bin_edges = 0.1:0.2:1.1;
 bin_centers = bin_edges(1:end-1) + diff(bin_edges)/2;
 
 sim_bin_mean = nan(size(bin_centers));
@@ -431,16 +434,36 @@ errorbar(bin_centers(valid_seq), seq_bin_mean(valid_seq), seq_bin_sem(valid_seq)
     '-sk', 'LineWidth', 1, 'MarkerFaceColor', 'k', 'CapSize', 8, ...
     'DisplayName', 'Sequential');
 
+
+% Zero Point
+% plot_x_sim = [0, bin_centers(valid_sim)];
+% plot_y_sim = [0, sim_bin_mean(valid_sim)];
+% plot_err_sim = [0, sim_bin_sem(valid_sim)];
+% plot_x_seq = [0, bin_centers(valid_seq)];
+% plot_y_seq = [0, seq_bin_mean(valid_seq)];
+% plot_err_seq = [0, seq_bin_sem(valid_seq)];
+% 
+% errorbar(plot_x_sim, plot_y_sim, plot_err_sim, ...
+%     '--ok', 'LineWidth', 1, 'MarkerFaceColor', 'w', 'CapSize', 8, ...
+%     'DisplayName', 'Simultaneous');
+% 
+% errorbar(plot_x_seq, plot_y_seq, plot_err_seq, ...
+%     '-sk', 'LineWidth', 1, 'MarkerFaceColor', 'k', 'CapSize', 8, ...
+%     'DisplayName', 'Sequential');
+
 xlabel('Normalized Response Magnitude', 'FontSize', 9, 'FontName', 'Arial');
 ylabel('Mean Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 legend('Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
+xticks(0.2:0.2:1.0);
+xlim([0.2 1]);
+
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', ...
     'LineWidth', 1.0, 'TickDir', 'out');
 box off; axis square;
 
 if save_figures
-    exportgraphics(fig2, fullfile(save_dir, 'Population_Spike_vs_Duration_Binned.tiff'), ...
+    exportgraphics(fig2, fullfile(save_dir, 'Population_Spike_vs_Duration_Binned_v2_XTickShift.tiff'), ...
         'Resolution', 600);
 end
 

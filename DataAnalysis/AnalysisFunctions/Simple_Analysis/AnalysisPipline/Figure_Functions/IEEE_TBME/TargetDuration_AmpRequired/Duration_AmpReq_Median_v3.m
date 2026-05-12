@@ -60,8 +60,8 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure3/Duration_AmpRequired';
+save_figures = false;
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure3/Duration_AmpRequired_v2_LessPoints';
 
 % --- Black and White Settings ---
 color_sim    = 'k'; 
@@ -70,7 +70,7 @@ IQR_out_parm = 1.5; % Strict IQR filter to drop intra-set noise
 stats_min_n_threshold = 2;
 
 % --- Small swapped-axis test: selected matched durations ---
-target_durations = [5:0.25:8];
+target_durations = [5:0.5:8];
 enforce_monotonic = true;
 
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
@@ -266,8 +266,9 @@ xlabel('Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'southwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([min(AmpVals)-0.3, max(AmpVals)]);
+% xlim([min(AmpVals)-0.3, max(AmpVals)]);
 % set(gca, 'XTick', 0:2:max(AmpVals));
+xlim([min(AmpVals), max(AmpVals)]);
 set(gca, 'XTick', AmpVals);
 
 ylim([0, ceil(max([Mean_Sim + SEM_Sim, Mean_Seq + SEM_Seq]) + 1.2)]);
@@ -356,8 +357,9 @@ xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p3], {'Sequential - Simultaneous'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([min(AmpVals)-0.3, max(AmpVals)]);
+% xlim([min(AmpVals)-0.3, max(AmpVals)]);
 % set(gca, 'XTick', 0:2:max(AmpVals));
+xlim([min(AmpVals), max(AmpVals)]);
 set(gca, 'XTick', AmpVals);
 ylim([floor(min([Mean_Del - SEM_Del, 0]) - 0.5), ceil(max([Mean_Del + SEM_Del]) + 0.8)]);
 box off; axis square;
@@ -555,8 +557,9 @@ xlabel('Matched Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([min(Unique_Targets)-0.2, max(target_durations)]);
+% xlim([min(Unique_Targets)-0.2, max(target_durations)]);
 % set(gca, 'XTick', 4:2:max(target_durations));
+xlim([min(Unique_Targets), max(target_durations)]);
 set(gca, 'XTick', 4:1:max(target_durations));
 ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]) + 1.0)]);
 box off; axis square;
@@ -607,8 +610,9 @@ xlabel('Matched Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
 legend([p6], {'Sim - Seq'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
-xlim([min(Unique_Targets)-0.2, max(target_durations)]);
+% xlim([min(Unique_Targets)-0.2, max(target_durations)]);
 % set(gca, 'XTick', 4:2:max(target_durations));
+xlim([min(Unique_Targets), max(target_durations)]);
 set(gca, 'XTick', 4:1:max(target_durations));
 % ylim([floor(min([Grand_Target_Del_Mean - Grand_Target_Del_SEM, 0]) - 0.5), ceil(max([Grand_Target_Del_Mean + Grand_Target_Del_SEM]) + 0.8)]);
 ylim([floor(min([Plot4_Del_Mean - Plot4_Del_SEM, 0]) - 0.5), ceil(max([Plot4_Del_Mean + Plot4_Del_SEM]) + 0.8)]);

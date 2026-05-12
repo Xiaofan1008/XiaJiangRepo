@@ -24,9 +24,9 @@ smooth_sigma = 5;
 
 % Saving and Visibility Settings
 show_title = false;
-save_figs = true;      
+save_figs = false;      
 show_figs = true;     
-save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster'; 
+save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster/DX012/Strobe_new_v2'; 
 
 % [MODIFIED 1] Trial Selection Toggle (Whitelist vs Blacklist)
 % Set to 'whitelist' to plot ONLY the listed trials.
@@ -118,7 +118,7 @@ for ich = raster_chn_start:raster_chn_end
     
     fig = figure('Color','w','Name',sprintf('Strobe - Ch %d', ich), 'Visible', fig_vis);
     set(fig, 'Units', 'centimeters');
-    set(fig, 'Position', [2, 2, 8.89, 8.89]); 
+    set(fig, 'Position', [2, 2, 8.8, 8.8]); 
     set(fig, 'PaperPositionMode', 'auto'); 
              
     ax = axes(fig); 
@@ -195,7 +195,10 @@ for ich = raster_chn_start:raster_chn_end
     
     axis square;
     box off;
-    set(gca, 'FontName', 'Arial', 'FontSize', 9);
+    % set(gca, 'FontName', 'Arial', 'FontSize', 9);
+    set(gca, 'FontName', 'Arial','FontSize', 9,'LineWidth', 1.0, 'TickDir', 'out');
+
+
     if show_title
         title(sprintf('Ch %d Response', ich), 'FontWeight', 'normal');
     end

@@ -7,14 +7,14 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 % Plot Settings
 save_figure = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Sim_vs_Seq_Raster';
-fig_name    = 'Sim_vs_Seq_Raster_v1.tiff';
+fig_name    = 'Sim_vs_Seq_Raster_DX011_Ch30.tiff';
 
 %% =============== USER SETTINGS ==============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim6';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq6_5ms';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 Electrode_Type   = 1;
 target_channels  = [1:32];
-plot_amp         = 10;     % µA
+plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;     % ms (Time of second pulse)
 stim_set_id_Sim = 1;      
 stim_set_id_Seq = 1;

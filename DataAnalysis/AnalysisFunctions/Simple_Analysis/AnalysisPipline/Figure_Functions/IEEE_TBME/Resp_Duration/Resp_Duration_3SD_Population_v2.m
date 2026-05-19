@@ -332,6 +332,6 @@ function p_str = format_p(p)
     if isnan(p)
         p_str = 'NaN';
     else
-        p_str = sprintf('%.20f', p);
+        p_str = sprintf('%.30f', p);
     end
 end

@@ -1,29 +1,18 @@
 %% ============================================================
-%   GRAND AVERAGE: NORMALIZED RECRUITMENT CURVE (Discrete Bins)
-%   - Logic: Aggregates pre-calculated normalized results.
+%   GRAND AVERAGE: DIRECTIONALITY RECRUITMENT CURVE (Order 1 vs Order 2)
+%   - Logic: Aggregates pre-calculated normalized sequential results.
+%   - Safety: Verifies that Set 1 and Set 2 are reversed orders of the same electrodes.
 %   - Grouping: Bins data by exact amplitude (No interpolation).
 %   - Statistics: Mean +/- SEM across DATASETS.
-%   - NEW: Added Wilcoxon Signed Rank Test (Paired) & Significance Stars
-%   - FILTER: Bonferroni + Magnitude Threshold + Phys Threshold + Min N
+%   - FILTER: Wilcoxon Signed Rank Test + Min N (Printed to Console Only)
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= 1. USER SETTINGS =================
 % --- STATISTICAL FILTERS ---
-% 1. Physiological Threshold: Ignore amps below this (e.g., < 1.5 uA)
-stats_phys_threshold = 1; 
-
-% 2. Magnitude Threshold: Ignore if difference (Seq - Sim) is small
-%    Suggestion: 0.2 (Filters out 1.0uA where diff is ~0.19)
-stats_mag_threshold  = 0.35;  
-
-% 3. Bonferroni Correction: Divide p-value cutoffs by this number
-%    (Usually equal to number of comparisons, e.g., 9 amplitudes)
-bonferroni_n = 9; 
-
-% 4. Minimum Sample Size for Stats (Limit dataset number)
-stats_min_n_threshold = 6; 
+% Minimum Sample Size for Stats (Limit dataset number)
+stats_min_n_threshold = 0; 
 
 % List all result files to include in the Grand Average
 file_paths = {
@@ -83,159 +72,175 @@ file_paths = {
 
 % Plot Settings
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Total_Spike_Count';
-fig_name    = 'Total_Spike_Count_SignedRank_v3_FormatChanged.tiff';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Conference/IEEE_EMBC/Figures/3_Total_Spike_Count';
+fig_name    = 'Order_effect.tiff';
 
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
-
-Pool_Sim = []; Pool_Seq = [];
-Pool_Paired = []; % [NEW] Initialize Paired Pool for Signed Rank Test
+Pool_Ord1 = []; 
+Pool_Ord2 = [];
+Pool_Paired = []; % Initialize Paired Pool for Signed Rank Test
 
 for i = 1:length(file_paths)
     if ~exist(file_paths{i}, 'file'), continue; end
-    D = load(file_paths{i}); if ~isfield(D, 'ResultNorm'), continue; end
-    R = D.ResultNorm; Amps = R.Amps; 
+    D = load(file_paths{i}); 
+    if ~isfield(D, 'ResultNorm'), continue; end
     
-    sim_ds_mean = squeeze(mean(mean(R.Norm_Sim, 3, 'omitnan'), 1, 'omitnan'));
-    
+    R = D.ResultNorm; 
+    Amps = R.Amps; 
     seq_raw = R.Norm_Seq;
+    
+    % --- THE BOUNCER: Check Dimension 3 (Sets) ---
+    nSets = size(seq_raw, 3);
+    if nSets < 2
+        % Silently skipping sets < 2 to keep command window clean
+        continue;
+    end
+    
+    % --- THE BOUNCER: Electrode Verification ---
+    try
+        sets_meta = R.Metadata.Stimulation_Sets;
+        set1_ch = sets_meta(1, :); set1_ch = sort(set1_ch(set1_ch > 0));
+        set2_ch = sets_meta(2, :); set2_ch = sort(set2_ch(set2_ch > 0));
+        
+        if ~isequal(set1_ch, set2_ch)
+            fprintf('  Skipping Dataset %d: Sets are NOT reverse orders.\n', i);
+            continue;
+        end
+    catch
+        % If metadata isn't strictly available in older files, we proceed but notify
+        fprintf('  Warning Dataset %d: Metadata missing. Assuming reversed pairs.\n', i);
+    end
+    
+    % --- EXTRACT DATA (Splitting Sets instead of crushing them) ---
+    % Squeeze across Channels (Dim 1) and ISIs (Dim 4, if it exists)
     if ndims(seq_raw) == 4
-        seq_ds_mean = squeeze(mean(mean(mean(seq_raw, 4, 'omitnan'), 3, 'omitnan'), 1, 'omitnan'));
+        seq_ds_mean = squeeze(mean(mean(seq_raw, 4, 'omitnan'), 1, 'omitnan')); % Result: [Amps x Sets]
     else
-        seq_ds_mean = squeeze(mean(mean(seq_raw, 3, 'omitnan'), 1, 'omitnan'));
+        seq_ds_mean = squeeze(mean(seq_raw, 1, 'omitnan')); % Result: [Amps x Sets]
     end
     
     % Store with 0-force logic
     for a = 1:length(Amps)
-        if abs(Amps(a)) < 0.001, v_sim=0; v_seq=0;
-        else, v_sim=sim_ds_mean(a); v_seq=seq_ds_mean(a); end
+        if abs(Amps(a)) < 0.001
+            v_ord1 = 0; 
+            v_ord2 = 0;
+        else
+            v_ord1 = seq_ds_mean(a, 1); % Extract Set 1 (Order A->B)
+            v_ord2 = seq_ds_mean(a, 2); % Extract Set 2 (Order B->A)
+        end
         
-        % Unpaired Pools (For Plotting)
-        if ~isnan(v_sim), Pool_Sim = [Pool_Sim; Amps(a), v_sim]; end
-        if ~isnan(v_seq), Pool_Seq = [Pool_Seq; Amps(a), v_seq]; end
-        
-        % [NEW] Paired Pool (For Statistics)
-        % Only store if BOTH Sim and Seq are valid
-        if ~isnan(v_sim) && ~isnan(v_seq)
-             Pool_Paired = [Pool_Paired; Amps(a), v_sim, v_seq]; 
+        % Only store if BOTH Orders are valid (Ensures perfect pairing)
+        if ~isnan(v_ord1) && ~isnan(v_ord2)
+            Pool_Ord1 = [Pool_Ord1; Amps(a), v_ord1]; 
+            Pool_Ord2 = [Pool_Ord2; Amps(a), v_ord2]; 
+            Pool_Paired = [Pool_Paired; Amps(a), v_ord1, v_ord2]; 
         end
     end
 end
 
 %% ================= 3. STATS & VECTORS =================
-Unique_Amps = unique([Pool_Sim(:,1); Pool_Seq(:,1)]);
+Unique_Amps = unique(Pool_Paired(:,1));
 Unique_Amps = sort(Unique_Amps);
+if isempty(Unique_Amps)
+    error('No valid paired datasets found. Check input files and filters.');
+end
 if Unique_Amps(1) ~= 0, Unique_Amps = [0; Unique_Amps]; end
 
-Grand_Sim_Mean = []; Grand_Sim_SEM = [];
-Grand_Seq_Mean = []; Grand_Seq_SEM = [];
+Grand_Ord1_Mean = []; Grand_Ord1_SEM = [];
+Grand_Ord2_Mean = []; Grand_Ord2_SEM = [];
 
 for k = 1:length(Unique_Amps)
     amp = Unique_Amps(k);
     
-    vs = Pool_Sim(Pool_Sim(:,1)==amp, 2);
+    % Order 1
+    vs = Pool_Ord1(Pool_Ord1(:,1)==amp, 2);
     if isempty(vs) && amp==0, vs=0; end
-    Grand_Sim_Mean(k) = mean(vs); Grand_Sim_SEM(k) = std(vs)/sqrt(10);
+    n_s = length(vs); % Calculate exact N per point
+    Grand_Ord1_Mean(k) = mean(vs); 
+    Grand_Ord1_SEM(k) = std(vs)/sqrt(max(1, n_s)); 
     
-    vq = Pool_Seq(Pool_Seq(:,1)==amp, 2);
+    % Order 2
+    vq = Pool_Ord2(Pool_Ord2(:,1)==amp, 2);
     if isempty(vq) && amp==0, vq=0; end
-    Grand_Seq_Mean(k) = mean(vq); Grand_Seq_SEM(k) = std(vq)/sqrt(10);
+    n_q = length(vq); % Calculate exact N per point
+    Grand_Ord2_Mean(k) = mean(vq); 
+    Grand_Ord2_SEM(k) = std(vq)/sqrt(max(1, n_q)); 
 end
 
 %% ================= 4. PLOT =================
-% [MODIFIED 1] Figure Size: Perfect IEEE single-column square (8.89 x 8.89 cm)
-figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'PaperPositionMode', 'auto'); hold on;
+figure('Units', 'centimeters', 'Position', [5, 5, 10.5, 9.5], 'Color', 'w'); hold on;
 
 % A. Scatter (Background)
 jitter_w = 0.4; 
-for i = 1:size(Pool_Seq, 1)
-    scatter(Pool_Seq(i,1)+(rand-0.5)*jitter_w, Pool_Seq(i,2), 12, [0.7 0.7 0.7], 's', 'filled', 'MarkerFaceAlpha', 0.5, 'HandleVisibility', 'off');
+for i = 1:size(Pool_Ord2, 1)
+    scatter(Pool_Ord2(i,1)+(rand-0.5)*jitter_w, Pool_Ord2(i,2), 12, [0.7 0.7 0.7], 's', 'filled', 'MarkerFaceAlpha', 0.5, 'HandleVisibility', 'off');
 end
-for i = 1:size(Pool_Sim, 1)
-    scatter(Pool_Sim(i,1)+(rand-0.5)*jitter_w, Pool_Sim(i,2), 12, [0.8 0.8 0.8], 'o', 'LineWidth', 0.7, 'MarkerEdgeAlpha', 0.5, 'HandleVisibility', 'off');
+for i = 1:size(Pool_Ord1, 1)
+    scatter(Pool_Ord1(i,1)+(rand-0.5)*jitter_w, Pool_Ord1(i,2), 12, [0.8 0.8 0.8], 'o', 'LineWidth', 0.7, 'MarkerEdgeAlpha', 0.5, 'HandleVisibility', 'off');
 end
 
 % B. Main Curves
-errorbar(Unique_Amps, Grand_Sim_Mean, Grand_Sim_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p1 = plot(Unique_Amps, Grand_Sim_Mean, '--o', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous');
-errorbar(Unique_Amps, Grand_Seq_Mean, Grand_Seq_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p2 = plot(Unique_Amps, Grand_Seq_Mean, '-s', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'k', 'DisplayName', 'Sequential');
+errorbar(Unique_Amps, Grand_Ord1_Mean, Grand_Ord1_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
+p1 = plot(Unique_Amps, Grand_Ord1_Mean, '--o', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'w', 'DisplayName', 'Order 1 (A \rightarrow B)');
 
-% --- 4b. STATS with TRIPLE FILTER (Bonferroni + Phys + Magnitude) ---
-fprintf('\n=== STATS FILTERING (Paired Signed Rank) ===\n');
-fprintf('1. Phys Threshold > %.1f uA\n', stats_phys_threshold);
-fprintf('2. Mag Threshold > %.2f (Seq-Sim)\n', stats_mag_threshold);
-fprintf('3. Bonferroni N = %d (Stricter P-values)\n', bonferroni_n);
-fprintf('4. Min N = %d (Data Limit)\n', stats_min_n_threshold);
+errorbar(Unique_Amps, Grand_Ord2_Mean, Grand_Ord2_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
+p2 = plot(Unique_Amps, Grand_Ord2_Mean, '-s', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'k', 'DisplayName', 'Order 2 (B \rightarrow A)');
+
+% --- Formatting ---
+box off; 
+set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
+axis square;
+xlabel('Amplitude (µA)', 'FontSize', 10, 'FontName', 'Arial');
+ylabel('Normalized Spike Count (a.u.)', 'FontSize', 10,  'FontName', 'Arial');
+legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 10, 'FontName', 'Arial');
+xlim([0, max(Unique_Amps)]);
+ylim([0 2]); 
+set(gca, 'YTick', 0 : 0.4 : 2);
+
+if save_figure
+    if ~exist(save_dir, 'dir'), mkdir(save_dir); end
+    exportgraphics(gcf, fullfile(save_dir, fig_name),'ContentType', 'vector');
+end
+
+%% ================= 5. CONSOLE STATISTICS TABLE =================
+fprintf('\n=================================================================\n');
+fprintf('   WILCOXON SIGNED-RANK TEST: DIRECTIONALITY (Order 1 vs Order 2)\n');
+fprintf('   * Testing all valid amplitudes to verify lack of difference *\n');
+fprintf('=================================================================\n');
+fprintf(' Amp (uA) |   N pairs  |  Ord1 Mean |  Ord2 Mean |  p-value \n');
+fprintf('-----------------------------------------------------------------\n');
 
 for k = 1:length(Unique_Amps)
     amp = Unique_Amps(k);
     if amp == 0, continue; end
     
+    % Get PAIRED Data
     current_pairs = Pool_Paired(abs(Pool_Paired(:,1)-amp)<0.001, :);
-    data_s = current_pairs(:, 2);
-    data_q = current_pairs(:, 3);
+    data_1 = current_pairs(:, 2);
+    data_2 = current_pairs(:, 3);
     
-    n_pairs = length(data_s);
+    n_pairs = length(data_1);
     
+    % --- FILTER: Check Min N ---
     if n_pairs < stats_min_n_threshold
-        fprintf('Amp %.1f: Skipped (Low N=%d)\n', amp, n_pairs);
+        fprintf(' %8.1f | %10d |       Skipped (Low N < %d)\n', amp, n_pairs, stats_min_n_threshold);
         continue;
     end
     
-    if amp <= stats_phys_threshold
-        fprintf('Amp %.1f: Skipped (Below Phys Threshold)\n', amp);
-        continue; 
-    end
+    % --- STATS: Signed Rank Test ---
+    p = signrank(data_1, data_2);
+    m1 = mean(data_1);
+    m2 = mean(data_2);
     
-    mean_diff = abs(mean(data_q) - mean(data_s))/mean(data_s);
-    if mean_diff < stats_mag_threshold
-        fprintf('Amp %.1f: Skipped (Diff %.3f < %.2f)\n', amp, mean_diff, stats_mag_threshold);
-        continue;
-    end
-    
-    p = signrank(data_s, data_q);
-    p = p * bonferroni_n;
-    
-    txt = '';
-    if p < (0.001) && amp >=4, txt = '***';
-    elseif p < (0.01) && amp >=2, txt = '**';
-    elseif p < (0.05), txt = '*';
-    end
-    
-    if ~isempty(txt)
-        y_top = max(mean(data_s)+std(data_s)/sqrt(n_pairs), mean(data_q)+std(data_q)/sqrt(n_pairs));
-        % [MODIFIED 2] Reduced star font size to 10pt (so they don't look massive) and changed to Arial
-        text(amp, y_top + 0.15, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
-        fprintf('Amp %.1f: MARKED with %s (p=%.10f, Diff=%.3f)\n', amp, txt, p, mean_diff);
+    sig_flag = '';
+    if p < 0.05
+        sig_flag = '<- SIGNIFICANT';
     else
-        fprintf('Amp %.1f: Not Significant (p=%.10f)\n', amp, p);
+        sig_flag = '(n.s.)';
     end
+    
+    fprintf(' %8.1f | %10d | %10.3f | %10.3f |  %.4f %s\n', amp, n_pairs, m1, m2, p, sig_flag);
 end
-
-% --- Formatting ---
-box off; 
-
-% Changed axes font to Arial 9pt, and thinned axis LineWidth to 1.0
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
-axis square;
-
-% Changed X/Y labels to Arial 9pt
-xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Normalized Spike Count (a.u.)', 'FontSize', 9,  'FontName', 'Arial');
-
-% Changed legend to Arial 9pt
-legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 9, 'FontName', 'Arial');
-
-xlim([0, max(Unique_Amps)]);
-ylim([0 2]); 
-set(gca, 'YTick', 0 : 0.4 : 2);
-
-% Upgraded save engine to 300 DPI TIFF export
-if save_figure
-    if ~exist(save_dir, 'dir'), mkdir(save_dir); end
-    save_path = fullfile(save_dir, fig_name);
-    print(gcf, save_path, '-dtiff', '-r300');
-    fprintf('Figure saved to: %s\n', save_path);
-end
+fprintf('=================================================================\n');
+fprintf('Done! Clean directionality figure generated.\n\n');

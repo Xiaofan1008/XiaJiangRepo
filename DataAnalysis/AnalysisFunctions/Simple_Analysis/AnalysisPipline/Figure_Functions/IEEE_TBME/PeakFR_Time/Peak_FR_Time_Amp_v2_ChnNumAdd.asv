@@ -6,6 +6,10 @@
 %       3. Calculates Mean and SEM across the population.
 %       4. Plots an I/O Line Graph (Sim vs Seq) with Error Bars.
 %       5. Adds statistical significance stars at each amplitude step.
+%       6. [NEW] Computes overall average peak latency across amplitudes
+%          for each dataset and performs paired signrank test.
+%       7. [NEW] Prints dataset number, stimulation set number,
+%          and responding-channel counts in command window.
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
@@ -89,14 +93,32 @@ fprintf('Pooling data from %d datasets...\n', length(file_paths));
 Pooled = struct();
 All_Amps = [];
 
+% --- store one overall latency summary per dataset ---
+Overall_Sim_DS = [];
+Overall_Seq_DS = [];
+
+% --- NEW: bookkeeping for counts ---
+n_valid_datasets = 0;
+n_total_sets_processed = 0;
+n_total_sim_channel_medians = 0;
+n_total_seq_channel_medians = 0;
+
 for i = 1:length(file_paths)
     if ~exist(file_paths{i}, 'file'), continue; end
     D = load(file_paths{i});
     if ~isfield(D, 'PeakData'), continue; end
     
     P = D.PeakData;
+    n_valid_datasets = n_valid_datasets + 1;
+    
+    % --- NEW: temporary vectors for this dataset only ---
+    sim_ds_all = [];
+    seq_ds_all = [];
+    
     for s = 1:length(P.Set)
         if isempty(P.Set(s).Amp), continue; end
+        n_total_sets_processed = n_total_sets_processed + 1;
+        
         for a = 1:length(P.Set(s).Amp)
             ThisAmpData = P.Set(s).Amp(a);
             val = ThisAmpData.Val;
@@ -120,16 +142,39 @@ for i = 1:length(file_paths)
             
             % Store median latency for each channel to prevent skewing
             if ~isempty(raw_sim)
-                Pooled.(fName).Sim_Ch = [Pooled.(fName).Sim_Ch; median(raw_sim)];
+                med_sim = median(raw_sim);
+                Pooled.(fName).Sim_Ch = [Pooled.(fName).Sim_Ch; med_sim];
+                sim_ds_all = [sim_ds_all; med_sim];
+                n_total_sim_channel_medians = n_total_sim_channel_medians + 1;
             end
             if ~isempty(raw_seq)
-                Pooled.(fName).Seq_Ch = [Pooled.(fName).Seq_Ch; median(raw_seq)];
+                med_seq = median(raw_seq);
+                Pooled.(fName).Seq_Ch = [Pooled.(fName).Seq_Ch; med_seq];
+                seq_ds_all = [seq_ds_all; med_seq];
+                n_total_seq_channel_medians = n_total_seq_channel_medians + 1;
             end
         end
     end
+    
+    % --- keep one paired overall summary per dataset ---
+    if ~isempty(sim_ds_all) && ~isempty(seq_ds_all)
+        Overall_Sim_DS = [Overall_Sim_DS; mean(sim_ds_all, 'omitnan')];
+        Overall_Seq_DS = [Overall_Seq_DS; mean(seq_ds_all, 'omitnan')];
+    end
 end
+
 All_Amps = unique(All_Amps);
 All_Amps = sort(All_Amps);
+
+fprintf('\n============================================================\n');
+fprintf('DATA SUMMARY\n');
+fprintf('============================================================\n');
+fprintf('Valid datasets included              : %d\n', n_valid_datasets);
+fprintf('Total stimulation sets processed     : %d\n', n_total_sets_processed);
+fprintf('Total Sim channel medians pooled     : %d\n', n_total_sim_channel_medians);
+fprintf('Total Seq channel medians pooled     : %d\n', n_total_seq_channel_medians);
+fprintf('Paired datasets in overall summary   : %d\n', length(Overall_Sim_DS));
+fprintf('============================================================\n');
 
 %% ================= 3. CALCULATE MEAN, SEM, AND STATS =================
 num_amps = length(All_Amps);
@@ -142,17 +187,18 @@ P_Vals   = zeros(1, num_amps);
 fprintf('\nCalculating Mean, SEM, and RankSum p-values per Amplitude...\n');
 for i = 1:num_amps
     curr_amp = All_Amps(i);
-    fName = sprintf('A_%.1f', curr_amp); fName = strrep(fName, '.', 'p');
+    fName = sprintf('A_%.1f', curr_amp); 
+    fName = strrep(fName, '.', 'p');
     
     sim_ch = Pooled.(fName).Sim_Ch;
     seq_ch = Pooled.(fName).Seq_Ch;
     
     % Compute Mean and SEM
-    Mean_Sim(i) = mean(sim_ch); 
-    Sem_Sim(i)  = std(sim_ch) / sqrt(length(sim_ch));
+    Mean_Sim(i) = mean(sim_ch, 'omitnan'); 
+    Sem_Sim(i)  = std(sim_ch, 'omitnan') / sqrt(length(sim_ch));
     
-    Mean_Seq(i) = mean(seq_ch); 
-    Sem_Seq(i)  = std(seq_ch) / sqrt(length(seq_ch));
+    Mean_Seq(i) = mean(seq_ch, 'omitnan'); 
+    Sem_Seq(i)  = std(seq_ch, 'omitnan') / sqrt(length(seq_ch));
     
     % Compute Stats
     if ~isempty(sim_ch) && ~isempty(seq_ch)
@@ -165,18 +211,49 @@ for i = 1:num_amps
         curr_amp, Mean_Sim(i), length(sim_ch), Mean_Seq(i), length(seq_ch), P_Vals(i));
 end
 
+%% ================= 3b. OVERALL MEAN LATENCY ACROSS AMPLITUDES =================
+fprintf('\n============================================================\n');
+fprintf('OVERALL PEAK LATENCY SUMMARY ACROSS AMPLITUDES\n');
+fprintf('============================================================\n');
+
+if ~isempty(Overall_Sim_DS) && ~isempty(Overall_Seq_DS)
+    overall_mean_sim = mean(Overall_Sim_DS, 'omitnan');
+    overall_sem_sim  = std(Overall_Sim_DS, 'omitnan') / sqrt(sum(~isnan(Overall_Sim_DS)));
+    
+    overall_mean_seq = mean(Overall_Seq_DS, 'omitnan');
+    overall_sem_seq  = std(Overall_Seq_DS, 'omitnan') / sqrt(sum(~isnan(Overall_Seq_DS)));
+    
+    if length(Overall_Sim_DS) == length(Overall_Seq_DS)
+        p_overall = signrank(Overall_Sim_DS, Overall_Seq_DS);
+    else
+        p_overall = NaN;
+    end
+    
+    fprintf('Simultaneous: Mean = %.3f ms, SEM = %.3f ms, N = %d\n', ...
+        overall_mean_sim, overall_sem_sim, length(Overall_Sim_DS));
+    fprintf('Sequential:   Mean = %.3f ms, SEM = %.3f ms, N = %d\n', ...
+        overall_mean_seq, overall_sem_seq, length(Overall_Seq_DS));
+    fprintf('Paired signrank p = %.6f\n', p_overall);
+    
+    if ~isnan(p_overall)
+        if p_overall < 0.001
+            fprintf('Overall Result: *** significant\n');
+        elseif p_overall < 0.01
+            fprintf('Overall Result: ** significant\n');
+        elseif p_overall < 0.05
+            fprintf('Overall Result: * significant\n');
+        else
+            fprintf('Overall Result: not significant\n');
+        end
+    end
+else
+    fprintf('No valid overall dataset-level summaries available.\n');
+end
+fprintf('============================================================\n');
+
 %% ================= 4. PLOT LINE GRAPH WITH ERROR BARS =================
 figure('Units', 'centimeters', 'Position', [5, 5, 8.8, 8.8], 'Color', 'w');
 hold on;
-
-% % 1. Plot Error Bars & Lines
-% % Simultaneous: Solid Black Line, Filled Black Circles
-% e1 = errorbar(All_Amps, Mean_Sim, Sem_Sim, '-ko', ...
-%     'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerFaceColor', 'k', 'CapSize', 3);
-% 
-% % Sequential: Dashed Black Line, Open Squares (White face, black edge)
-% e2 = errorbar(All_Amps, Mean_Seq, Sem_Seq, '--ks', ...
-%     'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerFaceColor', 'w', 'CapSize', 3);
 
 % 1. Create Shaded Error Areas (Plotted first so they sit in the background)
 x_fill = [All_Amps, fliplr(All_Amps)];
@@ -196,14 +273,17 @@ e1 = plot(All_Amps, Mean_Sim, '-ko', 'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerF
 % Sequential: Dashed Black Line, Open Squares
 e2 = plot(All_Amps, Mean_Seq, '--ks', 'LineWidth', 1.5, 'MarkerSize', 5, 'MarkerFaceColor', 'w');
 
-% 2. Add Statistical Stars above the points
+% 3. Add Statistical Stars above the points
 for i = 1:num_amps
     p = P_Vals(i);
     if isnan(p) || p >= 0.05, continue; end
     
-    if p < 0.001, txt = '***';
-    elseif p < 0.01, txt = '**';
-    elseif p < 0.05, txt = '*';
+    if p < 0.001
+        txt = '***';
+    elseif p < 0.01
+        txt = '**';
+    elseif p < 0.05
+        txt = '*';
     end
     
     % Find the highest point at this amplitude to float the star above the error bar
@@ -214,11 +294,11 @@ for i = 1:num_amps
         'FontWeight', 'bold', 'FontName', 'Arial');
 end
 
-% 3. IEEE Formatting
+% 4. IEEE Formatting
 xlabel('Stimulation Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
 ylabel('Peak Latency (ms)', 'FontSize', 9, 'FontName', 'Arial');
 
-lgd = legend([e1, e2], {'Simultaneous', 'Sequential'}, ...
+legend([e1, e2], {'Simultaneous', 'Sequential'}, ...
     'Location', 'northeast', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
 box off;
@@ -231,7 +311,9 @@ xticks(All_Amps); % Force ticks exactly at your tested amplitudes
 % Dynamically adjust Y limits to fit the data and stars
 max_y_limit = max(max(Mean_Sim + Sem_Sim), max(Mean_Seq + Sem_Seq)) + 1.5;
 min_y_limit = min(min(Mean_Sim - Sem_Sim), min(Mean_Seq - Sem_Seq)) - 0.5;
-if min_y_limit < 0, min_y_limit = 0; end
+if min_y_limit < 0
+    min_y_limit = 0;
+end
 ylim([min_y_limit, max_y_limit]);
 ylim([0,16]);
 

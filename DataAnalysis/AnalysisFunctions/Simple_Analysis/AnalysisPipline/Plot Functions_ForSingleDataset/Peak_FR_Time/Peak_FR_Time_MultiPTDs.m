@@ -12,7 +12,7 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim7';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX016/Xia_Exp1_Seq_Full_4';
 Electrode_Type = 2;
 
 % 1. Analysis Parameters
@@ -216,7 +216,7 @@ if plot_histograms
 end
 
 %% ================= 5. SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX015/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_PeakLatency_Separated_' exp_id '.mat']);

@@ -72,7 +72,7 @@ file_paths = {
 };
 
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/TargetSpread_AmpReq';
-save_figures = true;
+save_figures = false;
 tiff_dpi     = 600;
 
 % --- NEW: Swapped-axis test settings (AUC-based matched spread) ---

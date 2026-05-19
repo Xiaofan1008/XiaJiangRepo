@@ -68,7 +68,7 @@ top_n_peak       = 3;
 min_n_threshold  = 5;    
 
 % --- C. Plot Settings ---
-save_figure = true;
+save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/SpikeCount_vs_Distance';
 
 %% ================= PRE-SCAN: FIND ALL AMPLITUDES =================
@@ -185,6 +185,7 @@ for aa = 1:length(Unique_Amps)
         if n_pairs < min_n_threshold, continue; end
         
         p_val = signrank(data_s, data_q);
+        p_val = p_val * 10;
         mean_s = mean(data_s);
         mean_q = mean(data_q);
         perc_diff = ((mean_q - mean_s) / mean_s) * 100;
@@ -196,7 +197,7 @@ for aa = 1:length(Unique_Amps)
         else, txt = 'n.s.';
         end
         
-        fprintf('Zone: %4.0f to %4.0f um | N: %2d | Sim: %.2f | Seq: %.2f | Diff: %+5.1f%% | p = %.4f (%s)\n', ...
+        fprintf('Zone: %4.0f to %4.0f um | N: %2d | Sim: %.2f | Seq: %.2f | Diff: %+5.1f%% | p = %.10f (%s)\n', ...
                 z_min, z_max, n_pairs, mean_s, mean_q, perc_diff, p_val, txt);
                 
         Stat_Results(z).z_min = z_min;
@@ -264,7 +265,7 @@ for aa = 1:length(Unique_Amps)
     xlabel('Distance (µm)'); ylabel('Normalized Spike Count');
     % title(sprintf('Grouped Bar Chart (%.1f \\muA)', target_amp));
     
-    xlim([0 750]); 
+    xlim([0 700]); 
     ylim([0 2]); 
     set(gca, 'XTick', 0:100:700);
     set(gca, 'YTick', 0:0.4:2.0);
@@ -315,7 +316,7 @@ for aa = 1:length(Unique_Amps)
     % legend('Location', 'northeast', 'Box', 'off', 'FontSize', 8);
     legend('Box', 'off', 'FontSize', 8);
     
-    xlim([0 750]); 
+    xlim([0 700]); 
     ylim([0 2]); 
     axis square;
 

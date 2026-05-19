@@ -25,8 +25,8 @@ enforce_monotonic = true;
 % Plot Settings
 save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/AmpRequired_vs_SpikeCount';
-fig_name_inverse = 'ReqAmp_vs_TargetSpikeCount_v2_MaxAt1.tiff';
-fig_name_delta   = 'DeltaAmp_vs_TargetSpikeCount_v2_MaxAt1.tiff';
+fig_name_inverse = 'ReqAmp_vs_TargetSpikeCount_v3_MaxAt1.tiff';
+fig_name_delta   = 'DeltaAmp_vs_TargetSpikeCount_v3_MaxAt1.tiff';
 
 % List all result files to include in the Grand Average
 file_paths = {
@@ -322,7 +322,7 @@ if save_figure
 end
 
 %% ================= 5. PLOT 2: DELTA AMPLITUDE =================
-figure('Units', 'centimeters', 'Position', [12, 2, 8.89, 8.89], 'Color', 'w', 'PaperPositionMode', 'auto'); hold on;
+figure('Units', 'centimeters', 'Position', [12, 2, 8.8, 8.8], 'Color', 'w', 'PaperPositionMode', 'auto'); hold on;
 
 % A. Scatter (Background)
 jitter_w = 0.02;
@@ -346,7 +346,7 @@ end
 errorbar(Plot_Targets, Plot_Delta_Mean, Plot_Delta_SEM, '.', 'Color', 'k', ...
     'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
 p3 = plot(Plot_Targets, Plot_Delta_Mean, '-o', 'Color', 'k', 'LineWidth', 1.5, ...
-    'MarkerSize', 6, 'MarkerFaceColor', 'k', 'DisplayName', 'Sim - Seq');
+    'MarkerSize', 6, 'MarkerFaceColor', 'k', 'DisplayName', 'Simultaneous - Sequential');
 
 yline(0, '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 1, 'HandleVisibility', 'off');
 
@@ -366,6 +366,7 @@ for k = 1:length(Unique_Targets)
     end
 
     p = signrank(data_s, data_q);
+    p = p*10;
 
     txt = '';
     if p < 0.001
@@ -380,6 +381,9 @@ for k = 1:length(Unique_Targets)
         y_top = Grand_Delta_Mean(k) + Grand_Delta_SEM(k);
         text(target_val, y_top + 0.15, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', ...
             'FontWeight', 'bold', 'FontName', 'Arial');
+        fprintf('Target %.2f: MARKED with %s (p=%.10f)\n', target_val, txt, p);
+    else
+        fprintf('Target %.2f: Not Significant %s (p=%.5f)\n', target_val, txt, p);
     end
 end
 
@@ -389,7 +393,7 @@ set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
 axis square;
 
 xlabel('Matched Response Level (a.u.)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Required Amplitude Difference (Sim - Seq, µA)', 'FontSize', 9, 'FontName', 'Arial');
+ylabel('Required Amplitude Difference (µA)', 'FontSize', 9, 'FontName', 'Arial');
 
 legend([p3], 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 

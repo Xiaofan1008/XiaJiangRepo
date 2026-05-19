@@ -70,7 +70,7 @@ file_paths = {
     };
 
 save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Spatial_Radius';
-save_figures = true; % Set to true to export .tiff files
+save_figures = false; % Set to true to export .tiff files
 tiff_dpi     = 600;  % High resolution for publication
 
 %% ================= 1. DYNAMIC AMPLITUDE HARVESTING =================

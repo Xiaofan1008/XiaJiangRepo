@@ -6,8 +6,16 @@ TrialParams=TrialParams(1:num_elect:end,:);
 loadStimParams;
 StimParams_pulseinfo=cell2mat(StimParams(2:num_elect:end,8:9));
 
-if num_elect >= 2
-    StimParams_PulseDelay_info=cell2mat(StimParams(3:num_elect:end,6));
+% if num_elect >= 2
+%     StimParams_PulseDelay_info=cell2mat(StimParams(3:num_elect:end,6));
+% else 
+%     StimParams_PulseDelay_info=cell2mat(StimParams(2:num_elect:end,6));
+% end
+
+if num_elect == 2
+    StimParams_PulseDelay_info=cell2mat(StimParams(3:num_elect:end,6)); % 2 electrode stimulation 
+elseif num_elect > 2
+    StimParams_PulseDelay_info=cell2mat(StimParams(4:num_elect:end,6)); % 3 electrode stimulation
 else 
     StimParams_PulseDelay_info=cell2mat(StimParams(2:num_elect:end,6));
 end

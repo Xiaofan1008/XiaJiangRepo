@@ -33,11 +33,11 @@ if numel(underscores) > 4, base_name = last_folder(1 : underscores(end-1)-1);
 else, base_name = last_folder; end
 
 %% ================= LOAD SPIKES & STIM PARAMS =================
-fname_sp = [base_name '.sp_xia_FirstPulse.mat'];
+fname_sp = [base_name '.sp_xia.mat'];
 assert(isfile(fname_sp), 'Cannot find %s.', fname_sp);
 S_in = load(fname_sp);
-if isfield(S_in,'sp_seq')
-    sp_in = S_in.sp_seq;
+if isfield(S_in,'sp_clipped')
+    sp_in = S_in.sp_clipped;
 elseif isfield(S_in,'sp')
     sp_in = S_in.sp;
 else

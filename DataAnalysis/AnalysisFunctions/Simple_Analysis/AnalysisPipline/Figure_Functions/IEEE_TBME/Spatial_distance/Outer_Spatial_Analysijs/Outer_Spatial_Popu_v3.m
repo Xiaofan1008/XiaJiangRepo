@@ -84,7 +84,7 @@ MasterAmps = unique(all_amps);
 MasterAmps(MasterAmps == 0) = []; 
 
 % B. Establish New Dynamic Bins
-dist_bin_edges = 0 : bin_size : 600; 
+dist_bin_edges = 0 : bin_size : 700; 
 bin_centers    = dist_bin_edges(1:end-1) + diff(dist_bin_edges)/2;
 num_bins       = length(bin_centers);
 stride         = bin_size / raw_res; 
@@ -238,7 +238,7 @@ for a = 1:length(MasterAmps)
     % end
     xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); ylabel('Fraction of Total Response', 'FontSize', 9, 'FontName', 'Arial');
     set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off', 'XTick', 0:100:700);
-    xlim([0 600]); ylim([0 0.25]); axis square; legend('Location', 'northeast', 'Box', 'off');
+    xlim([0 600]); ylim([0 0.25]); axis square; legend('Location', 'northeast', 'Box', 'off', 'FontName', 'Arial');
 
     if save_figures
         % Ensure the directory exists
@@ -246,13 +246,13 @@ for a = 1:length(MasterAmps)
         
         % 1. Save the Probability Figure
         % Filename example: Prob_Profile_3.0uA_100um.tif
-        fname1 = sprintf('Prob_Profile_%.1fuA_%dum.tif', P.Val, bin_size);
+        fname1 = sprintf('Prob_Profile_%.1fuA_%dum_v2.tiff', P.Val, bin_size);
         fullPath1 = fullfile(save_dir, fname1);
         exportgraphics(fig1, fullPath1, 'Resolution', tiff_dpi, 'BackgroundColor', 'w');
         
         % 2. Save the Density Figure
         % Filename example: Dens_Profile_3.0uA_100um.tif
-        fname2 = sprintf('Dens_Profile_%.1fuA_%dum.tif', P.Val, bin_size);
+        fname2 = sprintf('Dens_Profile_%.1fuA_%dum_v2.tiff', P.Val, bin_size);
         fullPath2 = fullfile(save_dir, fname2);
         exportgraphics(fig2, fullPath2, 'Resolution', tiff_dpi, 'BackgroundColor', 'w');
         

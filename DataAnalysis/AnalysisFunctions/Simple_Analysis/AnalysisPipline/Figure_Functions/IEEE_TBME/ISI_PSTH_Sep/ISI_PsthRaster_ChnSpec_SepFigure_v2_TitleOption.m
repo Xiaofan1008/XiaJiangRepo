@@ -39,8 +39,8 @@ smooth_ms     = 6;
 Plot_PTDs = [];    
 
 % ---- export settings ----
-save_figures   = false;
-save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure5/ISI_PSTH_Raster/DX021_Ch19_YAxisFix';
+save_figures   = true;
+save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure5/ISI_PSTH_Raster/DX021_Ch19_LargeFontNoLabel';
 tiff_dpi       = 600;
 
 % ---- figure title settings ----
@@ -51,8 +51,8 @@ title_fontsize    = 7;
 fig_width_cm   = 6;
 fig_height_cm  = 6;
 font_name      = 'Arial';
-axis_fontsize  = 6;
-label_fontsize = 6;
+axis_fontsize  = 14;
+label_fontsize = 14;
 axis_linewidth = 1.0;
 fig_bg_color   = 'w';
 
@@ -423,7 +423,11 @@ for target_set = sets_to_plot
                 plot(ax, ctrs, rate_s, 'Color', psth_color, 'LineWidth', psth_lw);
             end
             xlim(ax, ras_win); 
-            ylim(ax, [0 yMaxPSTH]); 
+            % ylim(ax, [0 yMaxPSTH]); 
+            ylim(ax, [0 250]);
+            xticks([-40 0 40]);
+            yticks([0 50 150 250]);
+            % yticks([]);
             % ylabel(ax,'Rate (sp/s)', 'FontSize', label_fontsize, 'FontName', font_name);
             
             % ---- Raster axis (right) ----
@@ -455,7 +459,7 @@ for target_set = sets_to_plot
             end
             
             % ---- Axis labels / format ----
-            xlabel(ax,'Time (ms)', 'FontSize', label_fontsize, 'FontName', font_name);
+            % xlabel(ax,'Time (ms)', 'FontSize', label_fontsize, 'FontName', font_name);
             set(ax, 'FontSize', axis_fontsize, ...
                     'FontName', font_name, ...
                     'LineWidth', axis_linewidth, ...
@@ -468,8 +472,8 @@ for target_set = sets_to_plot
             % =====================================================
             if save_figures
                 safe_setLabel = regexprep(setLabel, '[^a-zA-Z0-9]+', '_');
-                filename = sprintf('%s_Set%d_%s_Amp%.1fuA_Ch%d_ISI%.1fms.tiff', ...
-                    base_name, target_set, safe_setLabel, target_amp, ich, PTD_ms);
+                filename = sprintf('%s_Set%d_Amp%.1fuA_Ch%d_ISI%.1fms.tiff', ...
+                    base_name, target_set, target_amp, ich, PTD_ms);
                 exportgraphics(fig, fullfile(save_dir, filename), 'Resolution', tiff_dpi);
             end
         end

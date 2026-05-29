@@ -7,10 +7,10 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ========================
-data_folder      = '/Volumes/MACData/Data/Data_Xia/DX022/Xia_ISI_SimSeq1';
+data_folder      = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim2';
 Electrode_Type   = 2;          
-raster_chn_start = 32;          
-raster_chn_end   = 57;
+raster_chn_start = 17;          
+raster_chn_end   = 32;
 
 % ---- plotting windows ----
 ras_win       = [-50 80];      
@@ -67,7 +67,7 @@ if isfile(badch_file)
     tmp = load(badch_file);
     if isfield(tmp,'BadCh_perSet'), BadCh_perSet = tmp.BadCh_perSet; end
 end
-badtr_file = [base_name '._BadTrials.mat'];
+badtr_file = [base_name '.BadTrials.mat'];
 if isfile(badtr_file)
     tmp = load(badtr_file);
     if isfield(tmp,'BadTrials'), BadTrialsPerCh = tmp.BadTrials; end

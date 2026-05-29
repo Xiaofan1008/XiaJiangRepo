@@ -6,7 +6,7 @@ clear all;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim2';
 FS = 30000;                 
 
 % 1. FILTERING PARAMETERS
@@ -34,6 +34,7 @@ else, base_name = last_folder; end
 
 %% ================= LOAD SPIKES & STIM PARAMS =================
 fname_sp = [base_name '.sp_xia.mat'];
+if ~isfile(fname_sp), fname_sp = [base_name '.sp.mat']; end
 assert(isfile(fname_sp), 'Cannot find %s.', fname_sp);
 S_in = load(fname_sp);
 if isfield(S_in,'sp_clipped')

@@ -13,8 +13,8 @@ clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Sim';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX006/Xia_Exp1_Seq';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim1';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq1';
 Electrode_Type = 2;
 
 % 1. Analysis Window
@@ -23,7 +23,7 @@ post_win_ms = [2 20];
 % 2. NORMALIZATION SETTINGS
 Ref_Amp = 5;            % Target Amplitude (uA)
 min_ref_response = 0.01; % Floor to avoid dividing by 0
-PTD_Ref = 5.5;
+PTD_Ref = 5;
 % 3. Plotting
 FS = 30000;         
 jitter_width = 0.2; dot_size = 20;          
@@ -269,7 +269,7 @@ legend('Location','best','Box','off'); box off;
 ylim([0 3.0]);
 
 %% ================= SAVE RESULTS =================
-save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX006/';
+save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX018/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(folder_sim, filesep); exp_id = parts{end};
 out_filename = fullfile(save_dir, ['Result_SpikeNormGlobalRef_' num2str(Ref_Amp) 'uA_Zeroed_5ms_' exp_id '.mat']);
@@ -306,10 +306,11 @@ function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
     f = dir('*RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
     R = load(f(1).name).Responding;
-    f = dir('*sp_xia_SSD.mat'); if isempty(f), f=dir('*sp_xia.mat'); end
+    f = dir('*sp_xia_SSD.mat'); if isempty(f), f=dir('*sp_FirstPulse.mat'); end
+    if isempty(f), f=dir('*sp_xia.mat'); end
     if isempty(f), error('No Spike file in %s', folder); end
     S_sp = load(f(1).name);
-    if isfield(S_sp,'sp_corr'), sp = S_sp.sp_corr; elseif isfield(S_sp,'sp_SSD'), sp = S_sp.sp_SSD; else, sp = S_sp.sp_in; end
+    if isfield(S_sp,'sp_corr'), sp = S_sp.sp_corr; elseif isfield(S_sp,'sp_SSD'), sp = S_sp.sp_SSD; elseif isfield(S_sp,'sp_seq'), sp = S_sp.sp_seq; else, sp = S_sp.sp_clipped; end
     if isempty(dir('*.trig.dat')), cleanTrig_sabquick; end; trig = loadTrig(0);
     S = load(dir('*_exp_datafile_*.mat').name);
     QC.BadCh = []; QC.BadTrials = [];

@@ -14,10 +14,14 @@ StimParams_pulseinfo=cell2mat(StimParams(2:num_elect:end,8:9));
 
 if num_elect == 2
     StimParams_PulseDelay_info=cell2mat(StimParams(3:num_elect:end,6)); % 2 electrode stimulation 
-elseif num_elect > 2
+elseif num_elect == 3
     StimParams_PulseDelay_info=cell2mat(StimParams(4:num_elect:end,6)); % 3 electrode stimulation
+elseif num_elect == 4
+    StimParams_PulseDelay_info=cell2mat(StimParams(5:num_elect:end,6)); % 4 electrode stimulation
+elseif num_elect == 5
+    StimParams_PulseDelay_info=cell2mat(StimParams(6:num_elect:end,6)); % 5 electrode stimulation
 else 
-    StimParams_PulseDelay_info=cell2mat(StimParams(2:num_elect:end,6));
+    StimParams_PulseDelay_info=cell2mat(StimParams(2:num_elect:end,6)); % Single electrode stim
 end
 
 nChn = size(data,1); 

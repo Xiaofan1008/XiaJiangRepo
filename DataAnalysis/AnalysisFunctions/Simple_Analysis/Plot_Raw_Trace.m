@@ -3,11 +3,12 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% User settings
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1_251202_121651';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX026/Xia_Ele3_SimSeq3Pulse2_260602_142027';
 
 channels_to_plot = [5 12 20];             % channels to plot (Intan numbering)
-amps_to_plot     = [5 6 10];               % amplitudes to include (µA)
-ptd_to_plot      = [];                    % PTDs to include (µs), empty = all
+amps_to_plot     = [10];               % amplitudes to include (µA)
+ptd_to_plot      = [0];                    % PTDs to include (µs), empty = all
+ptd_to_plot = ptd_to_plot.*1000;
 sets_to_plot     = [];                    % stimulation sets to include, empty = all
 
 nTrials_to_plot  = 20;                    % number of trials to include
@@ -60,7 +61,14 @@ n_AMP = numel(Amps);
 
 %% PTD decode
 postTrig_all = cell2mat(StimParams(2:end,6));
-postTrig = postTrig_all(2:simultaneous_stim:end);
+
+if simultaneous_stim > 2
+    postTrig = postTrig_all(3:simultaneous_stim:end);
+elseif simultaneous_stim == 2
+    postTrig = postTrig_all(2:simultaneous_stim:end);  % µs
+else
+    postTrig = postTrig_all(2:simultaneous_stim:end);
+end
 [PTDs,~,ptdIdx] = unique(postTrig);
 n_PTD = numel(PTDs);
 

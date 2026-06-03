@@ -74,7 +74,10 @@ if isempty(dir([dName '_dn_sab.dat']))
                 if (par)
                     parfor iChn = 1:nChn
                         % v(iChn,:) = simpleBlank(v(iChn,:),N,T,theseTrig,1,FS);
-                        v(iChn,:) = simpleBlank_PostTriggerDelay_Xia(v(iChn,:),N,T,theseTrig,1,FS);
+                        % ---- 2 Electrode Seq stim ----
+                        % v(iChn,:) = simpleBlank_PostTriggerDelay_Xia(v(iChn,:),N,T,theseTrig,1,FS); 
+                        % ---- Multi Electrode Seq stim ----
+                        v(iChn,:) = simpleBlank_PTD_MultiElec_Xia_v1(v(iChn,:),N,T,theseTrig,1,FS);
 
                     end
                 else
@@ -84,8 +87,10 @@ if isempty(dir([dName '_dn_sab.dat']))
                             pause(0.01);
                         end
                         % v(iChn,:) = simpleBlank(v(iChn,:),N,T,theseTrig,1,FS);
-                        v(iChn,:) = simpleBlank_PostTriggerDelay_Xia(v(iChn,:),N,T,theseTrig,1,FS);
-                    
+                        % ---- 2 electrode stim ----
+                        % v(iChn,:) = simpleBlank_PostTriggerDelay_Xia(v(iChn,:),N,T,theseTrig,1,FS);
+                        % ---- Multi Electrodes Seq Stim ---- 
+                        v(iChn,:) = simpleBlank_PTD_MultiElec_Xia_v1(v(iChn,:),N,T,theseTrig,1,FS);
                     end
                 end
             end

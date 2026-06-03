@@ -49,7 +49,7 @@ PTD_Tol_ms     = 0.01;    % tolerance for matching PTD in ms
 Amp_Tol_uA     = 0.01;    % tolerance for matching amplitude in uA
 
 %% ---------------- USER SETTINGS ----------------
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim4';
 Electrode_Type = 2;
 
 %% ---------------- MANUAL BAD TRIALS LIST ----------------
@@ -79,31 +79,31 @@ Bad_Groups(c).Set = 1;
 Bad_Groups(c).AmpTrials = {
     % Amp (uA),  [List of Relative Bad Trial Indices]
       % 0,         [];
-      1,         [1,2,8:15,20,22,23,24,26,30];
-      2,         [1,3,6,9,12,23,25,30];
-      3,         [1:3,5:7,11,13:14,17,18,23,25:27,29:30];
-      4,         [2,4,5,9,11,16,17,21:23];
-      5,         [1:2,7,10,12:15,17,19,20,24:28,30];
+      1,         [];
+      2,         [];
+      3,         [];
+      4,         [];
+      5,         [];
       % 6,       [];
-      8,         [1,8:10,12:16,19:22,26:30];
-      10,        [1,7,8,11:14,20,21,23,27:29];
+      8,         [2:4,6,10,11,14,18,20,22,25];
+      10,        [2,3,5,6,8:10,12,13,16,17];
 };
 
 % ================ Stimulation Set 2 ================
-c = 2;
-Bad_Groups(c).Set = 2;
-Bad_Groups(c).AmpTrials = {
-    % Amp (uA),  [List of Relative Bad Trial Indices]
-      % 0,         [];
-      1,         [4:7,9:11,15,21,22,26:28];
-      2,         [3:5,9,11:12,16:22,27:30];
-      3,         [1,4,6,8,10:12,19:27];
-      4,         [1,4:6,9,11,13:18,23:24,27,29,30];
-      5,         [2,4,11:13,15,17,19:21,23,27:29];
-      % 6,       [];
-      8,         [1,2,5,6,8:10,12,19:21,24,28:30];
-      10,        [1:2,5:7,9,11:13,15:18,20,21,24:26,28:29];
-};
+% c = 2;
+% Bad_Groups(c).Set = 2;
+% Bad_Groups(c).AmpTrials = {
+%     % Amp (uA),  [List of Relative Bad Trial Indices]
+%       % 0,       [];
+%       1,         [];
+%       2,         [];
+%       3,         [];
+%       4,         [];
+%       5,         [];
+%       % 6,       [];
+%       8,         [];
+%       10,        [];
+% };
 
 % You can add more stimulation sets using the same format:
 %

@@ -27,6 +27,8 @@ stats_min_n_threshold = 6;
 
 % List all result files to include in the Grand Average
 file_paths = {
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX018/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim4.mat';
+    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX018/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX018/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/SpikeCount/DX018/Result_SpikeNormGlobalRef_5uA_Zeroed_5ms_Xia_Exp1_Sim2.mat';
 

@@ -3,10 +3,10 @@
 % Refined: Uses Baseline Template + Zero-Crossing Check
 % ============================================================
 clear all;
-addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Single2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX026/Xia_Ele5_Single1';
 FS = 30000;                 
 
 % 1. FILTERING PARAMETERS

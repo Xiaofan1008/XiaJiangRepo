@@ -7,14 +7,14 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX026/Xia_Ele5_SimSeq5Pulse1_260602_182126';
 
 %% Choice
 Spike_filtering = 0;
 raster_chn_start = 1;
-raster_chn_end = 1; %nChn
+raster_chn_end = 32; %nChn
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
-PTD_to_plot = [5];   % e.g., [500 1000], empty for all PTD
+PTD_to_plot = [20];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
 %% Spike Amplitude Filtering Parameters
 pos_limit = 100;    % upper bound (µV)
@@ -137,7 +137,13 @@ n_PULSE = numel(PulsePeriods);
 % Extract POST-TRIGGER DELAY (PTD)
 % Column 6 stores PTD for the 2nd pulse of each trial block
 % For sequential stimulation: row 2 = delayed pulse
-if simultaneous_stim > 1
+if simultaneous_stim > 4
+    ptd_all = cell2mat(StimParams(6:simultaneous_stim:end, 6));
+elseif simultaneous_stim == 4
+    ptd_all = cell2mat(StimParams(5:simultaneous_stim:end, 6));
+elseif simultaneous_stim == 3
+    ptd_all = cell2mat(StimParams(4:simultaneous_stim:end, 6));
+elseif simultaneous_stim == 2
     ptd_all = cell2mat(StimParams(3:simultaneous_stim:end, 6));  % µs
 else
     ptd_all = zeros(n_Trials,1); % Single-pulse case, no PTD

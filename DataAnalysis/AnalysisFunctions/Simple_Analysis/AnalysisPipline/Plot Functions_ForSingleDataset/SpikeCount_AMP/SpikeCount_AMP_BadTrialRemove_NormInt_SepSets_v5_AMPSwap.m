@@ -9,14 +9,14 @@
 %       3. Allow amplitude exclusion by Mode + SeqSetIndex + Amp.
 %       4. Excluded amplitudes are set to NaN, not deleted.
 %       5. Ref_Amp normalization is estimated if Ref_Amp is missing/excluded.
-%       6. Plot connects across excluded/missing amplitudes using valid points.
+%       6. Amplitude remapping is applied before exclusion and normalization.
 % ============================================================
 clear;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
-folder_sim = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim3';
-folder_seq = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq3';
+folder_sim = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim4';
+folder_seq = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq4';
 Electrode_Type = 2;
 
 % 1. Analysis Window
@@ -33,7 +33,7 @@ jitter_width = 0.2;
 dot_size = 20;
 
 % ========================================================================
-% [NEW] Amplitude exclusion rules
+% Amplitude exclusion rules
 %
 % Format:
 %   ExcludeAmpRules = {
@@ -54,8 +54,7 @@ dot_size = 20;
 % ========================================================================
 ExcludeAmpRules = {
     % Mode,   SeqSetIndex,   Amp
-    % 'Seq',  1,             8;
-    % 'Sim',  2,             10;
+
     % 'Seq',  1,             8;
     % 'Seq',  2,             8;
     % 'Sim',  1,             8;
@@ -65,6 +64,75 @@ ExcludeAmpRules = {
     % 'Seq',  2,             10;
     % 'Sim',  1,             10;
     % 'Sim',  2,             10;
+};
+
+% ========================================================================
+% [NEW] Amplitude remapping rules
+%
+% Use this when amplitude columns are mis-labelled/misaligned.
+%
+% Format:
+%   AmplitudeRemapRules = {
+%       % Mode, SeqSetIndex, WrongAmpLabel, CorrectAmpLabel
+%       'Seq', 1, 5, 10;
+%       'Seq', 1, 10, 5;
+%   };
+%
+% Meaning:
+%   The data currently sitting under WrongAmpLabel should be moved to
+%   CorrectAmpLabel.
+%
+% Example for a simple 5 <-> 10 uA swap:
+%   'Seq', 1, 5, 10;
+%   'Seq', 1, 10, 5;
+%
+% Example for multiple amplitudes:
+%   'Seq', 1, 5, 10;
+%   'Seq', 1, 10, 8;
+%   'Seq', 1, 8, 5;
+%
+% This is applied BEFORE amplitude exclusion and BEFORE normalization.
+% ========================================================================
+AmplitudeRemapRules = {
+    % Mode,   SeqSetIndex,   WrongAmpLabel,   CorrectAmpLabel
+
+    % Example: swap 5 and 10 uA for Seq Set 1
+    'Seq',  1,             2,               10;
+    'Seq',  1,             10,              2;
+
+    'Seq',  1,             3,               8;
+    'Seq',  1,             8,              3;
+
+    'Seq',  1,             4,               5;
+    'Seq',  1,             5,              4;
+
+    'Seq',  2,             2,               10;
+    'Seq',  2,             10,              2;
+
+    'Seq',  2,             3,               8;
+    'Seq',  2,             8,              3;
+
+    'Seq',  2,             4,               5;
+    'Seq',  2,             5,              4;
+
+    % Example: swap 5 and 10 uA for Sim Set 1
+    'Sim',  1,             2,               10;
+    'Sim',  1,             10,              2;
+
+    'Sim',  1,             4,               8;
+    'Sim',  1,             8,              4;
+
+    'Sim',  1,             1,               5;
+    'Sim',  1,             1,              5;
+
+    'Sim',  2,             2,               10;
+    'Sim',  2,             10,              2;
+
+    'Sim',  2,             4,               8;
+    'Sim',  2,             8,              4;
+
+    'Sim',  2,             1,               5;
+    'Sim',  2,             1,              5;
 };
 
 %% =================== 1. LOAD DATA ====================
@@ -151,7 +219,6 @@ end
 nSets_seq = size(uniqueComb_seq,1);
 
 % ========================================================================
-% [MODIFIED]
 % Use sequential ordered sets as the main analysis structure.
 %
 % Each sequential ordered set gets matched to a simultaneous unordered set.
@@ -374,8 +441,24 @@ for ss_seq = 1:nSets
         end
 
         % =================================================================
-        % [NEW] Apply mode-specific, set-specific amplitude exclusion.
-        % Excluded amplitudes are set to NaN before reference estimation.
+        % [NEW] Apply amplitude remapping BEFORE exclusion and normalization.
+        %
+        % This corrects mis-labelled amplitude data.
+        %
+        % Important:
+        %   - The remapping copies from the original curve, so multiple
+        %     amplitude remaps can be applied safely at the same time.
+        %   - This is different from sequential pairwise swaps, where the
+        %     order of swaps can accidentally change the result.
+        % =================================================================
+        curve_sim = apply_amplitude_remap(curve_sim, Amps, 'Sim', ss_seq, AmplitudeRemapRules);
+        curve_seq = apply_amplitude_remap(curve_seq, Amps, 'Seq', ss_seq, AmplitudeRemapRules);
+
+        % =================================================================
+        % Apply mode-specific, set-specific amplitude exclusion.
+        %
+        % Excluded amplitudes are set to NaN after remapping, so the deleted
+        % amplitudes do not affect reference estimation or normalization.
         % =================================================================
         for ai = 1:nAMP
             amp_val = Amps(ai);
@@ -393,8 +476,7 @@ for ss_seq = 1:nSets
         Raw_Seq_All(ch_idx, :, ss_seq) = curve_seq;
 
         % =================================================================
-        % [MODIFIED] Estimate Ref_Amp response if real Ref_Amp is missing
-        % or excluded.
+        % Estimate Ref_Amp response if real Ref_Amp is missing or excluded.
         % =================================================================
         [val_sim_ref, method_sim] = estimate_ref_response(Amps, curve_sim, Ref_Amp);
         [val_seq_ref, method_seq] = estimate_ref_response(Amps, curve_seq, Ref_Amp);
@@ -558,7 +640,8 @@ ResultNorm.PTD_Ref = PTD_Ref;
 ResultNorm.Ref_Amp = Ref_Amp;
 ResultNorm.post_win_ms = post_win_ms;
 
-% Save exclusion rules
+% Save amplitude correction and exclusion rules
+ResultNorm.AmplitudeRemapRules = AmplitudeRemapRules;
 ResultNorm.ExcludeAmpRules = ExcludeAmpRules;
 
 % Save reference estimate metadata
@@ -691,6 +774,66 @@ function [R, sp, trig, S, QC] = load_experiment_data(folder)
         if isfield(tmp, 'BadTrials')
             QC.BadTrials = tmp.BadTrials;
         end
+    end
+end
+
+function curve_out = apply_amplitude_remap(curve_in, Amps, mode_name, seq_set_idx, AmplitudeRemapRules)
+
+    % =====================================================================
+    % Apply amplitude remapping for one curve.
+    %
+    % Rule format:
+    %   AmplitudeRemapRules = {
+    %       % Mode, SeqSetIndex, WrongAmpLabel, CorrectAmpLabel
+    %       'Seq', 1, 5, 10;
+    %       'Seq', 1, 10, 5;
+    %   };
+    %
+    % Meaning:
+    %   The data currently sitting under WrongAmpLabel should be moved to
+    %   CorrectAmpLabel.
+    %
+    % This function supports multiple remapping rules safely.
+    % It always copies from the original input curve, not from values already
+    % modified by earlier rules.
+    % =====================================================================
+
+    curve_out = curve_in;
+
+    if isempty(AmplitudeRemapRules)
+        return;
+    end
+
+    curve_original = curve_in;
+
+    for r = 1:size(AmplitudeRemapRules, 1)
+
+        rule_mode   = AmplitudeRemapRules{r, 1};
+        rule_set    = AmplitudeRemapRules{r, 2};
+        wrong_amp   = AmplitudeRemapRules{r, 3};
+        correct_amp = AmplitudeRemapRules{r, 4};
+
+        % Only apply rules matching the current mode and sequential set index
+        if ~strcmpi(rule_mode, mode_name) || rule_set ~= seq_set_idx
+            continue;
+        end
+
+        wrong_idx = find(abs(Amps - wrong_amp) < 0.001, 1);
+        correct_idx = find(abs(Amps - correct_amp) < 0.001, 1);
+
+        if isempty(wrong_idx)
+            warning('Amplitude remap skipped: wrong_amp %.3f uA not found for %s Set %d.', ...
+                wrong_amp, mode_name, seq_set_idx);
+            continue;
+        end
+
+        if isempty(correct_idx)
+            warning('Amplitude remap skipped: correct_amp %.3f uA not found for %s Set %d.', ...
+                correct_amp, mode_name, seq_set_idx);
+            continue;
+        end
+
+        curve_out(correct_idx) = curve_original(wrong_idx);
     end
 end
 

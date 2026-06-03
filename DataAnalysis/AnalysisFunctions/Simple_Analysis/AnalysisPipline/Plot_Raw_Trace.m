@@ -3,11 +3,11 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX024/Xia_ISI_SimSeq1_260423_152315';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX026/Xia_Ele5_SimSeq5Pulse1_260602_182126';
 
 channels_to_plot = 15:20;                % channels to plot (Depth_s index)
 amps_to_plot     = [10];                 % amplitudes to include (µA)
-ptd_to_plot      = [0 5 8 10 13 15];                  % PTDs (ms), [] means all
+ptd_to_plot      = [0 20];                  % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
 
 nTrials_to_plot  = 30;                  % how many trials to draw per condition
@@ -89,7 +89,19 @@ n_AMP = numel(Amps);
 
 %% ====================== PTD ======================
 postTrig_all = cell2mat(StimParams(2:end,6));
-postTrig = postTrig_all(2:simultaneous_stim:end);
+% postTrig = postTrig_all(2:simultaneous_stim:end);
+
+if simultaneous_stim > 4
+    postTrig = postTrig_all(5:simultaneous_stim:end);
+elseif simultaneous_stim == 4
+    postTrig = postTrig_all(4:simultaneous_stim:end);  % µs
+elseif simultaneous_stim == 3
+    postTrig = postTrig_all(3:simultaneous_stim:end);  % µs
+elseif simultaneous_stim == 2
+    postTrig = postTrig_all(2:simultaneous_stim:end);  % µs
+else
+    postTrig = postTrig_all(2:simultaneous_stim:end);
+end
 [PTDs,~,ptdIdx] = unique(postTrig);
 n_PTD = numel(PTDs);
 

@@ -4,7 +4,7 @@ function data = simpleBlank_PTD_MultiElec_Xia_v1(data,N,T,trig,mode,FS)
 % Keep the raw TrialParams first, because the new mixed-prefix files contain
 % extra metadata columns, including ActiveElectrodeCount in column 4.
 TrialParams_raw = loadTrialParams; 
-TrialParams = cell2mat(TrialParams_raw(:,2))';
+TrialParams = cell2mat(TrialParams_raw(:,2));
 % =====================================================
 
 num_elect=min(diff(find(diff(TrialParams)~=0))); % number of electrodes used per trial

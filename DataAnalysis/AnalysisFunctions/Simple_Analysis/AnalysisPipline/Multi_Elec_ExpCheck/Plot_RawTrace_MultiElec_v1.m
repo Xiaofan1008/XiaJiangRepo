@@ -7,9 +7,9 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX026/Xia_Ele5_SimSeq5Pulse1_260602_182126';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX027/Xia_FixISI_5ms1_260604_122628';
 
-channels_to_plot = 15:20;                % channels to plot, using Depth_s index
+channels_to_plot = 1;                % channels to plot, using Depth_s index
 amps_to_plot     = [10];                 % amplitudes to include, [] means all
 Electrode_Type   = 2;                   % 0 rigid, 1 flex, 2 4-shank flex
 % ================= XIA MODIFICATION =================
@@ -22,8 +22,8 @@ Electrode_Type   = 2;                   % 0 rigid, 1 flex, 2 4-shank flex
 % isi_to_plot_ms is the actual ISI between sequential pulses.
 % Example:
 %   prefix 5 with ISI = 5 ms has artifacts at 0, 5, 10, 15, 20 ms.
-prefix_to_plot  = [1 2 3 4 5];           % prefixes to plot, [] means all
-isi_to_plot_ms  = [5];                   % ISI values in ms, [] means all
+prefix_to_plot  = [];           % prefixes to plot, [] means all
+isi_to_plot_ms  = [];                   % ISI values in ms, [] means all
 sets_to_plot    = [];                    % condition set IDs, [] means all
 
 % If this is 1, the full simultaneous condition will be plotted together

@@ -13,7 +13,7 @@
 % ============================================================
 
 clear all
-addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ====================== CHOOSE FOLDER ======================
 data_folder = '/Volumes/MACData/Data/Data_Xia/DX027/Xia_FixISI_5ms1';
@@ -40,7 +40,7 @@ ConditionTypes_to_plot = [];
 
 % Which stimulation set/order IDs to plot.
 % [] means all detected sets.
-SetIDs_to_plot = [];
+SetIDs_to_plot = [1];
 
 % Amplitudes to plot.
 % [] means all non-zero amplitudes.

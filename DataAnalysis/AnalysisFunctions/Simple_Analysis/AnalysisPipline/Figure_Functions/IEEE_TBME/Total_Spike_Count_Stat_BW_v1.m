@@ -20,7 +20,7 @@ stats_mag_threshold  = 0.35;
 
 % 3. Bonferroni Correction: Divide p-value cutoffs by this number
 %    (Usually equal to number of comparisons, e.g., 9 amplitudes)
-bonferroni_n = 9; 
+bonferroni_n = 11; 
 
 % 4. Minimum Sample Size for Stats (Limit dataset number)
 stats_min_n_threshold = 6; 
@@ -98,7 +98,7 @@ file_paths = {
 % Plot Settings
 save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Total_Spike_Count';
-fig_name    = 'Total_Spike_Count_SignedRank_v3_FormatChanged.tiff';
+fig_name    = 'Total_Spike_Count_SignedRank_v4_FormatChanged.tiff';
 
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
@@ -213,8 +213,13 @@ for k = 1:length(Unique_Amps)
     p = p * bonferroni_n;
     
     txt = '';
-    if p < (0.001) && amp >=4, txt = '***';
-    elseif p < (0.01) && amp >=2, txt = '**';
+    % if p < (0.001) && amp >=4, txt = '***';
+    % elseif p < (0.01) && amp >=2, txt = '**';
+    % elseif p < (0.05), txt = '*';
+    % end
+
+    if p < (0.001), txt = '***';
+    elseif p < (0.01), txt = '**';
     elseif p < (0.05), txt = '*';
     end
     

@@ -9,10 +9,6 @@
 %    *.sp_xia_PrefixRecovery.mat
 %  Required spike variable:
 %    sp_seq
-%
-%  XIA MODIFICATION:
-%    Added option to pool simultaneous trials across all set IDs, because
-%    simultaneous stimulation does not depend on electrode order.
 % ============================================================
 
 clear all
@@ -52,8 +48,6 @@ ras_win = [-5 40];      % ms
 % PSTH settings.
 bin_ms = 1;             % bin size for PSTH
 smooth_ms = 5;          % smoothing width
-
-
 
 % Raster line settings.
 raster_line_width = 1.1;

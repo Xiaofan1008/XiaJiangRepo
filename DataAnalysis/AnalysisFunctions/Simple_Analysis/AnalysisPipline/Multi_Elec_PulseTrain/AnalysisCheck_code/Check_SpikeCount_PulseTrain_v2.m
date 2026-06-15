@@ -4,13 +4,6 @@
 %  Purpose:
 %    Quickly compare total spike count between final sequential pulse train
 %    and final AutoSim / simultaneous pulse train.
-%
-%  Main question:
-%    Does AutoSim really produce higher total spike count than sequential,
-%    or was the apparent difference mainly due to PSTH peak shape?
-%
-%  Input spike file options:
-%    recovery_ssd = *.sp_xia_PrefixRecovery_SSD.mat, variable sp_corr
 % ============================================================
 
 clear all
@@ -33,21 +26,22 @@ Electrode_Type = 2;     % 0 rigid, 1 single-shank flex, 2 four-shank flex
 spike_source = 'recovery_ssd';
 
 % Response window for spike counting, relative to trigger.
-%
-% Good windows to test:
-%   [0 40]   train + early response
-%   [0 50]   train + slightly longer response
-%   [0 60]   train + delayed response
-%   [25 60]  post-train response only
 response_window_ms = [0 40];
 
 % Baseline window, relative to trigger.
 baseline_window_ms = [-60 -10];
 
-% Apply baseline correction?
-% Corrected count =
-%   response_count - expected_baseline_spikes_in_response_window
-do_baseline_correction = true;
+% Baseline correction mode for spike count.
+% 'none':
+%   Use raw response spike count.
+% 'subtract':
+%   response_count - expected_baseline_spikes_in_response_window.
+%   This can be negative, which is mathematically valid.
+% 'subtract_clamp0':
+%   response_count - expected_baseline_spikes_in_response_window,
+%   then negative values are set to 0.
+%   This is useful for quick visual plots, but should be interpreted carefully.
+count_baseline_mode = 'subtract_clamp0';
 
 % Final train levels to compare.
 %
@@ -379,7 +373,7 @@ disp(unique(trainLevel_trial(isAutoSim_trial == 1 & isZero_trial == 0))');
 
 fprintf('\nResponse window: %.1f to %.1f ms\n', response_window_ms(1), response_window_ms(2));
 fprintf('Baseline window: %.1f to %.1f ms\n', baseline_window_ms(1), baseline_window_ms(2));
-fprintf('Baseline correction: %d\n', do_baseline_correction);
+fprintf('Count baseline mode: %s\n', count_baseline_mode);
 
 %% ====================== BUILD CONDITION LIST ======================
 % Each condition is a family + set + level.
@@ -536,7 +530,8 @@ nAnalyseCh = numel(channels_to_analyse);
 %   response_count
 %   baseline_count
 %   expected baseline spikes during response window
-%   baseline-corrected spike count
+%   baseline-subtracted count
+%   final analysis count, according to count_baseline_mode
 
 resp_dur_ms = response_window_ms(2) - response_window_ms(1);
 base_dur_ms = baseline_window_ms(2) - baseline_window_ms(1);
@@ -589,9 +584,10 @@ for ich_i = 1:nAnalyseCh
                 continue;
             end
 
-            corr_counts = NaN(numel(trial_list),1);
+            analysis_counts = NaN(numel(trial_list),1);
             raw_resp_counts = NaN(numel(trial_list),1);
             expected_base_counts = NaN(numel(trial_list),1);
+            baseline_subtracted_counts = NaN(numel(trial_list),1);
 
             for tt = 1:numel(trial_list)
 
@@ -608,30 +604,47 @@ for ich_i = 1:nAnalyseCh
 
                 expected_baseline_spikes = baseline_count * (resp_dur_ms / base_dur_ms);
 
-                if do_baseline_correction
-                    corrected_count = response_count - expected_baseline_spikes;
-                else
-                    corrected_count = response_count;
+                baseline_subtracted_count = response_count - expected_baseline_spikes;
+
+                switch lower(count_baseline_mode)
+
+                    case 'none'
+                        count_for_analysis = response_count;
+
+                    case 'subtract'
+                        count_for_analysis = baseline_subtracted_count;
+
+                    case 'subtract_clamp0'
+                        count_for_analysis = baseline_subtracted_count;
+
+                        if count_for_analysis < 0
+                            count_for_analysis = 0;
+                        end
+
+                    otherwise
+                        error('Unknown count_baseline_mode: %s', count_baseline_mode);
                 end
 
-                corr_counts(tt) = corrected_count;
+                analysis_counts(tt) = count_for_analysis;
                 raw_resp_counts(tt) = response_count;
                 expected_base_counts(tt) = expected_baseline_spikes;
+                baseline_subtracted_counts(tt) = baseline_subtracted_count;
             end
 
-            mean_corr = mean(corr_counts, 'omitnan');
-            sem_corr  = std(corr_counts, 'omitnan') ./ sqrt(sum(~isnan(corr_counts)));
+            mean_analysis = mean(analysis_counts, 'omitnan');
+            sem_analysis  = std(analysis_counts, 'omitnan') ./ sqrt(sum(~isnan(analysis_counts)));
 
             mean_raw_resp = mean(raw_resp_counts, 'omitnan');
             mean_expected_base = mean(expected_base_counts, 'omitnan');
+            mean_baseline_subtracted = mean(baseline_subtracted_counts, 'omitnan');
 
-            MeanMat(ich_i, c, aa) = mean_corr;
-            SEMMat(ich_i, c, aa)  = sem_corr;
+            MeanMat(ich_i, c, aa) = mean_analysis;
+            SEMMat(ich_i, c, aa)  = sem_analysis;
             NMat(ich_i, c, aa)    = numel(trial_list);
 
             row_i = row_i + 1;
 
-            SummaryRows(row_i,1:15) = { ...
+            SummaryRows(row_i,1:17) = { ...
                 ch_depth_index, ...
                 ch_spike, ...
                 CondList(c).Family, ...
@@ -644,9 +657,11 @@ for ich_i = 1:nAnalyseCh
                 response_window_ms(2), ...
                 baseline_window_ms(1), ...
                 baseline_window_ms(2), ...
+                count_baseline_mode, ...
                 mean_raw_resp, ...
                 mean_expected_base, ...
-                mean_corr};
+                mean_baseline_subtracted, ...
+                mean_analysis};
         end
     end
 end
@@ -665,17 +680,19 @@ SummaryTable = cell2table(SummaryRows, ...
     'RespWinEnd_ms', ...
     'BaseWinStart_ms', ...
     'BaseWinEnd_ms', ...
+    'CountBaselineMode', ...
     'MeanRawResponseCount', ...
     'MeanExpectedBaselineCount', ...
-    'MeanBaselineCorrectedCount'});
+    'MeanBaselineSubtractedCount', ...
+    'MeanAnalysisCount'});
 
 fprintf('\n================ Quick Spike Count Summary ================\n');
 disp(SummaryTable);
 fprintf('===========================================================\n');
 
 if save_summary_table
-    out_summary_name = sprintf('%s_QuickSpikeCount_%s_Resp%.0fto%.0fms.mat', ...
-        base_name, spike_source, response_window_ms(1), response_window_ms(2));
+    out_summary_name = sprintf('%s_QuickSpikeCount_%s_Resp%.0fto%.0fms_%s.mat', ...
+        base_name, spike_source, response_window_ms(1), response_window_ms(2), count_baseline_mode);
 
     save(out_summary_name, ...
         'SummaryTable', ...
@@ -687,7 +704,7 @@ if save_summary_table
         'Amps_selected', ...
         'response_window_ms', ...
         'baseline_window_ms', ...
-        'do_baseline_correction', ...
+        'count_baseline_mode', ...
         'seq_train_level', ...
         'autosim_train_level', ...
         'spike_source', ...
@@ -697,23 +714,12 @@ if save_summary_table
 end
 
 %% ====================== FIGURE 1: AVERAGED SPIKE COUNT VS AMPLITUDE ======================
-% One figure only.
-%
-% This figure averages across all selected recording channels.
-%
 % X-axis:
 %   amplitude
-%
 % Y-axis:
-%   mean baseline-corrected spike count / trial across selected channels
-%
+%   mean spike count / trial according to count_baseline_mode
 % Error bar:
 %   SEM across selected recording channels
-%
-% Important:
-%   This gives a quick population-level view.
-%   However, it may hide channel-specific differences, so Figure 2 below
-%   still shows each channel separately.
 
 cond_colors = lines(numel(CondList));
 
@@ -766,10 +772,10 @@ end
 
 yline(0, 'k:', 'LineWidth', 1);
 
-xlabel('Amplitude (\muA)');
-ylabel('Baseline-corrected spike count / trial');
+xlabel('Amplitude (µA)');
+ylabel(getCountYAxisLabel(count_baseline_mode));
 
-title(sprintf(['Average across selected channels | Response %.0f–%.0f ms | ' ...
+title(sprintf(['Average Corrected Spike Count | Response %.0f–%.0f ms | ' ...
                'Baseline %.0f–%.0f ms'], ...
       response_window_ms(1), response_window_ms(2), ...
       baseline_window_ms(1), baseline_window_ms(2)), ...
@@ -781,6 +787,87 @@ legend('Box','off', 'Location','best');
 fprintf('\nFigure 1 averaged across these Depth_s channel indices:\n');
 disp(channels_to_analyse);
 
+%% ====================== FIGURE 1B: AVERAGED SPIKE COUNT BAR PLOT ======================
+% This is better than the line plot when only one amplitude is selected.
+%
+% One bar = one condition
+% Bar height = mean across selected recording channels
+% Error bar = SEM across selected recording channels
+
+for aa = 1:numel(Amps_selected)
+
+    amp_val = Amps_selected(aa);
+
+    y_bar = MeanAcrossCh(:,aa);
+    e_bar = SEMAcrossCh(:,aa);
+
+    valid_idx = ~isnan(y_bar);
+
+    if ~any(valid_idx)
+        continue;
+    end
+
+    y_plot = y_bar(valid_idx);
+    e_plot = e_bar(valid_idx);
+
+    % cond_labels_plot = {CondList(valid_idx).Label};
+    cond_labels_plot = {'Seq1', 'Seq2', 'Sim'};
+    cond_colors_plot = cond_colors(valid_idx,:);
+
+    figure('Color','w', ...
+           'Name', sprintf('QuickCount_AverageAcrossSelectedChannels_Bar_Amp%g', amp_val), ...
+           'Position', [120 120 700 500]);
+
+    hold on; box off;
+
+    % b = bar(1:numel(y_plot), y_plot, 0.65, 'FaceColor', 'flat');
+    b = bar(1:numel(y_plot), y_plot, 0.45, 'FaceColor', 'flat');
+
+
+    for ii = 1:numel(y_plot)
+        b.CData(ii,:) = cond_colors_plot(ii,:);
+    end
+
+    errorbar(1:numel(y_plot), y_plot, e_plot,'k', 'LineStyle', 'none','LineWidth', 1.4, 'CapSize', 6);
+
+    yline(0, 'k:', 'LineWidth', 1);
+
+    xticks(1:numel(y_plot));
+    xticklabels(cond_labels_plot);
+
+    if numel(y_plot) > 2
+        % xtickangle(25);
+        xtickangle(0);
+    end
+
+    ylabel(getCountYAxisLabel(count_baseline_mode));
+
+    title(sprintf(['Average Corrected Spike Count | %.1f µA | '  'Response %.0f–%.0f ms'], ...
+          amp_val, response_window_ms(1), response_window_ms(2)),'Interpreter','none');
+
+    ax = gca;
+    ax.FontSize = 10;
+    ax.LineWidth = 0.8;
+    ax.TickDir = 'out';
+    ax.Box = 'off';
+
+    xlim([0.4 numel(y_plot)+0.6]);
+
+    % Add numeric values above bars.
+    y_max = max(y_plot + e_plot, [], 'omitnan');
+
+    if isempty(y_max) || isnan(y_max) || y_max <= 0
+        y_max = 1;
+    end
+
+    ylim([0 y_max * 1.25]);
+
+    for ii = 1:numel(y_plot)
+        text(ii, y_plot(ii) + e_plot(ii) + y_max*0.04, sprintf('%.2f', y_plot(ii)), 'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', 'FontSize', 9);
+    end
+end
+
 %% ====================== FIGURE 2: CHANNEL-WISE COMPARISON ======================
 % One figure per amplitude.
 %
@@ -789,12 +876,6 @@ disp(channels_to_analyse);
 %
 % Tick labels:
 %   real recording channel index from Depth_s
-%
-% This is useful when channels_to_analyse is not continuous, for example:
-%   channels_to_analyse = [1:7 17:28]
-%
-% In that case, the plot will not have a large visual gap between 7 and 17,
-% but the x-axis labels will still show the real channel numbers.
 
 xpos = 1:numel(channels_to_analyse);
 
@@ -836,13 +917,14 @@ for aa = 1:numel(Amps_selected)
     end
 
     xlabel('Recording channel index (Depth_s)');
-    ylabel('Baseline-corrected spike count / trial');
+    ylabel(getCountYAxisLabel(count_baseline_mode));
 
-    title(sprintf('Channel-wise quick spike count | %.1f \\muA | Response %.0f–%.0f ms', ...
+    title(sprintf('Channel-wise quick spike count | %.1f µA | Response %.0f–%.0f ms', ...
           amp_val, response_window_ms(1), response_window_ms(2)), ...
           'Interpreter','none');
 
     legend('Box','off', 'Location','best');
+
     % Keep a little space at both ends of the compact x-axis.
     xlim([0.5 numel(channels_to_analyse)+0.5]);
 end
@@ -902,9 +984,9 @@ for aa = 1:numel(Amps_selected)
     end
 
     xlabel('Recording channel index (Depth_s)');
-    ylabel('Baseline-corrected spike count / trial');
+    ylabel(getCountYAxisLabel(count_baseline_mode));
 
-    title(sprintf(['Channel-wise baseline-corrected spike count | %.1f \\muA | ' ...
+    title(sprintf(['Channel-wise spike count | %.1f \\muA | ' ...
                    'Response %.0f–%.0f ms'], ...
           amp_val, response_window_ms(1), response_window_ms(2)), ...
           'Interpreter','none');
@@ -1057,5 +1139,23 @@ function chNum = convertStimNameUsingEMap(stimName, E_MAP)
             stimName, chNum);
     else
         warning('Stim channel %s was not found in E_MAP and could not be parsed.', stimName);
+    end
+end
+
+function yLabelText = getCountYAxisLabel(count_baseline_mode)
+
+    switch lower(count_baseline_mode)
+
+        case 'none'
+            yLabelText = 'Raw spike count / trial';
+
+        case 'subtract'
+            yLabelText = 'Baseline-subtracted spike count / trial';
+
+        case 'subtract_clamp0'
+            yLabelText = 'Baseline-subtracted spike count / trial';
+
+        otherwise
+            yLabelText = 'Spike count / trial';
     end
 end

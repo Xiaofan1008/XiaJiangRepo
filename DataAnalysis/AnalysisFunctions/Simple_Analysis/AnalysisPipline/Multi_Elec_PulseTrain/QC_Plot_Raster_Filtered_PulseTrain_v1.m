@@ -15,7 +15,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== CHOOSE FOLDER ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
 
 %% ====================== USER SETTINGS ======================
 

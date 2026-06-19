@@ -14,10 +14,10 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
 
 % Recording channels to plot, using Depth_s index.
-channels_to_plot = [17:27 33:48 50:52 54:55 57 61:63];
+channels_to_plot = [1:2];
 
 Electrode_Type = 2;     % 0 rigid, 1 single-shank flex, 2 four-shank flex
 
@@ -51,7 +51,7 @@ ras_win = [-10 60];      % ms
 
 % PSTH settings.
 bin_ms = 1;             % bin size, ms
-smooth_ms = 3;          % smoothing width in bins/ms approximately
+smooth_ms = 2;          % smoothing width in bins/ms approximately
 
 % Raster marker settings.
 raster_marker_size = 6;

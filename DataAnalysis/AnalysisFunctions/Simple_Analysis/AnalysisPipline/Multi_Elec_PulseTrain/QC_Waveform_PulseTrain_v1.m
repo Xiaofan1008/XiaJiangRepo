@@ -17,7 +17,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
 
 % Recording channels to plot, using Depth_s index.
 spike_chn_start = 1;
@@ -28,11 +28,11 @@ Electrode_Type = 2;     % 0 rigid, 1 single-shank flex, 2 four-shank flex
 
 % Stimulation set IDs to plot.
 % [] means all detected sets.
-SetIDs_to_plot = [];
+SetIDs_to_plot = [2];
 
 % Amplitudes to plot.
 % [] means all non-zero amplitudes.
-Amps_to_plot = [];
+Amps_to_plot = []; 
 
 % Sequential/interleaved train levels to plot.
 % [] means all detected sequential levels.
@@ -53,7 +53,7 @@ plot_auto_sim = true;
 include_zero_control = false;
 
 % Time window after trigger used to collect waveforms.
-waveform_time_window_ms = [0 40];
+waveform_time_window_ms = [-10 40];
 
 % Bin width for grouping waveforms by spike latency.
 % [0 40] with 2 ms bins gives 20 bins, matching 4 x 5 layout.
@@ -77,8 +77,8 @@ plot_mean_waveform = true;
 max_waveforms_per_bin_amp = 200;
 
 % Figure layout.
-layout_row = 4;
-layout_col = 5;
+layout_row = [];
+layout_col = [];
 
 % Sampling frequency.
 FS = 30000;
@@ -501,11 +501,31 @@ d = Depth_s(Electrode_Type);
 bin_edges = waveform_time_window_ms(1):bin_ms:waveform_time_window_ms(2);
 nBins = numel(bin_edges) - 1;
 
-if nBins > layout_row * layout_col
-    warning('Number of time bins (%d) is larger than subplot layout capacity (%d). Some bins may not fit clearly.', ...
-        nBins, layout_row * layout_col);
-end
+% Automatically choose subplot layout if not manually specified.
+if isempty(layout_row) || isempty(layout_col)
 
+    % Aim for a reasonably wide figure.
+    layout_col = ceil(sqrt(nBins));
+    layout_row = ceil(nBins / layout_col);
+
+    fprintf('Auto subplot layout: %d rows x %d columns for %d bins.\n', ...
+        layout_row, layout_col, nBins);
+
+else
+    layout_capacity = layout_row * layout_col;
+
+    if nBins > layout_capacity
+        warning(['Number of time bins (%d) is larger than subplot layout capacity (%d). ', ...
+                 'Automatically increasing layout size.'], ...
+                 nBins, layout_capacity);
+
+        layout_col = ceil(sqrt(nBins));
+        layout_row = ceil(nBins / layout_col);
+
+        fprintf('Updated subplot layout: %d rows x %d columns for %d bins.\n', ...
+            layout_row, layout_col, nBins);
+    end
+end
 %% ====================== WAVEFORM X AXIS ======================
 
 example_ch = find(~cellfun(@isempty, sp_use), 1, 'first');
@@ -794,7 +814,7 @@ for ich = spike_chn_start:spike_chn_end
                     yticks(ax, linspace(y_lim(1), y_lim(2), 3));
                     xticks(ax, round(linspace(t_wave(1), t_wave(end), 3), 2));
 
-                    grid(ax, 'on');
+                    grid(ax, 'off');
                     axis(ax, 'square');
 
                     % Mark if this latency bin contains the final stimulation event.

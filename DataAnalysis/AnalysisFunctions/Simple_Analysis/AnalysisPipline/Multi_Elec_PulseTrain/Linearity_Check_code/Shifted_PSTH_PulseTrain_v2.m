@@ -12,13 +12,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ======================
 
-single_data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single2';
-multi_data_folder  = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+single_data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single3';
+multi_data_folder  = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
 
 % Recording channels to plot.
 % These are Depth_s indices, not raw Intan channel numbers.
 % channels_to_plot = [17:27 33:48 50:52 54:55 57 61:63];
-channels_to_plot = [61];
+channels_to_plot = [1:64];
 
 % Electrode type for Depth_s mapping.
 Electrode_Type = 2;     % 0 rigid, 1 single-shank flex, 2 four-shank flex

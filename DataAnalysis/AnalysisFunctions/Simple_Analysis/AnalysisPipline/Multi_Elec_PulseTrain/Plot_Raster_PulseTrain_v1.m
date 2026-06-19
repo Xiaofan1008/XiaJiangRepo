@@ -16,12 +16,12 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== CHOOSE FOLDER ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single3';
 
 %% ====================== USER SETTINGS ======================
 
-raster_chn_start = 35;
-raster_chn_end   = 40;   % Depth_s index
+raster_chn_start = 33;
+raster_chn_end   = 34;   % Depth_s index
 Electrode_Type   = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
 % Stimulation set selection.
@@ -36,7 +36,7 @@ Amps_to_plot = [];
 % [] means all detected train levels.
 % Example:
 %   [1 3 6] plots only level 1, level 3, and level 6.
-train_levels_to_plot = [1:6];
+train_levels_to_plot = [];
 
 % Include automatically added simultaneous condition?
 % 1 = include, 0 = exclude.
@@ -66,7 +66,7 @@ save_sp_xia = true;
 overwrite_sp_xia = true;
 
 % If true, print one example trial for each selected condition.
-debug_print_trial_content = true;
+debug_print_trial_content = false;
 
 %% ====================== CHECK FOLDER ======================
 

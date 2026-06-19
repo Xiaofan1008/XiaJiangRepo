@@ -17,10 +17,10 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== USER SETTINGS ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
 
 % Recording channels to plot, using Depth_s index.
-channels_to_plot = 40:43;
+channels_to_plot = 25;
 
 Electrode_Type = 2;     % 0 rigid, 1 single-shank flex, 2 four-shank flex
 

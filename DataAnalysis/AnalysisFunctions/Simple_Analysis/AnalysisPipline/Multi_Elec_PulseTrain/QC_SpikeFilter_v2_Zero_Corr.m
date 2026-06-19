@@ -11,19 +11,6 @@
 % Output:
 %   *.sp_xia_PrefixRecovery_SSD.mat
 %   final cleaned variable: sp_corr
-%
-% Filtering steps:
-%   1) Start-slope / rapid swing filter
-%   2) Morphology width filter
-%   3) Zero-crossing check
-%   4) Channel-level template correlation filter
-%
-% Important changes from old prefix code:
-%   - Does NOT use StimParams columns 26–30.
-%   - Uses TrialParams + StimMeta.
-%   - PrefixLength is replaced by TrainLevel.
-%   - Simultaneous condition is handled by isAutoSim_trial.
-%   - lastActivePTD_ms is replaced by eventEnd_ms_trial.
 % ============================================================
 
 clear all;
@@ -31,23 +18,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single3';
 
 FS = 30000;
 
 %% ================= FILTERING PARAMETERS =================
+do_zero_crossing_check = true;
 
-% 1. Start-slope filter:
-% Removes waveforms with an unrealistically fast voltage swing near the
-% beginning of the waveform.
-Start_Slope_Thresh_uV = 100;     % max allowed voltage swing in sliding 0.2 ms window
-
-% 2. Morphology width filter:
-% Removes waveforms with impossible trough-to-peak timing.
-min_trough_peak_ms = 0.15;       % too fast = likely artifact
-max_trough_peak_ms = 1.0;        % too slow = likely noise
-
-% 3. Template correlation filter:
 corr_thresh = 0.6;               % lower = more permissive, higher = stricter
 do_corr_filter = 1;
 
@@ -60,8 +37,8 @@ min_template_spikes = 10;
 % Correlation filter is applied only inside this time range relative to each trigger.
 %
 % For pulse-train recovery, [0 60] ms is still reasonable because the longest
-% 2-electrode 3-pulse interleaved train ends at 25 ms, and the evoked response
-% can continue after that.
+% 2-electrode 3-pulse interleaved train ends around 25 ms, and the evoked
+% response can continue after that.
 cleanup_window_ms = [0 60];
 
 %% ================= FOLDER & BASE NAME =================
@@ -187,20 +164,6 @@ if numel(conditionID_trial) ~= n_Trials
 end
 
 %% ================= BUILD PULSE-TRAIN TRIAL METADATA FROM StimMeta =================
-% This replaces the old prefix columns 26–30.
-%
-% Old prefix code used:
-%   prefixLength_trial
-%   conditionSetID_trial
-%   conditionType_trial
-%   isi_ms_trial
-%
-% New pulse-train code uses:
-%   trainLevel_trial
-%   stimSet_trial
-%   isAutoSim_trial
-%   isZeroControl
-%   eventEnd_ms_trial
 
 stimSet_trial        = NaN(n_Trials,1);
 trainLevel_trial     = NaN(n_Trials,1);
@@ -269,7 +232,7 @@ for tr = 1:n_Trials
     end
 
     % Use actual randomized StimParams rows to get amplitude.
-    % This avoids problems if the metadata and randomized order differ.
+    % This avoids problems if metadata and randomized order differ.
     rr = (tr-1)*simultaneous_stim + (1:simultaneous_stim);
 
     if max(rr) <= size(StimParams_data,1)
@@ -304,131 +267,38 @@ disp(unique(isAutoSim_trial)');
 fprintf('Detected final event times / lastActivePTD_ms: ');
 disp(unique(lastActivePTD_ms(~isnan(lastActivePTD_ms)))');
 
-%% ================= 1) START SLOPE FILTER =================
-% This section is kept the same as the old code.
-% It operates only on waveform shape, not on stimulation condition.
-
-sp_slope = sp_in;
-
-check_dur_ms = 0.8;       % scan first 0.8 ms of waveform
-slide_win_ms = 0.2;       % use 0.2 ms sliding window
-
-n_check = round(check_dur_ms * FS / 1000);
-n_slide = round(slide_win_ms * FS / 1000);
-
-fprintf('\nStart Slope Filtering (Swing > %d uV in %.1f ms window, scanning first %.1f ms)...\n', ...
-    Start_Slope_Thresh_uV, slide_win_ms, check_dur_ms);
-
-removed_slope = zeros(nCh,1);
-
-for ch = 1:nCh
-
-    if isempty(sp_in{ch})
-        continue;
-    end
-
-    wfs = sp_in{ch}(:,2:end);
-
-    limit_idx = min(n_check, size(wfs, 2));
-
-    if limit_idx > n_slide
-
-        early_wfs = wfs(:, 1:limit_idx);
-        max_swing = zeros(size(early_wfs,1), 1);
-
-        for k = 1 : (limit_idx - n_slide + 1)
-            win_data = early_wfs(:, k : k+n_slide-1);
-            swing = max(win_data, [], 2) - min(win_data, [], 2);
-            max_swing = max(max_swing, swing);
-        end
-
-        valid_mask = max_swing < Start_Slope_Thresh_uV;
-        sp_slope{ch} = sp_in{ch}(valid_mask, :);
-
-        removed = sum(~valid_mask);
-        removed_slope(ch) = removed;
-
-        if removed > 0
-            fprintf('Ch %2d: Removed %d artifact/noisy spikes by start-slope filter.\n', ch, removed);
-        end
-
-    else
-        sp_slope{ch} = sp_in{ch};
-    end
-end
-
-%% ================= 2) MORPHOLOGY FILTER =================
-% This section is also condition-independent.
-% It removes waveforms with unrealistic trough-to-peak timing.
-
-sp_morph = sp_slope;
-
-fprintf('\nMorphology Filtering (trough-to-peak width %.2f to %.2f ms)...\n', ...
-    min_trough_peak_ms, max_trough_peak_ms);
-
-removed_morph = zeros(nCh,1);
-
-for ch = 1:nCh
-
-    if isempty(sp_slope{ch})
-        continue;
-    end
-
-    wfs = sp_slope{ch}(:,2:end);
-
-    [~, min_idx] = min(wfs, [], 2);
-    [~, max_idx] = max(wfs, [], 2);
-
-    width_ms = abs(max_idx - min_idx) / (FS / 1000);
-
-    valid_idx = (width_ms >= min_trough_peak_ms) & ...
-                (width_ms <= max_trough_peak_ms);
-
-    sp_morph{ch} = sp_slope{ch}(valid_idx, :);
-
-    removed = sum(~valid_idx);
-    removed_morph(ch) = removed;
-
-    if removed > 0
-        fprintf('Ch %2d: Removed %d spikes by morphology width filter.\n', ch, removed);
-    end
-end
-
-%% ================= 3) ZERO-CROSSING CHECK =================
-% Removes waveforms that do not have a positive phase.
-
-sp_zcross = sp_morph;
-
-fprintf('\nZero-Crossing Check (removing waveforms without positive phase)...\n');
-
+%% ================= 1) ZERO-CROSSING CHECK =================
+sp_zcross = sp_in;
 removed_zcross = zeros(nCh,1);
 
-for ch = 1:nCh
+if do_zero_crossing_check
 
-    if isempty(sp_zcross{ch})
-        continue;
+    fprintf('\nZero-Crossing Check (removing waveforms without positive phase)...\n');
+
+    for ch = 1:nCh
+
+        if isempty(sp_zcross{ch})
+            continue;
+        end
+
+        wfs = sp_zcross{ch}(:,2:end);
+
+        % Keep spikes that contain at least one positive sample.
+        has_positive_phase = max(wfs, [], 2) > 0;
+
+        removed = sum(~has_positive_phase);
+        removed_zcross(ch) = removed;
+
+        if removed > 0
+            sp_zcross{ch} = sp_zcross{ch}(has_positive_phase, :);
+            fprintf('Ch %2d: Removed %d spikes by zero-crossing check.\n', ch, removed);
+        end
     end
-
-    wfs = sp_zcross{ch}(:,2:end);
-
-    has_positive_phase = max(wfs, [], 2) > 0;
-
-    removed = sum(~has_positive_phase);
-    removed_zcross(ch) = removed;
-
-    if removed > 0
-        sp_zcross{ch} = sp_zcross{ch}(has_positive_phase, :);
-        fprintf('Ch %2d: Removed %d spikes by zero-crossing check.\n', ch, removed);
-    end
+else
+    fprintf('\nZero-Crossing Check skipped.\n');
 end
 
-%% ================= 4) CHANNEL-LEVEL TEMPLATE CORRELATION FILTER =================
-% This builds one channel-level waveform template from all remaining
-% candidate-clean spikes after:
-%   slope -> morphology -> zero-crossing
-%
-% Then the same correlation threshold is applied to spikes inside
-% cleanup_window_ms around each trigger.
+%% ================= 2) CHANNEL-LEVEL TEMPLATE CORRELATION FILTER =================
 
 sp_corr = sp_zcross;
 
@@ -439,7 +309,7 @@ removed_corr = zeros(nCh,1);
 if do_corr_filter
 
     fprintf('\nChannel-Level Correlation Filtering...\n');
-    fprintf('Template source: all candidate-clean spikes after slope/morphology/zero-crossing.\n');
+    fprintf('Template source: all candidate-clean spikes after zero-crossing.\n');
     fprintf('Cleanup window: %.1f to %.1f ms relative to each trigger.\n', ...
         cleanup_window_ms(1), cleanup_window_ms(2));
 
@@ -497,19 +367,11 @@ if do_corr_filter
         fprintf('Ch %2d: Template N = %d | Removed %d spikes by correlation filter.\n', ...
             ch, nSpikes, removed_count);
     end
+else
+    fprintf('\nChannel-Level Correlation Filtering skipped.\n');
 end
 
 %% ================= REMOVAL SUMMARY BY PULSE-TRAIN CONDITION =================
-% This replaces the old prefix-based removal summary.
-%
-% The summary is based on final correlation stage:
-%   before correlation = sp_zcross
-%   after correlation  = sp_corr
-%
-% Rows are grouped as:
-%   ZeroControl
-%   Seq_Level_1, Seq_Level_2, ...
-%   AutoSim_Level_1, AutoSim_Level_2, ...
 
 SummaryRows = {};
 row_i = 0;
@@ -611,19 +473,22 @@ QC_params = struct();
 QC_params.input_file = fname_sp;
 QC_params.output_type = 'PulseTrainPrefixRecovery_SSD';
 
-QC_params.Start_Slope_Thresh_uV = Start_Slope_Thresh_uV;
-QC_params.check_dur_ms = check_dur_ms;
-QC_params.slide_win_ms = slide_win_ms;
+% Record which filters were actually used.
+QC_params.do_start_slope_filter = false;
+QC_params.do_morphology_filter  = false;
+QC_params.do_zero_crossing_check = do_zero_crossing_check;
+QC_params.do_corr_filter = do_corr_filter;
 
-QC_params.min_trough_peak_ms = min_trough_peak_ms;
-QC_params.max_trough_peak_ms = max_trough_peak_ms;
+% Record the current filter philosophy.
+QC_params.filter_pipeline = 'sp_in -> zero_crossing -> correlation -> sp_corr';
+QC_params.note = ['Start-slope and morphology filters were intentionally skipped ', ...
+                  'to avoid deleting potentially real recovered pulse-train spikes.'];
 
 QC_params.cleanup_window_ms = cleanup_window_ms;
 
 QC_params.corr_thresh = corr_thresh;
-QC_params.do_corr_filter = do_corr_filter;
 QC_params.min_template_spikes = min_template_spikes;
-QC_params.template_strategy = 'channel_level_all_candidate_clean_spikes';
+QC_params.template_strategy = 'channel_level_all_zero_crossing_passed_spikes';
 
 QC_params.FS = FS;
 
@@ -642,17 +507,23 @@ if isfile(out_name)
     delete(out_name);
 end
 
+% Important:
+%   Only sp_corr is saved as the cleaned spike variable.
+%
+% Not saved:
+%   sp_in
+%   sp_zcross
+%   sp_slope
+%   sp_morph
+%
+% Reason:
+%   The final downstream analysis should use sp_corr only.
+
 save(out_name, ...
-    'sp_in', ...
-    'sp_slope', ...
-    'sp_morph', ...
-    'sp_zcross', ...
     'sp_corr', ...
     'QC_params', ...
     'corr_template', ...
     'corr_source_n', ...
-    'removed_slope', ...
-    'removed_morph', ...
     'removed_zcross', ...
     'removed_corr', ...
     'RemovalSummary', ...

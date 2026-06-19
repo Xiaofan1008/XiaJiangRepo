@@ -15,11 +15,11 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== CHOOSE FOLDER ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
 
 %% ====================== USER SETTINGS ======================
 
-raster_chn_start = 33;
+raster_chn_start = 1;
 raster_chn_end   = 64;   % Depth_s index
 Electrode_Type   = 2;   % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
@@ -29,7 +29,7 @@ SetIDs_to_plot = [];
 
 % Amplitudes to plot.
 % [] means all non-zero amplitudes.
-Amps_to_plot = [];
+Amps_to_plot = [10];
 
 % ============================================================
 % IMPORTANT LEVEL SETTINGS
@@ -71,7 +71,7 @@ plot_auto_sim = true;
 include_zero_control = 0;
 
 % Raster/PSTH parameters.
-ras_win        = [-60 80];   % ms
+ras_win        = [-20 80];   % ms
 bin_ms_raster = 1;            % PSTH bin size, ms
 smooth_ms      = 5;           % PSTH smoothing width
 

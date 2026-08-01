@@ -16,17 +16,17 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 %% ====================== CHOOSE FOLDER ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single3';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX030/Xia_Elec2_Train1';
 
 %% ====================== USER SETTINGS ======================
 
-raster_chn_start = 33;
-raster_chn_end   = 34;   % Depth_s index
+raster_chn_start = 1;
+raster_chn_end   = 64;   % Depth_s index
 Electrode_Type   = 2;    % 0: rigid; 1: single-shank flex; 2: four-shank flex
 
 % Stimulation set selection.
 % [] means all detected sets.
-SetIDs_to_plot = [];
+SetIDs_to_plot = [1];
 
 % Amplitudes to plot.
 % [] means all non-zero amplitudes.

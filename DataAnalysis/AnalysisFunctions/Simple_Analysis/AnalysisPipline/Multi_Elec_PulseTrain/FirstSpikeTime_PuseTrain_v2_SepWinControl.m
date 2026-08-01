@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ====================== USER INPUT ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Single3';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train2';
 
 FS = 30000;
 

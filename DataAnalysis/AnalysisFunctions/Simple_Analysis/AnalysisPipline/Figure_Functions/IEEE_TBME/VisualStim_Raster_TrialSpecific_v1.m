@@ -18,7 +18,7 @@ amp_max = 200;
 abs_max = 200;  
 
 % Raster Plot Parameters 
-ras_win = [-200 200];   % ms 
+ras_win = [-150 150];   % ms 
 bin_size_ms  = 1;      
 smooth_sigma = 5;      
 
@@ -26,7 +26,7 @@ smooth_sigma = 5;
 show_title = false;
 save_figs = false;      
 show_figs = true;     
-save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster/DX012/Strobe_new_v2'; 
+save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster/DX012/Strobe_new_v3'; 
 
 % [MODIFIED 1] Trial Selection Toggle (Whitelist vs Blacklist)
 % Set to 'whitelist' to plot ONLY the listed trials.

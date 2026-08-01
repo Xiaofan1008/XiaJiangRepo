@@ -1,0 +1,77 @@
+Stage A Dataset Validation Report
+Created: 01-Aug-2026 12:57:55
+Overall passed: true
+
+[SINGLE]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new/Xia_Single4_new.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new/Exp1_Single_3m14s_exp_datafile_001_changed_electrodes4.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new/Xia_Single4_new.trig.dat
+Bad-trial file: (not found)
+Bad-channel file: (not found)
+Responding file: (not found)
+Trials: 175
+Triggers: 175
+sp_corr channels: 64
+Stimulation events/trial: 1
+Amplitudes (uA): 0   5   6  10
+PTDs (ms): 0
+Global bad trials: (not available)
+Bad-channel sets: (not available)
+Responding results available: false
+
+[SIM]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Exp1_Seq_Sim_Full_23m45s_exp_datafile_001_changed_electrodes4.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.trig.dat
+Bad-trial file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.BadTrials.mat
+Bad-channel file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.BadChannels.mat
+Responding file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4_RespondingChannels.mat
+Trials: 1350
+Triggers: 1350
+sp_corr channels: 64
+Stimulation events/trial: 2
+Amplitudes (uA): 5   6  10
+PTDs (ms): 0   5   8  10  12  15  17  20  25
+Global bad-trial consistency: true
+Global bad-trial count: 6
+Global bad-trial IDs: 76  133  181  228  279  356
+Bad-channel sets: 2
+Responding results available: true
+
+[SEQ]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Exp1_Seq_Sim_Full_23m45s_exp_datafile_001_changed_electrodes4.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.trig.dat
+Bad-trial file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.BadTrials.mat
+Bad-channel file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4.BadChannels.mat
+Responding file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4/Xia_Seq_Sim4_RespondingChannels.mat
+Trials: 1350
+Triggers: 1350
+sp_corr channels: 64
+Stimulation events/trial: 2
+Amplitudes (uA): 5   6  10
+PTDs (ms): 0   5   8  10  12  15  17  20  25
+Global bad-trial consistency: true
+Global bad-trial count: 6
+Global bad-trial IDs: 76  133  181  228  279  356
+Bad-channel sets: 2
+Responding results available: true
+
+[CROSS-DATASET CHECKS]
+Passed: true
+Sampling rates consistent: true
+Channel counts consistent: true
+Single-to-Sim electrode-name coverage: 100.0%
+Single-to-Seq electrode-name coverage: 100.0%
+Target Sim PTD available: true
+Target Seq PTD available: true
+
+[MESSAGES]
+[INFO][SINGLE] No bad-trial file; single trials remain unreviewed.
+[INFO][SINGLE] No responding file; paired-data labels will be used.

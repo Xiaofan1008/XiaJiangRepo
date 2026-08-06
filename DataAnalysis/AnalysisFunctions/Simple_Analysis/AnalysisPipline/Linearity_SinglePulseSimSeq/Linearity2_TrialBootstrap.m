@@ -17,9 +17,9 @@ clear;
 
 %% ============================= USER SETTINGS ============================
 
-single_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new';
-sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
-seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
+single_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Single2';
+sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim2';
+seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim2';
 
 % Enter the same path for sim_folder and seq_folder when both conditions
 % are stored together. The dataset will then be loaded only once.
@@ -78,7 +78,18 @@ if exist('loadTrig','file') ~= 2
         'loadTrig was not found under analysis_functions_folder.');
 end
 
-depth_to_spike_channel = double(Depth_s(Electrode_Type));
+% depth_to_spike_channel = double(Depth_s(Electrode_Type));
+
+% Depth_s must run inside a dataset folder containing the .rhs file
+original_folder = pwd;
+restore_folder = onCleanup(@() cd(original_folder));
+
+cd(single_folder);
+depth_to_spike_channel = Depth_s(Electrode_Type);
+
+clear restore_folder;
+cd(original_folder);
+
 depth_to_spike_channel = depth_to_spike_channel(:);
 nDepthChannels = numel(depth_to_spike_channel);
 

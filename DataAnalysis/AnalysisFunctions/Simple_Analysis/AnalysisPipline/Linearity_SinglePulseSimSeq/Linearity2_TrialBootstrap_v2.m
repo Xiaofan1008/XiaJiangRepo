@@ -17,9 +17,9 @@ clear;
 
 %% ============================= USER SETTINGS ============================
 
-single_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new';
-sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
-seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
+single_folder = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Single2';
+sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim2';
+seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX015/Xia_Seq_Sim2';
 
 % Enter the same path for sim_folder and seq_folder when both conditions
 % are stored together. The dataset will then be loaded only once.
@@ -85,8 +85,19 @@ if exist('loadTrig','file') ~= 2
         'loadTrig was not found under analysis_functions_folder.');
 end
 
-depth_to_spike_channel = double(Depth_s(Electrode_Type));
-depth_to_spike_channel = depth_to_spike_channel(:);
+% depth_to_spike_channel = double(Depth_s(Electrode_Type));
+
+% Depth_s must run inside a dataset folder containing the .rhs file
+original_folder = pwd;
+restore_folder = onCleanup(@() cd(original_folder));
+
+cd(single_folder);
+depth_to_spike_channel = Depth_s(Electrode_Type);
+
+clear restore_folder;
+cd(original_folder);
+
+depth_to_spike_channel = double(depth_to_spike_channel(:));
 nDepthChannels = numel(depth_to_spike_channel);
 
 fprintf('\nTrial-bootstrap linearity analysis\n');
@@ -606,29 +617,28 @@ end
 end
 
 function [BadTrials,file_path] = load_bad_trials(folder,nDepth)
-preferred = find_named_mat_files(folder,'simseqbadtrials');
-if numel(preferred) > 1
-    error('Linearity2:AmbiguousBadTrials','Multiple SimSeq bad-trial files in %s.',folder);
-elseif isscalar(preferred)
-    files = preferred;
-else
-    files = find_named_mat_files(folder,'badtrials');
-    keep = true(size(files));
-    for k = 1:numel(files)
-        normalized = regexprep(lower(files(k).name),'[^a-z0-9]','');
-        keep(k) = ~contains(normalized,'simseqbadtrials');
-    end
-    files = files(keep);
-end
+% Only load the standard *.BadTrials.mat file.
+% Specialized files such as MultiISIsBadTrials and SimSeqBadTrials
+% are intentionally ignored.
+files = find_named_mat_files(folder,'badtrials');
 if isempty(files)
-    BadTrials = cell(nDepth,1); file_path = ''; return;
-elseif numel(files) > 1
-    error('Linearity2:AmbiguousBadTrials','Multiple bad-trial files in %s.',folder);
+    BadTrials = cell(nDepth,1);
+    file_path = '';
+    return;
+end
+if numel(files) > 1
+    matched_names = strjoin(string({files.name}),newline);
+
+    error('Linearity2:AmbiguousBadTrials', ...
+        ['Multiple standard BadTrials files were found in:\n%s\n' ...
+         'Matched files:\n%s'], ...
+        folder,matched_names);
 end
 file_path = fullfile(files(1).folder,files(1).name);
 S = load(file_path);
 if ~isfield(S,'BadTrials') || ~iscell(S.BadTrials)
-    error('Linearity2:BadTrialVariable','BadTrials cell array missing from %s.',file_path);
+    error('Linearity2:BadTrialVariable', ...
+        'BadTrials cell array missing from %s.',file_path);
 end
 BadTrials = S.BadTrials(:);
 if numel(BadTrials) < nDepth
@@ -651,13 +661,19 @@ end
 Responding = S.Responding;
 end
 
-function files = find_named_mat_files(folder,token)
+function files = find_named_mat_files(folder,file_label)
 files = clean_file_list(dir(fullfile(folder,'*.mat')));
 keep = false(size(files));
+% The label must be:
+%   - at the beginning, or preceded by ".", "_" or "-"
+%   - immediately followed by ".mat" at the end
+pattern = ['(^|[._-])' ...
+           regexptranslate('escape',lower(file_label)) ...
+           '\.mat$'];
 for k = 1:numel(files)
-    normalized = regexprep(lower(files(k).name),'[^a-z0-9]','');
-    keep(k) = contains(normalized,lower(token));
+    keep(k) = ~isempty(regexpi(files(k).name,pattern,'once'));
 end
+
 files = files(keep);
 end
 

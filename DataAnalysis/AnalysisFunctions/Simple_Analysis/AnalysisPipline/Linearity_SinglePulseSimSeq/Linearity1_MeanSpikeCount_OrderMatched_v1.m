@@ -15,7 +15,10 @@
 %    - Excludes bad channels and channel-specific bad trials.
 %    - Uses baseline-corrected evoked spike count by default.
 %    - Uses all clean trials by default; deterministic balancing is optional.
-%    - Keeps A->B and B->A separate, with optional equal-order merging.
+%    - Analyses two order-matched branches separately:
+%         Sim trials from the A->B set versus sequential A->B
+%         Sim trials from the B->A set versus sequential B->A
+%    - Uses a separate responding-channel union for each matched branch.
 %    - Does not create, modify, or save any files.
 %
 %  Required external analysis functions
@@ -49,8 +52,9 @@ FS = 30000;
 Pairs_To_Analyze = 'all';
 
 % Channel choices:
-%   'responding' = union of manually labelled responding channels for the
-%                  selected Sim and Seq conditions
+%   'responding' = a separate union for each matched branch:
+%                  Sim(A->B set) union Seq(A->B), and
+%                  Sim(B->A set) union Seq(B->A)
 %   'all'        = all depth channels returned by Depth_s
 %   numeric      = selected depth-channel indices, for example [1 3 5]
 Channels_To_Analyze = 'responding';
@@ -73,8 +77,8 @@ PTD_Tolerance_ms = 0.01;
 Trial_Mode = 'all';
 Random_Seed = 1;
 
-% 'separate', 'merged', or 'both'. The merged curve gives A->B and B->A
-% equal weight; it does not pool their trials.
+% Retained for compatibility with the original version. In this
+% order-matched preview, each branch is always plotted separately.
 Sequential_Mode = 'separate';
 
 % Broad groups shown in figures and tables:
@@ -153,9 +157,9 @@ DetectedPairs = detect_complete_pairs(Single,Sim,Seq, ...
 
 if isempty(DetectedPairs)
     error('Linearity1:NoCompletePairs', ...
-        ['No complete electrode pair was found across Single, Sim, and Seq. ' ...
-         'A complete pair requires A alone, B alone, simultaneous A+B, ' ...
-         'A->B, and B->A at the selected PTD.']);
+         ['No complete electrode pair was found across Single, Sim, and Seq. ' ...
+         'This order-matched version requires A alone, B alone, ' ...
+         'simultaneous trials in both nominal order sets, A->B, and B->A.']);
 end
 
 DetectedPairTable = pair_table(DetectedPairs);
@@ -163,13 +167,11 @@ fprintf('Detected complete stimulation pairs\n');
 disp(DetectedPairTable);
 
 pair_indices = resolve_pair_selection(Pairs_To_Analyze,numel(DetectedPairs));
-[plot_codes,plot_labels,plot_colors] = resolve_display_conditions( ...
-    Curve_Groups_To_Plot,Sequential_Mode);
 [plot_individual,plot_average] = resolve_figure_mode(Plot_Figure_Mode);
 
 %% ============================= MAIN ANALYSIS =============================
 
-condition_codes = {'A','B','Sim','A_to_B','B_to_A'};
+condition_codes = {'A','B','SimMatched','Sequential'};
 nConditions = numel(condition_codes);
 post_duration_ms = diff(post_win_ms);
 baseline_duration_ms = diff(baseline_win_ms);
@@ -205,173 +207,171 @@ end
 % Start with a genuinely empty structure. A preallocated no-field structure
 % cannot accept a populated result and causes "dissimilar structures".
 LinearityResults = struct([]);
-ResultTables = cell(1,numel(pair_indices));
-LateWindowTables = cell(1,numel(pair_indices));
+ResultTables = {};
+LateWindowTables = {};
 
 random_stream = RandStream('mt19937ar','Seed',Random_Seed);
 
-for ipOut = 1:numel(pair_indices)
-    ip = pair_indices(ipOut);
+for ip = pair_indices
     Pair = DetectedPairs(ip);
+    Branches = make_order_matched_branches(Pair);
 
-    pair_channels = resolve_channels_for_pair(Channels_To_Analyze, ...
-        Pair,Sim,Seq,nDepthChannels,Sequential_PTD_ms,PTD_Tolerance_ms);
-    if isempty(pair_channels)
-        warning('Linearity1:NoSelectedChannels', ...
-            'Pair %d has no channels under the requested channel setting.',ip);
-        continue;
-    end
+    for ib = 1:numel(Branches)
+        Branch = Branches(ib);
+        branch_channels = resolve_channels_for_branch(Channels_To_Analyze, ...
+            Branch,Sim,Seq,nDepthChannels,Sequential_PTD_ms,PTD_Tolerance_ms);
+        if isempty(branch_channels)
+            warning('Linearity1:NoSelectedChannels', ...
+                'Pair %d, %s branch has no channels under the requested setting.', ...
+                ip,Branch.code);
+            continue;
+        end
 
-    nSelectedChannels = numel(pair_channels);
-    nAmp = numel(selected_amplitudes);
+        nSelectedChannels = numel(branch_channels);
+        nAmp = numel(selected_amplitudes);
+        trial_mean = nan(nSelectedChannels,nAmp,nConditions);
+        trial_sem = nan(nSelectedChannels,nAmp,nConditions);
+        trial_sd = nan(nSelectedChannels,nAmp,nConditions);
+        trial_n = zeros(nSelectedChannels,nAmp,nConditions);
+        late_mean = nan(nSelectedChannels,nAmp,2);
 
-    trial_mean = nan(nSelectedChannels,nAmp,nConditions);
-    trial_sem = nan(nSelectedChannels,nAmp,nConditions);
-    trial_sd = nan(nSelectedChannels,nAmp,nConditions);
-    trial_n = zeros(nSelectedChannels,nAmp,nConditions);
-    late_mean = nan(nSelectedChannels,nAmp,2); % A and B
+        for jc = 1:nSelectedChannels
+            depth_channel = branch_channels(jc);
+            spike_channel = depth_to_spike_channel(depth_channel);
+            for ia = 1:nAmp
+                amp = selected_amplitudes(ia);
+                trial_ids = cell(1,nConditions);
+                trial_ids{1} = select_clean_trials(Single,Pair.A,Pair.key, ...
+                    'single',amp,0,depth_channel,PTD_Tolerance_ms);
+                trial_ids{2} = select_clean_trials(Single,Pair.B,Pair.key, ...
+                    'single',amp,0,depth_channel,PTD_Tolerance_ms);
+                trial_ids{3} = select_clean_trials(Sim,Branch.sim_order_key,Pair.key, ...
+                    'sim_order',amp,0,depth_channel,PTD_Tolerance_ms);
+                trial_ids{4} = select_clean_trials(Seq,Branch.seq_order_key,Pair.key, ...
+                    'seq',amp,Sequential_PTD_ms,depth_channel,PTD_Tolerance_ms);
 
-    for jc = 1:nSelectedChannels
-        depth_channel = pair_channels(jc);
-        spike_channel = depth_to_spike_channel(depth_channel);
-
-        for ia = 1:nAmp
-            amp = selected_amplitudes(ia);
-
-            trial_ids = cell(1,nConditions);
-            trial_ids{1} = select_clean_trials(Single,Pair.A,Pair.key, ...
-                'single',amp,0,depth_channel,PTD_Tolerance_ms);
-            trial_ids{2} = select_clean_trials(Single,Pair.B,Pair.key, ...
-                'single',amp,0,depth_channel,PTD_Tolerance_ms);
-            trial_ids{3} = select_clean_trials(Sim,'',Pair.key, ...
-                'sim',amp,0,depth_channel,PTD_Tolerance_ms);
-            trial_ids{4} = select_clean_trials(Seq,Pair.A_to_B_key,Pair.key, ...
-                'seq',amp,Sequential_PTD_ms,depth_channel,PTD_Tolerance_ms);
-            trial_ids{5} = select_clean_trials(Seq,Pair.B_to_A_key,Pair.key, ...
-                'seq',amp,Sequential_PTD_ms,depth_channel,PTD_Tolerance_ms);
-
-            if is_balanced_trial_mode(Trial_Mode)
-                n_balanced = min(cellfun(@numel,trial_ids));
-                if n_balanced > 0
-                    for ic = 1:nConditions
-                        chosen = randperm(random_stream,numel(trial_ids{ic}),n_balanced);
-                        trial_ids{ic} = sort(trial_ids{ic}(chosen));
+                if is_balanced_trial_mode(Trial_Mode)
+                    n_balanced = min(cellfun(@numel,trial_ids));
+                    if n_balanced > 0
+                        for ic = 1:nConditions
+                            chosen = randperm(random_stream,numel(trial_ids{ic}),n_balanced);
+                            trial_ids{ic} = sort(trial_ids{ic}(chosen));
+                        end
+                    else
+                        trial_ids(:) = {[]};
                     end
-                else
-                    trial_ids(:) = {[]};
                 end
+
+                datasets = {Single,Single,Sim,Seq};
+                for ic = 1:nConditions
+                    values = calculate_evoked_counts(datasets{ic},spike_channel, ...
+                        trial_ids{ic},baseline_win_ms,post_win_ms);
+                    [trial_mean(jc,ia,ic),trial_sd(jc,ia,ic), ...
+                        trial_sem(jc,ia,ic),trial_n(jc,ia,ic)] = ...
+                        summarize_values(values);
+                end
+
+                late_A = calculate_evoked_counts(Single,spike_channel, ...
+                    trial_ids{1},baseline_win_ms,late_win_ms);
+                late_B = calculate_evoked_counts(Single,spike_channel, ...
+                    trial_ids{2},baseline_win_ms,late_win_ms);
+                late_mean(jc,ia,1) = mean(late_A,'omitnan');
+                late_mean(jc,ia,2) = mean(late_B,'omitnan');
             end
+        end
 
-            datasets = {Single,Single,Sim,Seq,Seq};
-            for ic = 1:nConditions
-                D = datasets{ic};
-                values = calculate_evoked_counts(D,spike_channel, ...
-                    trial_ids{ic},baseline_win_ms,post_win_ms);
-                [trial_mean(jc,ia,ic),trial_sd(jc,ia,ic), ...
-                    trial_sem(jc,ia,ic),trial_n(jc,ia,ic)] = ...
-                    summarize_values(values);
+        linear_mean = trial_mean(:,:,1)+trial_mean(:,:,2);
+        linear_sem = sqrt(trial_sem(:,:,1).^2+trial_sem(:,:,2).^2);
+        displayed_mean = cat(3,trial_mean(:,:,3),trial_mean(:,:,4));
+        displayed_sem = cat(3,trial_sem(:,:,3),trial_sem(:,:,4));
+        displayed_n = cat(3,trial_n(:,:,3),trial_n(:,:,4));
+        difference_mean = displayed_mean-linear_mean;
+        difference_sem = sqrt(displayed_sem.^2+linear_sem.^2);
+
+        P = struct();
+        P.detected_pair_index = ip;
+        P.electrode_A = Pair.A;
+        P.electrode_B = Pair.B;
+        P.pair_key = Pair.key;
+        P.branch_code = Branch.code;
+        P.branch_label = Branch.label;
+        P.sim_order_key = Branch.sim_order_key;
+        P.seq_order_key = Branch.seq_order_key;
+        P.sim_set_indices = Branch.sim_set_indices;
+        P.seq_set_indices = Branch.seq_set_indices;
+        P.stimulation_depth_A = find_electrode_depth_index(Sim,Pair.A);
+        P.stimulation_depth_B = find_electrode_depth_index(Sim,Pair.B);
+        P.depth_channels = branch_channels;
+        P.spike_channels = depth_to_spike_channel(branch_channels);
+        P.amplitudes_uA = selected_amplitudes;
+        P.condition_codes = condition_codes;
+        P.trial_mean = trial_mean;
+        P.trial_sd = trial_sd;
+        P.trial_sem = trial_sem;
+        P.trial_n = trial_n;
+        P.linear_mean = linear_mean;
+        P.linear_sem = linear_sem;
+        P.display_condition_codes = {Branch.sim_display_code,Branch.seq_display_code};
+        P.displayed_mean = displayed_mean;
+        P.displayed_sem = displayed_sem;
+        P.displayed_n = displayed_n;
+        P.difference_mean = difference_mean;
+        P.difference_sem = difference_sem;
+        P.late_window_ms = late_win_ms;
+        P.late_mean_A_B = late_mean;
+        P.settings = struct('baseline_win_ms',baseline_win_ms, ...
+            'post_win_ms',post_win_ms,'trial_mode',char(string(Trial_Mode)), ...
+            'random_seed',Random_Seed,'sequential_ptd_ms',Sequential_PTD_ms, ...
+            'channel_population_mode','order_matched');
+        if isempty(LinearityResults)
+            LinearityResults = P;
+        else
+            LinearityResults(end+1) = P;
+        end
+
+        result_index = numel(ResultTables)+1;
+        plot_codes = string(P.display_condition_codes);
+        plot_labels = string({Branch.sim_plot_label,Branch.seq_plot_label});
+        plot_colors = [0 0.35 0.85; Branch.seq_color];
+        ResultTables{result_index} = build_result_table(P,plot_codes);
+        LateWindowTables{result_index} = build_late_table(P);
+
+        fprintf('\nPair %d: %s and %s | %s branch\n', ...
+            ip,Pair.A,Pair.B,Branch.label);
+        fprintf('Matched Sim sets: %s | Sequential sets: %s\n', ...
+            num2str(Branch.sim_set_indices),num2str(Branch.seq_set_indices));
+        fprintf('Responding-channel union for this branch: %s\n', ...
+            num2str(branch_channels));
+        fprintf('Number of selected channels: %d\n',numel(branch_channels));
+        fprintf('Common additive reference: A [%g,%g) + B [%g,%g) ms.\n', ...
+            post_win_ms(1),post_win_ms(2),post_win_ms(1),post_win_ms(2));
+        if Print_Channel_Results
+            disp(ResultTables{result_index});
+        end
+        if Print_Late_Window_Check
+            fprintf('Single-response late-window check [%g, %g) ms\n',late_win_ms);
+            disp(LateWindowTables{result_index});
+        end
+
+        if Plot_Count_Curves
+            if plot_individual
+                plot_individual_curves(P,plot_codes,plot_labels,plot_colors, ...
+                    'count',Show_Error_Bars,Channels_Per_Figure);
             end
-
-            late_A = calculate_evoked_counts(Single,spike_channel, ...
-                trial_ids{1},baseline_win_ms,late_win_ms);
-            late_B = calculate_evoked_counts(Single,spike_channel, ...
-                trial_ids{2},baseline_win_ms,late_win_ms);
-            late_mean(jc,ia,1) = mean(late_A,'omitnan');
-            late_mean(jc,ia,2) = mean(late_B,'omitnan');
+            if plot_average
+                plot_average_curves(P,plot_codes,plot_labels,plot_colors, ...
+                    'count',Show_Error_Bars);
+            end
         end
-    end
-
-    linear_mean = trial_mean(:,:,1)+trial_mean(:,:,2);
-    linear_sem = sqrt(trial_sem(:,:,1).^2+trial_sem(:,:,2).^2);
-
-    observed_mean = cat(3,trial_mean(:,:,3),trial_mean(:,:,4), ...
-        trial_mean(:,:,5));
-    observed_sem = cat(3,trial_sem(:,:,3),trial_sem(:,:,4), ...
-        trial_sem(:,:,5));
-    observed_n = cat(3,trial_n(:,:,3),trial_n(:,:,4),trial_n(:,:,5));
-
-    merged_mean = (trial_mean(:,:,4)+trial_mean(:,:,5))/2;
-    merged_sem = sqrt(trial_sem(:,:,4).^2+trial_sem(:,:,5).^2)/2;
-    merged_n = nan(size(merged_mean));
-
-    displayed_mean = cat(3,observed_mean,merged_mean);
-    displayed_sem = cat(3,observed_sem,merged_sem);
-    displayed_n = cat(3,observed_n,merged_n);
-    difference_mean = displayed_mean-linear_mean;
-    difference_sem = sqrt(displayed_sem.^2+linear_sem.^2);
-
-    stimulation_depth_A = find_electrode_depth_index(Sim,Pair.A);
-    stimulation_depth_B = find_electrode_depth_index(Sim,Pair.B);
-
-    P = struct();
-    P.detected_pair_index = ip;
-    P.electrode_A = Pair.A;
-    P.electrode_B = Pair.B;
-    P.pair_key = Pair.key;
-    P.stimulation_depth_A = stimulation_depth_A;
-    P.stimulation_depth_B = stimulation_depth_B;
-    P.depth_channels = pair_channels;
-    P.spike_channels = depth_to_spike_channel(pair_channels);
-    P.amplitudes_uA = selected_amplitudes;
-    P.condition_codes = condition_codes;
-    P.trial_mean = trial_mean;
-    P.trial_sd = trial_sd;
-    P.trial_sem = trial_sem;
-    P.trial_n = trial_n;
-    P.linear_mean = linear_mean;
-    P.linear_sem = linear_sem;
-    P.display_condition_codes = {'Sim','A_to_B','B_to_A','SeqMerged'};
-    P.displayed_mean = displayed_mean;
-    P.displayed_sem = displayed_sem;
-    P.displayed_n = displayed_n;
-    P.difference_mean = difference_mean;
-    P.difference_sem = difference_sem;
-    P.late_window_ms = late_win_ms;
-    P.late_mean_A_B = late_mean;
-    P.settings = struct('baseline_win_ms',baseline_win_ms, ...
-        'post_win_ms',post_win_ms,'trial_mode',char(string(Trial_Mode)), ...
-        'random_seed',Random_Seed,'sequential_ptd_ms',Sequential_PTD_ms, ...
-        'sequential_mode',char(string(Sequential_Mode)));
-    if isempty(LinearityResults)
-        LinearityResults = P;
-    else
-        LinearityResults(end+1) = P;
-    end
-
-    ResultTables{ipOut} = build_result_table(P,plot_codes);
-    LateWindowTables{ipOut} = build_late_table(P);
-
-    fprintf('\nPair %d: %s and %s\n',ip,Pair.A,Pair.B);
-    fprintf('Selected depth channels: %s\n',num2str(pair_channels));
-    fprintf('Common additive reference: A [%g,%g) + B [%g,%g) ms.\n', ...
-        post_win_ms(1),post_win_ms(2),post_win_ms(1),post_win_ms(2));
-    if Print_Channel_Results
-        disp(ResultTables{ipOut});
-    end
-    if Print_Late_Window_Check
-        fprintf('Single-response late-window check [%g, %g) ms\n',late_win_ms);
-        disp(LateWindowTables{ipOut});
-    end
-
-    if Plot_Count_Curves
-        if plot_individual
-            plot_individual_curves(P,plot_codes,plot_labels,plot_colors, ...
-                'count',Show_Error_Bars,Channels_Per_Figure);
-        end
-        if plot_average
-            plot_average_curves(P,plot_codes,plot_labels,plot_colors, ...
-                'count',Show_Error_Bars);
-        end
-    end
-
-    if Plot_Difference_Curves
-        if plot_individual
-            plot_individual_curves(P,plot_codes,plot_labels,plot_colors, ...
-                'difference',Show_Error_Bars,Channels_Per_Figure);
-        end
-        if plot_average
-            plot_average_curves(P,plot_codes,plot_labels,plot_colors, ...
-                'difference',Show_Error_Bars);
+        if Plot_Difference_Curves
+            if plot_individual
+                plot_individual_curves(P,plot_codes,plot_labels,plot_colors, ...
+                    'difference',Show_Error_Bars,Channels_Per_Figure);
+            end
+            if plot_average
+                plot_average_curves(P,plot_codes,plot_labels,plot_colors, ...
+                    'difference',Show_Error_Bars);
+            end
         end
     end
 end
@@ -819,8 +819,9 @@ candidate_keys = intersect(sim_keys,seq_keys,'stable');
 single_labels = unique(Single.order_key(cellfun(@numel,Single.trial_labels) == 1));
 
 Pairs = repmat(struct('key','', 'A','', 'B','', 'A_to_B_key','', ...
-    'B_to_A_key','', 'sim_set_indices',[], 'a_to_b_set_indices',[], ...
-    'b_to_a_set_indices',[]),1,0);
+    'B_to_A_key','', 'sim_set_indices',[], ...
+    'sim_a_to_b_set_indices',[], 'sim_b_to_a_set_indices',[], ...
+    'a_to_b_set_indices',[], 'b_to_a_set_indices',[]),1,0);
 
 for k = 1:numel(candidate_keys)
     labels = split(candidate_keys(k),'|');
@@ -833,9 +834,11 @@ for k = 1:numel(candidate_keys)
     AtoB = A+">"+B;
     BtoA = B+">"+A;
     has_singles = any(single_labels == A) && any(single_labels == B);
+    has_sim_AtoB = any(sim_mask & Sim.order_key == AtoB);
+    has_sim_BtoA = any(sim_mask & Sim.order_key == BtoA);
     has_AtoB = any(seq_mask & Seq.order_key == AtoB);
     has_BtoA = any(seq_mask & Seq.order_key == BtoA);
-    if ~(has_singles && has_AtoB && has_BtoA)
+    if ~(has_singles && has_sim_AtoB && has_sim_BtoA && has_AtoB && has_BtoA)
         continue;
     end
     P = struct();
@@ -845,6 +848,10 @@ for k = 1:numel(candidate_keys)
     P.A_to_B_key = char(AtoB);
     P.B_to_A_key = char(BtoA);
     P.sim_set_indices = unique(Sim.set_index(sim_mask & Sim.pair_key == candidate_keys(k))).';
+    P.sim_a_to_b_set_indices = unique(Sim.set_index( ...
+        sim_mask & Sim.order_key == AtoB)).';
+    P.sim_b_to_a_set_indices = unique(Sim.set_index( ...
+        sim_mask & Sim.order_key == BtoA)).';
     P.a_to_b_set_indices = unique(Seq.set_index(seq_mask & Seq.order_key == AtoB)).';
     P.b_to_a_set_indices = unique(Seq.set_index(seq_mask & Seq.order_key == BtoA)).';
     Pairs(end+1) = P; %#ok<AGROW>
@@ -856,17 +863,48 @@ n = numel(Pairs);
 Pair = (1:n).';
 ElectrodeA = strings(n,1);
 ElectrodeB = strings(n,1);
-SimSets = strings(n,1);
+SimAtoBSets = strings(n,1);
+SimBtoASets = strings(n,1);
 AtoBSets = strings(n,1);
 BtoASets = strings(n,1);
 for k = 1:n
     ElectrodeA(k) = string(Pairs(k).A);
     ElectrodeB(k) = string(Pairs(k).B);
-    SimSets(k) = vector_text(Pairs(k).sim_set_indices);
+    SimAtoBSets(k) = vector_text(Pairs(k).sim_a_to_b_set_indices);
+    SimBtoASets(k) = vector_text(Pairs(k).sim_b_to_a_set_indices);
     AtoBSets(k) = vector_text(Pairs(k).a_to_b_set_indices);
     BtoASets(k) = vector_text(Pairs(k).b_to_a_set_indices);
 end
-T = table(Pair,ElectrodeA,ElectrodeB,SimSets,AtoBSets,BtoASets);
+T = table(Pair,ElectrodeA,ElectrodeB,SimAtoBSets,SimBtoASets, ...
+    AtoBSets,BtoASets);
+end
+
+function Branches = make_order_matched_branches(Pair)
+Branches = repmat(struct(),1,2);
+
+Branches(1).code = 'AB';
+Branches(1).label = 'A->B matched';
+Branches(1).sim_order_key = Pair.A_to_B_key;
+Branches(1).seq_order_key = Pair.A_to_B_key;
+Branches(1).sim_set_indices = Pair.sim_a_to_b_set_indices;
+Branches(1).seq_set_indices = Pair.a_to_b_set_indices;
+Branches(1).sim_display_code = 'Sim_AB_Matched';
+Branches(1).seq_display_code = 'A_to_B';
+Branches(1).sim_plot_label = 'Sim matched to A->B set';
+Branches(1).seq_plot_label = 'A then B';
+Branches(1).seq_color = [0.85 0.33 0.10];
+
+Branches(2).code = 'BA';
+Branches(2).label = 'B->A matched';
+Branches(2).sim_order_key = Pair.B_to_A_key;
+Branches(2).seq_order_key = Pair.B_to_A_key;
+Branches(2).sim_set_indices = Pair.sim_b_to_a_set_indices;
+Branches(2).seq_set_indices = Pair.b_to_a_set_indices;
+Branches(2).sim_display_code = 'Sim_BA_Matched';
+Branches(2).seq_display_code = 'B_to_A';
+Branches(2).sim_plot_label = 'Sim matched to B->A set';
+Branches(2).seq_plot_label = 'B then A';
+Branches(2).seq_color = [0.55 0.15 0.70];
 end
 
 function out = vector_text(values)
@@ -896,7 +934,7 @@ else
 end
 end
 
-function channels = resolve_channels_for_pair(request,Pair,Sim,Seq,nDepth,target_ptd,tol)
+function channels = resolve_channels_for_branch(request,Branch,Sim,Seq,nDepth,target_ptd,tol)
 if isnumeric(request)
     channels = unique(double(request(:).'),'stable');
     if isempty(channels) || any(channels < 1 | channels > nDepth | fix(channels) ~= channels)
@@ -910,16 +948,16 @@ switch mode
     case 'all'
         channels = 1:nDepth;
     case 'responding'
-        sim_sets = Pair.sim_set_indices;
-        seq_sets = unique([Pair.a_to_b_set_indices Pair.b_to_a_set_indices]);
-        sim_mask = responding_mask_for_sets(Sim,sim_sets,0,tol,nDepth);
-        seq_mask = responding_mask_for_sets(Seq,seq_sets,target_ptd,tol,nDepth);
+        sim_mask = responding_mask_for_sets( ...
+            Sim,Branch.sim_set_indices,0,tol,nDepth);
+        seq_mask = responding_mask_for_sets( ...
+            Seq,Branch.seq_set_indices,target_ptd,tol,nDepth);
         channels = find(sim_mask | seq_mask).';
         if isempty(channels)
             error('Linearity1:NoRespondingLabels', ...
-                ['No responding-channel labels were found for pair %s. ' ...
+                ['No responding-channel labels were found for the %s branch. ' ...
                  'Use Channels_To_Analyze=''all'' or verify RespondingChannels files.'], ...
-                Pair.key);
+                Branch.label);
         end
     otherwise
         error('Linearity1:InvalidChannels', ...
@@ -969,6 +1007,9 @@ switch lower(mode)
         condition_mask = D.order_key == string(ordered_key);
     case 'sim'
         condition_mask = D.pair_key == string(pair_key);
+    case 'sim_order'
+        condition_mask = D.pair_key == string(pair_key) & ...
+            D.order_key == string(ordered_key);
     case 'seq'
         condition_mask = D.order_key == string(ordered_key);
     otherwise
@@ -1236,6 +1277,7 @@ for page = 1:nPages
         figure_title = sprintf('%s + %s: observed minus linear reference', ...
             P.electrode_A,P.electrode_B);
     end
+    figure_title = sprintf('%s | %s',figure_title,P.branch_label);
     if nPages > 1
         figure_title = sprintf('%s (page %d of %d)',figure_title,page,nPages);
     end
@@ -1333,6 +1375,7 @@ else
         P.electrode_A,P.electrode_B);
     ylabel_text = 'Mean observed - linear';
 end
+title_text = sprintf('%s | %s',title_text,P.branch_label);
 title(ax,title_text,'FontWeight','bold','Interpreter','none');
 xlabel(ax,'Amplitude (uA)');
 ylabel(ax,ylabel_text);

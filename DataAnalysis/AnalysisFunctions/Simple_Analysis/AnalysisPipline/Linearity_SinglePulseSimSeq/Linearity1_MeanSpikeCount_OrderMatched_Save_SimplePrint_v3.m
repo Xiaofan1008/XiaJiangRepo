@@ -36,9 +36,9 @@ clear;
 %% ============================= USER SETTINGS ============================
 
 % Original experiment folders.,o
-single_folder = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Single1';
-sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Sim1';
-seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX012/Xia_Exp1_Seq1_5ms';
+single_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Single4';
+sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim4';
+seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq4';
 
 % If Sim and Seq are stored together, enter exactly the same path for
 % sim_folder and seq_folder. The folder will be loaded only once.
@@ -167,9 +167,10 @@ DetectedPairs = detect_complete_pairs(Single,Sim,Seq, ...
 
 if isempty(DetectedPairs)
     error('Linearity1:NoCompletePairs', ...
-         ['No complete electrode pair was found across Single, Sim, and Seq. ' ...
-         'This order-matched version requires A alone, B alone, ' ...
-         'simultaneous trials in both nominal order sets, A->B, and B->A.']);
+         ['No analyzable electrode pair was found across Single, Sim, and Seq. ' ...
+         'Each pair requires A alone and B alone plus at least one complete ' ...
+         'order-matched branch: simultaneous and sequential A->B, or ' ...
+         'simultaneous and sequential B->A.']);
 end
 
 DetectedPairTable = pair_table(DetectedPairs);
@@ -854,7 +855,13 @@ for k = 1:numel(candidate_keys)
     has_sim_BtoA = any(sim_mask & Sim.order_key == BtoA);
     has_AtoB = any(seq_mask & Seq.order_key == AtoB);
     has_BtoA = any(seq_mask & Seq.order_key == BtoA);
-    if ~(has_singles && has_sim_AtoB && has_sim_BtoA && has_AtoB && has_BtoA)
+    % Treat the two sequential orders as independent optional branches.
+    % Retain the pair when at least one order has both its nominally matched
+    % simultaneous condition and its sequential condition. Never substitute
+    % the opposite simultaneous set for a missing matched set.
+    has_complete_AtoB = has_sim_AtoB && has_AtoB;
+    has_complete_BtoA = has_sim_BtoA && has_BtoA;
+    if ~(has_singles && (has_complete_AtoB || has_complete_BtoA))
         continue;
     end
     P = struct();
@@ -921,6 +928,14 @@ Branches(2).seq_display_code = 'B_to_A';
 Branches(2).sim_plot_label = 'Sim matched to B->A set';
 Branches(2).seq_plot_label = 'B then A';
 Branches(2).seq_color = [0.55 0.15 0.70];
+
+% A dataset may contain only one sequential order. Analyse only branches
+% for which both the order-matched simultaneous set and sequential set are
+% present. The absent order remains absent from plots and saved results.
+keep_branch = [ ...
+    ~isempty(Pair.sim_a_to_b_set_indices) && ~isempty(Pair.a_to_b_set_indices), ...
+    ~isempty(Pair.sim_b_to_a_set_indices) && ~isempty(Pair.b_to_a_set_indices)];
+Branches = Branches(keep_branch);
 end
 
 function out = vector_text(values)

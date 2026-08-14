@@ -1,0 +1,77 @@
+Stage A Dataset Validation Report
+Created: 14-Aug-2026 09:49:48
+Overall passed: true
+
+[SINGLE]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single1
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single1/Xia_Single1.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single1/Exp1_Single_3m14s_exp_datafile_001_changed_electrodes1.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Single1/Xia_Single1.trig.dat
+Bad-trial file: (not found)
+Bad-channel file: (not found)
+Responding file: (not found)
+Trials: 175
+Triggers: 175
+sp_corr channels: 64
+Stimulation events/trial: 1
+Amplitudes (uA): 0   5   6  10
+PTDs (ms): 0
+Global bad trials: (not available)
+Bad-channel sets: (not available)
+Responding results available: false
+
+[SIM]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Exp1_Seq_Sim_Full_23m45s_exp_datafile_001_changed_electrodes1.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.trig.dat
+Bad-trial file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.MultiISIsBadTrials.mat
+Bad-channel file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.BadChannels.mat
+Responding file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1_RespondingChannels.mat
+Trials: 1350
+Triggers: 1350
+sp_corr channels: 64
+Stimulation events/trial: 2
+Amplitudes (uA): 5   6  10
+PTDs (ms): 0   5   8  10  12  15  17  20  25
+Global bad-trial consistency: true
+Global bad-trial count: 146
+Global bad-trial IDs: 13    22    63    75    79    82    83    89   112   135   136   145   156   163   182   183   184   186   196   216   218   224   225   231   236   240   251   253   258   264   268   278   281   284   288   298   303   304   305   317   346   348   362   370   371   378   380   381   382   385   392   397   401   403   410   415   416   418   434   435   436   438   440   442   447   450   453   455   467   475   478   482   483   497   499   503   523   524   525   531   541   549   563   566   568   574   586   614   626   642   647   648   651   699   714   715   723   730   741   744   753   784   792   823   831   869   871   878   879   881   889   898   901   902   914   915   917   929   955   973   993   998  1023  1037  1053  1086  1091  1092  1100  1103  1105  1113  1134  1135  1145  1147  1157  1188  1222  1252  1262  1269  1273  1291  1326  1328
+Bad-channel sets: 2
+Responding results available: true
+
+[SEQ]
+Folder: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1
+Passed: true
+Spike file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.sp_xia_SSD.mat
+Experiment file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Exp1_Seq_Sim_Full_23m45s_exp_datafile_001_changed_electrodes1.mat
+Trigger file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.trig.dat
+Bad-trial file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.MultiISIsBadTrials.mat
+Bad-channel file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1.BadChannels.mat
+Responding file: /Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1/Xia_Seq_Sim1_RespondingChannels.mat
+Trials: 1350
+Triggers: 1350
+sp_corr channels: 64
+Stimulation events/trial: 2
+Amplitudes (uA): 5   6  10
+PTDs (ms): 0   5   8  10  12  15  17  20  25
+Global bad-trial consistency: true
+Global bad-trial count: 146
+Global bad-trial IDs: 13    22    63    75    79    82    83    89   112   135   136   145   156   163   182   183   184   186   196   216   218   224   225   231   236   240   251   253   258   264   268   278   281   284   288   298   303   304   305   317   346   348   362   370   371   378   380   381   382   385   392   397   401   403   410   415   416   418   434   435   436   438   440   442   447   450   453   455   467   475   478   482   483   497   499   503   523   524   525   531   541   549   563   566   568   574   586   614   626   642   647   648   651   699   714   715   723   730   741   744   753   784   792   823   831   869   871   878   879   881   889   898   901   902   914   915   917   929   955   973   993   998  1023  1037  1053  1086  1091  1092  1100  1103  1105  1113  1134  1135  1145  1147  1157  1188  1222  1252  1262  1269  1273  1291  1326  1328
+Bad-channel sets: 2
+Responding results available: true
+
+[CROSS-DATASET CHECKS]
+Passed: true
+Sampling rates consistent: true
+Channel counts consistent: true
+Single-to-Sim electrode-name coverage: 100.0%
+Single-to-Seq electrode-name coverage: 100.0%
+Target Sim PTD available: true
+Target Seq PTD available: true
+
+[MESSAGES]
+[INFO][SINGLE] No bad-trial file; single trials remain unreviewed.
+[INFO][SINGLE] No responding file; paired-data labels will be used.

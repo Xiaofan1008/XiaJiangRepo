@@ -38,7 +38,7 @@ clear;
 clc;
 
 %% ========================= USER SETTINGS ==============================
-model_data_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/Luke_ModelPackage/DX014_D4_Pair_A030_A031_ModelData.mat'];
+model_data_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/auto_pair_pipeline/auto_pair_results/Luke_ModelPackage/DX014_D3_Pair_A029_A030_ModelData.mat'];
 
 % Choose 'all' or 'balanced'.
 Trial_Mode = 'all';
@@ -94,7 +94,7 @@ Plot_Linear_Prediction = true;
 %   'average'    = responding-channel average only
 %   'both'       = individual panels and the average
 %   'all'        = accepted as an alias for 'both'
-Plot_Figure_Mode = 'both';
+Plot_Figure_Mode = 'average';
 
 % false = keep A->B and B->A as two separate curves.
 % true  = replace them with one equally weighted, order-averaged

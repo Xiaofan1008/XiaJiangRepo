@@ -9,8 +9,8 @@ clc;
 %% ========================= USER SETTINGS ==============================
 % Enter the full paths to the three datasets.
 % If Sim and Seq are stored together, use the same path for both.
-single_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Single4_new';
-sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim4';
+single_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Single1';
+sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim1';
 seq_folder    = sim_folder;
 
 % Acquisition/electrode settings.

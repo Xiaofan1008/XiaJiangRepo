@@ -1,0 +1,52 @@
+
+################ COMPLETE STAGE C1 REPORT ################
+Created: 14-Aug-2026 10:41:01
+Pair: A-029 + A-030
+Amplitudes: 5   6  10 uA
+Selected depth channels: 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  22  31
+Single review complete: false
+Single excluded trials: (none)
+Waveforms retained: NO
+Absolute spike/trigger times retained: NO
+Experiment files modified: NO
+
+[STIMULATION MAPPING]
+A-029 -> depth 9, sp_corr cell 30, shank 1, site 9, (0.0, 400.0) um
+A-030 -> depth 5, sp_corr cell 31, shank 1, site 5, (0.0, 200.0) um
+Same shank: true
+Stimulation-pair distance: 200.0 um
+
+[CONDITION TRIAL COUNTS]
+             <strong>A</strong>     <strong>B</strong>     <strong>AB</strong>    <strong>A_to_B</strong>    <strong>B_to_A</strong>
+             <strong>__</strong>    <strong>__</strong>    <strong>__</strong>    <strong>______</strong>    <strong>______</strong>
+
+    <strong>5_uA </strong>    25    25    46      18        13  
+    <strong>6_uA </strong>    25    25    50      25        25  
+    <strong>10_uA</strong>    25    25    42      25        19  
+
+
+[SELECTED CHANNELS AND DISTANCES]
+    <strong>DepthChannel</strong>    <strong>SpCellIndex_Single</strong>    <strong>SpCellIndex_Sim</strong>    <strong>SpCellIndex_Seq</strong>    <strong>Shank</strong>    <strong>LocalSite</strong>    <strong>X_um</strong>    <strong>Y_um</strong>    <strong>DistanceToA_um</strong>    <strong>DistanceToB_um</strong>    <strong>MinimumDistance_um</strong>    <strong>DistanceToMidpoint_um</strong>    <strong>IsRespondingUnion</strong>
+    <strong>____________</strong>    <strong>__________________</strong>    <strong>_______________</strong>    <strong>_______________</strong>    <strong>_____</strong>    <strong>_________</strong>    <strong>____</strong>    <strong>____</strong>    <strong>______________</strong>    <strong>______________</strong>    <strong>__________________</strong>    <strong>_____________________</strong>    <strong>_________________</strong>
+
+          1                 32                  32                 32             1          1          0       0            400               200                 200                    300                  true       
+          2                  8                   8                  8             1          2          0      50            350               150                 150                    250                  true       
+          3                  1                   1                  1             1          3          0     100            300               100                 100                    200                  true       
+          4                 25                  25                 25             1          4          0     150            250                50                  50                    150                  true       
+          5                 31                  31                 31             1          5          0     200            200                 0                   0                    100                  true       
+          6                  7                   7                  7             1          6          0     250            150                50                  50                     50                  true       
+          7                  2                   2                  2             1          7          0     300            100               100                 100                      0                  true       
+          8                 26                  26                 26             1          8          0     350             50               150                  50                     50                  true       
+          9                 30                  30                 30             1          9          0     400              0               200                   0                    100                  true       
+         10                  6                   6                  6             1         10          0     450             50               250                  50                    150                  true       
+         11                  3                   3                  3             1         11          0     500            100               300                 100                    200                  true       
+         12                 27                  27                 27             1         12          0     550            150               350                 150                    250                  true       
+         13                 29                  29                 29             1         13          0     600            200               400                 200                    300                  true       
+         14                  5                   5                  5             1         14          0     650            250               450                 250                    350                  true       
+         15                  4                   4                  4             1         15          0     700            300               500                 300                    400                  true       
+         16                 28                  28                 28             1         16          0     750            350               550                 350                    450                  true       
+         22                 18                  18                 18             4          6        600     250         618.47            602.08              602.08                 602.08                  true       
+         31                 21                  21                 21             4         15        600     700         670.82            781.02              670.82                 721.11                  true       
+
+
+############## END COMPLETE STAGE C1 REPORT ##############

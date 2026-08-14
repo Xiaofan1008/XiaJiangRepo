@@ -1,0 +1,31 @@
+
+################ COMPLETE STAGE B REPORT ################
+Created: 14-Aug-2026 10:40:58
+Stage A source: /Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/auto_pair_pipeline/auto_pair_results/DX014_D3_StageA_DatasetInfo.mat
+Candidate pairs: 1
+Complete responsive pairs: 1
+Experiment files modified: NO
+
+[PAIR OVERVIEW]
+    <strong>PairIndex</strong>        <strong>PairKey</strong>        <strong>ElectrodeA</strong>    <strong>ElectrodeB</strong>            <strong>Status</strong>            <strong>CompleteAmplitudes_uA</strong>        <strong>ConditionsRetained</strong>        <strong>CommonGoodChannels</strong>    <strong>RespondingUnion</strong>    <strong>SingleTrialsReviewed</strong>
+    <strong>_________</strong>    <strong>_______________</strong>    <strong>__________</strong>    <strong>__________</strong>    <strong>______________________</strong>    <strong>_____________________</strong>    <strong>__________________________</strong>    <strong>__________________</strong>    <strong>_______________</strong>    <strong>____________________</strong>
+
+        1        "A-029 + A-030"     "A-029"       "A-030"      "COMPLETE_BOTH_ORDERS"         "5   6  10"         "A, B, AB, A_to_B, B_to_A"            64                  18                  false        
+
+
+
+------------------------------------------------------------
+PAIR 1: A-029 + A-030
+Status: COMPLETE_BOTH_ORDERS
+Conditions retained: A, B, AB, A_to_B, B_to_A
+Complete amplitudes: 5   6  10 uA
+Common good channels: 64
+Responding-channel union: 18
+Single trials reviewed: false
+Amp      A      B     A+B    A->B   B->A   Balance  SimParams  RespUnion  Complete
+   0     25      0      0      0      0        0       true          0     false
+   5     25     25     46     18     13       13       true         16      true
+   6     25     25     50     25     25       25       true         16      true
+  10     25     25     42     25     19       19       true         18      true
+
+############## END COMPLETE STAGE B REPORT ##############

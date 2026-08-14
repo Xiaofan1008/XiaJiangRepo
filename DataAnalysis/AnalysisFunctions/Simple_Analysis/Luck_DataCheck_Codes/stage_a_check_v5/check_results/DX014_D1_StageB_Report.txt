@@ -1,0 +1,30 @@
+
+################ COMPLETE STAGE B REPORT ################
+Created: 14-Aug-2026 09:54:19
+Stage A source: /Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/DX014_D1_StageA_DatasetInfo.mat
+Candidate pairs: 1
+Complete responsive pairs: 1
+Experiment files modified: NO
+
+[PAIR OVERVIEW]
+    <strong>PairIndex</strong>        <strong>PairKey</strong>        <strong>ElectrodeA</strong>    <strong>ElectrodeB</strong>      <strong>Status</strong>      <strong>CompleteAmplitudes_uA</strong>    <strong>CommonGoodChannels</strong>    <strong>RespondingUnion</strong>    <strong>SingleTrialsReviewed</strong>
+    <strong>_________</strong>    <strong>_______________</strong>    <strong>__________</strong>    <strong>__________</strong>    <strong>__________</strong>    <strong>_____________________</strong>    <strong>__________________</strong>    <strong>_______________</strong>    <strong>____________________</strong>
+
+        1        "A-000 + A-001"     "A-000"       "A-001"      "COMPLETE"         "5   6  10"                 64                  21                  false        
+
+
+
+------------------------------------------------------------
+PAIR 1: A-000 + A-001
+Status: COMPLETE
+Complete amplitudes: 5   6  10 uA
+Common good channels: 64
+Responding-channel union: 21
+Single trials reviewed: false
+Amp      A      B     A+B    A->B   B->A   Balance  SimParams  RespUnion  Complete
+   0      0     25      0      0      0        0       true          0     false
+   5     25     25     50     25     15       15       true         14      true
+   6     25     25     50     25     25       25       true         17      true
+  10     25     25     50     25     25       25       true         20      true
+
+############## END COMPLETE STAGE B REPORT ##############

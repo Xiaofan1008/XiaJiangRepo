@@ -1,0 +1,29 @@
+
+################ COMPLETE STAGE B REPORT ################
+Created: 14-Aug-2026 10:35:34
+Stage A source: /Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/auto_pair_pipeline/auto_pair_results/DX014_D2_StageA_DatasetInfo.mat
+Candidate pairs: 1
+Complete responsive pairs: 1
+Experiment files modified: NO
+
+[PAIR OVERVIEW]
+    <strong>PairIndex</strong>        <strong>PairKey</strong>        <strong>ElectrodeA</strong>    <strong>ElectrodeB</strong>            <strong>Status</strong>            <strong>CompleteAmplitudes_uA</strong>        <strong>ConditionsRetained</strong>        <strong>CommonGoodChannels</strong>    <strong>RespondingUnion</strong>    <strong>SingleTrialsReviewed</strong>
+    <strong>_________</strong>    <strong>_______________</strong>    <strong>__________</strong>    <strong>__________</strong>    <strong>______________________</strong>    <strong>_____________________</strong>    <strong>__________________________</strong>    <strong>__________________</strong>    <strong>_______________</strong>    <strong>____________________</strong>
+
+        1        "A-006 + A-007"     "A-006"       "A-007"      "COMPLETE_BOTH_ORDERS"           "4  6"            "A, B, AB, A_to_B, B_to_A"            64                  17                  false        
+
+
+
+------------------------------------------------------------
+PAIR 1: A-006 + A-007
+Status: COMPLETE_BOTH_ORDERS
+Conditions retained: A, B, AB, A_to_B, B_to_A
+Complete amplitudes: 4  6 uA
+Common good channels: 64
+Responding-channel union: 17
+Single trials reviewed: false
+Amp      A      B     A+B    A->B   B->A   Balance  SimParams  RespUnion  Complete
+   4     30     30     60     30     30       30       true         14      true
+   6     30     30     60     30     30       30       true         15      true
+
+############## END COMPLETE STAGE B REPORT ##############

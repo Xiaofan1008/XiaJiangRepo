@@ -7,7 +7,7 @@ clc;
 
 %% ========================= USER SETTING ===============================
 % Enter the full path to the confirmed Stage A result.
-stage_a_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/DX014_D4_StageA_DatasetInfo.mat'];
+stage_a_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/DX014_D1_StageA_DatasetInfo.mat'];
 
 %% ======================= INITIAL SETUP ================================
 check_results_folder = fileparts(stage_a_file);

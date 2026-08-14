@@ -38,7 +38,7 @@ clear;
 clc;
 
 %% ========================= USER SETTINGS ==============================
-model_data_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/auto_pair_pipeline/auto_pair_results/Luke_ModelPackage/DX014_D3_Pair_A029_A030_ModelData.mat'];
+model_data_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/Luke_ModelPackage/DX014_D4_Pair_A030_A031_ModelData.mat'];
 
 % Choose 'all' or 'balanced'.
 Trial_Mode = 'all';

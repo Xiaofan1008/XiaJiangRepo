@@ -6,7 +6,7 @@ clear;
 clc;
 
 %% ========================= USER SETTINGS ==============================
-stage_b_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/DX014_D4_StageB_PairSummary.mat'];
+stage_b_file = ['/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/Luck_DataCheck_Codes/stage_a_check_v5/check_results/DX014_D1_StageB_PairSummary.mat'];
 
 pair_index = 1;
 

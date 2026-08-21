@@ -10,7 +10,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX014/Xia_Seq_Sim3'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze. 
@@ -32,10 +32,10 @@ target_Amps = [5 10]; % uA
 manual_artifacts = [
     % 1,5,3;
     % 1,5,14;
-    1,10,25;
-    2,5,20;
-    2,5,25;
-    2,10,25;
+    % 1,10,25;
+    % 2,5,20;
+    % 2,5,25;
+    % 2,10,25;
   
 ]; 
 
@@ -299,7 +299,7 @@ end
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
- save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/';
+ save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 
@@ -316,7 +316,7 @@ else
     isi_str = strjoin(string(target_ISIs), '_');
 end
 
-out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_DX014_' char(amp_str) 'uA_' exp_id '.mat']);
+out_filename = fullfile(save_dir, ['Result_SpikeCount_FixWin_DX020_' char(amp_str) 'uA_' exp_id '.mat']);
 
 ResultFR = struct();
 ResultFR.Metadata.Created = datestr(now);

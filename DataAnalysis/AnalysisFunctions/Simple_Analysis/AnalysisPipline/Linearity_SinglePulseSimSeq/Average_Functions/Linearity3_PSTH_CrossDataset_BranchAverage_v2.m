@@ -46,13 +46,13 @@ Manual_Result_Files = {
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX009_Xia_Exp1_Sim3.mat';
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX009_Xia_Exp1_Sim5.mat';
 
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim1.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim2.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim4.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim5.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim6.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim7.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim8.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim1.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim2.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim4.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim5.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim6.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim7.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX010_Xia_Exp1_Sim8.mat';
 
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX011_Xia_Exp1_Sim1.mat';
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX011_Xia_Exp1_Sim2.mat';
@@ -97,10 +97,10 @@ Manual_Result_Files = {
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX016_Xia_Exp1_Seq_Full_3.mat';
 '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX016_Xia_Exp1_Seq_Full_4.mat';
 
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim1.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim2.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim3.mat';
-'/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim4.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim1.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim2.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim3.mat';
+% '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_PSTH_SinglePulse_SimSeq/PSTHLinearity_DX018_Xia_Exp1_Sim4.mat';
 
 };
 

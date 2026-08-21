@@ -34,9 +34,9 @@ clear;
 
 %% ============================= USER SETTINGS ============================
 
-single_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Single4';
-sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim4';
-seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Seq4';
+single_folder = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Single6';
+sim_folder    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Sim6';
+seq_folder    = '/Volumes/MACData/Data/Data_Xia/DX010/Xia_Exp1_Seq6_5ms';
 
 % Enter the same path for sim_folder and seq_folder when both conditions
 % are stored together. That folder is loaded only once.

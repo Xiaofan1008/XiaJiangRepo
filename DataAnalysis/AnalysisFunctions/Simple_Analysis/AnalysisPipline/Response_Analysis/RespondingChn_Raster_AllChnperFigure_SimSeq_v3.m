@@ -1,123 +1,91 @@
 %% ========================================================================
-% MULTI-ISI RASTER + PSTH: ALL SELECTED CHANNELS
+% FAST MULTI-ISI RASTER + PSTH: ALL SELECTED CHANNELS
 %
-% PURPOSE
-%   Plot all selected recording channels in the same figure for every
-%   selected:
+% SPEED IMPROVEMENTS
+%   1. Figures are created as docked tabs.
+%   2. Figures remain invisible until all tiles are complete.
+%   3. Only spike-time columns from sp_corr are retained in memory.
+%   4. Fast binary searches extract spikes from each trial window.
+%   5. One raster graphics object is created per channel, rather than one
+%      object for every trial.
+%   6. PSTH counts are calculated once from all collected relative spikes.
 %
-%       ordered stimulation set × amplitude × PTD
+% OUTPUT
+%   One docked figure tab per:
 %
-% SPIKE DATA
-%   Strictly requires:
+%       selected set × amplitude × PTD
 %
-%       *.sp_xia_SSD.mat
-%       variable: sp_corr
-%
-% RESPONDING CHANNELS
-%   Loads:
-%
-%       <base_name>_MultiISI_RespondingChannels.mat
-%
-%   Responding channels are highlighted with a pale-red background.
-%
-% OPTIONAL QC FILES
-%   Use_Bad_Trials:
-%       false = show every trial
-%       true  = load bad trials and exclude them from each channel
-%
-%   Use_Bad_Channels:
-%       false = ignore bad-channel files
-%       true  = load bad channels and omit them from the figure
-%
-% CHANNEL SELECTION
-%   Plot_Channels is entered manually using displayed channel indices.
-%
-% EXAMPLES
-%       Plot_Channels = 1:64;
-%       Plot_Channels = 35:64;
-%       Plot_Channels = [35:40 42:48 50:64];
-%
-% FIGURES
-%   One figure is produced for each selected condition.
-%   Figures are displayed but are not saved.
+%   Figures are displayed but not saved.
 % ========================================================================
 
 clear;
-close all;
+% close all;
 
 addpath(genpath( ...
     '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ============================ USER SETTINGS ===========================
+
 data_folder = ...
     '/Volumes/MACData/Data/Data_Xia/DX023/Xia_ISI_SimSeq1';
-% Sampling rate in Hz
+
 FS = 30000;
 
-%% -------------------------- CONDITION SELECTION -----------------------
 % Electrode type:
 %   0 = rigid single-shank probe
 %   1 = flexible single-shank probe
 %   2 = four-shank flexible probe
 Electrode_Type = 2;
 
-% Channel selection
+%% ------------------------- CONDITION SELECTION ------------------------
+
+% Channel Selectiomn
 Plot_Channels = 1:64;
-
-% Empty means plot every available set.
-% Example: Plot_Sets = [1 2];
+% Empty means all available sets
 Plot_Sets = [1];
-
-% Empty means plot every available amplitude.
-% Example: Plot_Amps = [5 10];
+% Empty means all available amplitudes
 Plot_Amps = [];
+% Empty means all available PTDs
+% Example: Plot_PTDs = [0 3 5 10 20];
+Plot_PTDs = [0 3];
 
-% Empty means plot every available PTD.
-% PTD is entered in milliseconds.
-% Example: Plot_PTDs = [0 5 10 20];
-Plot_PTDs = [];
-
-% Numerical tolerance for amplitude and PTD matching
 Condition_Tolerance = 1e-4;
 
 %% ----------------------------- QC OPTIONS -----------------------------
 
-% false:
-%   Do not load or apply bad-trial information.
-%
-% true:
-%   Load a bad-trial file and exclude the bad trials separately for each
-%   recording channel.
+% false = show all trials
+% true  = load and exclude bad trials separately for each channel
 Use_Bad_Trials = false;
 
-% false:
-%   Do not load or apply bad-channel information.
-%
-% true:
-%   Load BadCh_perSet or BadCh and omit those channels from each figure.
+% false = ignore bad-channel files
+% true  = load and omit bad channels from each set
 Use_Bad_Channels = false;
+
+%% --------------------------- FIGURE OPTIONS ---------------------------
+
+% 'docked':
+%   Display every condition as a tab in one MATLAB figure container.
+%
+% 'normal':
+%   Display every condition in a separate window.
+Figure_Window_Style = 'docked';
+
+% Only used when Figure_Window_Style = 'normal'
+fig_position = [50 50 1600 900];
+
+% Build each figure invisibly before displaying it
+% This avoids repeated rendering while tiles are being added.
+Build_Figures_Invisibly = true;
 
 %% --------------------------- PLOTTING OPTIONS -------------------------
 
-% Raster window relative to the first pulse
 ras_win = [-50 80];
 
-% PSTH bin width in milliseconds
 bin_ms_raster = 1;
-
-% Existing one-sided smoothing-kernel duration
 smooth_ms = 5;
 
-% Figure position and size
-fig_position = [50 50 1600 900];
-
-% Raster marker size
 Raster_Marker_Size = 4;
-
-% PSTH line width
 PSTH_Line_Width = 1.4;
-
-% Minimum PSTH y-axis limit
 Minimum_PSTH_YMax = 50;
 
 %% =========================== INITIAL CHECKS ===========================
@@ -142,33 +110,36 @@ if ~isscalar(bin_ms_raster) || ...
         ~isfinite(bin_ms_raster) || ...
         bin_ms_raster <= 0
 
-    error('bin_ms_raster must be a positive number.');
+    error('bin_ms_raster must be positive.');
 end
 
 if ~isscalar(smooth_ms) || ...
         ~isfinite(smooth_ms) || ...
         smooth_ms <= 0
 
-    error('smooth_ms must be a positive number.');
+    error('smooth_ms must be positive.');
 end
 
 if ~isscalar(FS) || ~isfinite(FS) || FS <= 0
-    error('FS must be a positive sampling rate in Hz.');
+    error('FS must be a positive sampling rate.');
 end
 
-% Remember and restore the original MATLAB folder
+valid_window_styles = {'docked','normal'};
+
+if ~any(strcmpi(Figure_Window_Style,valid_window_styles))
+    error('Figure_Window_Style must be ''docked'' or ''normal''.');
+end
+
 starting_folder = pwd;
 cleanup_object = onCleanup(@() cd(starting_folder)); %#ok<NASGU>
 
-% Move automatically to the selected dataset
 cd(data_folder);
 
 fprintf('\n============================================================\n');
-fprintf('MULTI-ISI RASTER + PSTH\n');
+fprintf('FAST MULTI-ISI RASTER + PSTH\n');
 fprintf('============================================================\n');
 fprintf('Dataset: %s\n',data_folder);
-fprintf('Electrode type: %d\n',Electrode_Type);
-fprintf('Sampling rate: %g Hz\n',FS);
+fprintf('Figure style: %s\n',Figure_Window_Style);
 fprintf('Raster window: [%g,%g) ms\n',ras_win);
 fprintf('Use bad trials: %s\n',logical_text(Use_Bad_Trials));
 fprintf('Use bad channels: %s\n',logical_text(Use_Bad_Channels));
@@ -176,21 +147,21 @@ fprintf('Use bad channels: %s\n',logical_text(Use_Bad_Channels));
 %% ============================ LOAD sp_corr ============================
 
 ssd_files = dir('*.sp_xia_SSD.mat');
+ssd_files = remove_metadata_and_backups(ssd_files);
 
 if isempty(ssd_files)
     error('No *.sp_xia_SSD.mat file was found.');
 end
 
 if numel(ssd_files) > 1
-    warning('Multiple SSD files found. Using: %s',ssd_files(1).name);
+    error('Multiple current *.sp_xia_SSD.mat files were found.');
 end
 
 ssd_file = ssd_files(1).name;
 base_name = erase(ssd_file,'.sp_xia_SSD.mat');
 
 if ~ismember('sp_corr',who('-file',ssd_file))
-    error(['The SSD file does not contain sp_corr.\n' ...
-        'Required file: %s'],ssd_file);
+    error('The SSD file does not contain sp_corr:\n%s',ssd_file);
 end
 
 SpikeLoad = load(ssd_file,'sp_corr');
@@ -198,11 +169,10 @@ sp = SpikeLoad.sp_corr;
 nSpChannels = numel(sp);
 
 if ~iscell(sp)
-    error('sp_corr must be a cell array containing one cell per channel.');
+    error('sp_corr must be a cell array.');
 end
 
 fprintf('\nSpike file: %s\n',ssd_file);
-fprintf('Spike variable: sp_corr\n');
 fprintf('Spike-data cells: %d\n',nSpChannels);
 
 %% ===================== LOAD RESPONDING CHANNELS =======================
@@ -221,17 +191,14 @@ if isfile(responding_file)
         Resp = RespondingLoad.Responding;
         hasResp = true;
 
-        fprintf('Responding-channel file: %s\n',responding_file);
+        fprintf('Responding file: %s\n',responding_file);
     else
-        warning(['The responding-channel file exists but does not ' ...
-            'contain Responding.']);
+        warning('Responding file does not contain Responding.');
     end
 
 else
-    warning(['No MultiISI responding-channel file was found.\n' ...
-        'Expected file: %s\n' ...
-        'Channels will not be highlighted as responding.'], ...
-        responding_file);
+    warning(['Responding file not found. Channels will not be ' ...
+        'highlighted:\n%s'],responding_file);
 end
 
 %% ==================== OPTIONALLY LOAD BAD CHANNELS ====================
@@ -254,8 +221,8 @@ if Use_Bad_Channels
 
     if isempty(bad_channel_file)
 
-        warning(['Use_Bad_Channels is true, but no suitable ' ...
-            'bad-channel file was found.']);
+        warning(['Use_Bad_Channels is true, but no bad-channel ' ...
+            'file was found.']);
 
     else
         BadChannelLoad = load(bad_channel_file);
@@ -267,19 +234,18 @@ if Use_Bad_Channels
             BadCh_global = BadChannelLoad.BadCh;
 
         else
-            warning(['Bad-channel file does not contain BadCh_perSet ' ...
-                'or BadCh. Bad channels will not be applied.']);
+            warning(['Bad-channel file contains neither ' ...
+                'BadCh_perSet nor BadCh.']);
 
             bad_channel_file = '';
         end
     end
 end
 
-if Use_Bad_Channels && ~isempty(bad_channel_file)
+if isempty(bad_channel_file)
+    fprintf('Bad-channel file: not applied\n');
+else
     fprintf('Bad-channel file: %s\n',bad_channel_file);
-
-elseif ~Use_Bad_Channels
-    fprintf('Bad-channel file: not used\n');
 end
 
 %% ===================== OPTIONALLY LOAD BAD TRIALS =====================
@@ -290,10 +256,10 @@ bad_trial_file = '';
 if Use_Bad_Trials
 
     bad_trial_patterns = { ...
-        '*_MultiISIsBadTrials.mat', ...
         '*.MultiISIsBadTrials.mat', ...
-        '*_MultiISIBadTrials.mat', ...
+        '*_MultiISIsBadTrials.mat', ...
         '*.MultiISIBadTrials.mat', ...
+        '*_MultiISIBadTrials.mat', ...
         '*.SimSeqBadTrials.mat', ...
         '*_SimSeqBadTrials.mat', ...
         '*.BadTrials.mat'};
@@ -303,8 +269,8 @@ if Use_Bad_Trials
 
     if isempty(bad_trial_file)
 
-        warning(['Use_Bad_Trials is true, but no suitable ' ...
-            'bad-trial file was found.']);
+        warning(['Use_Bad_Trials is true, but no bad-trial ' ...
+            'file was found.']);
 
     else
         BadTrialLoad = load(bad_trial_file);
@@ -312,19 +278,16 @@ if Use_Bad_Trials
         if isfield(BadTrialLoad,'BadTrials')
             BadTrials = BadTrialLoad.BadTrials;
         else
-            warning(['Bad-trial file does not contain BadTrials. ' ...
-                'Bad trials will not be applied.']);
-
+            warning('Bad-trial file does not contain BadTrials.');
             bad_trial_file = '';
         end
     end
 end
 
-if Use_Bad_Trials && ~isempty(bad_trial_file)
+if isempty(bad_trial_file)
+    fprintf('Bad-trial file: not applied\n');
+else
     fprintf('Bad-trial file: %s\n',bad_trial_file);
-
-elseif ~Use_Bad_Trials
-    fprintf('Bad-trial file: not used\n');
 end
 
 %% =========================== LOAD TRIGGERS ============================
@@ -345,20 +308,22 @@ trig = double(loadTrig(0));
 trig = trig(:);
 nTrig = numel(trig);
 
-fprintf('Trigger file: %s\n',trigger_files(1).name);
+% Calculate trigger times once
+trig_ms = trig/FS*1000;
+
 fprintf('Triggers loaded: %d\n',nTrig);
 
 %% ==================== LOAD EXPERIMENT PARAMETERS =====================
 
 experiment_files = dir('*_exp_datafile_*.mat');
+experiment_files = remove_metadata_and_backups(experiment_files);
 
 if isempty(experiment_files)
     error('No *_exp_datafile_*.mat file was found.');
 end
 
 if numel(experiment_files) > 1
-    warning('Multiple experiment files found. Using: %s', ...
-        experiment_files(1).name);
+    error('Multiple current experiment files were found.');
 end
 
 experiment_file = experiment_files(1).name;
@@ -380,12 +345,12 @@ for variable_index = 1:numel(required_variables)
 end
 
 StimParams = ExpLoad.StimParams;
-sim_stim   = double(ExpLoad.simultaneous_stim);
-E_MAP      = ExpLoad.E_MAP;
-n_Trials   = double(ExpLoad.n_Trials);
+sim_stim = double(ExpLoad.simultaneous_stim);
+E_MAP = ExpLoad.E_MAP;
+n_Trials = double(ExpLoad.n_Trials);
 
 if sim_stim ~= 2
-    error(['This script requires two stimulation events per trial, but ' ...
+    error(['This script requires paired stimulation, but ' ...
         'simultaneous_stim = %d.'],sim_stim);
 end
 
@@ -394,14 +359,14 @@ if nTrig < n_Trials
         nTrig,n_Trials);
 
 elseif nTrig > n_Trials
-    warning('%d triggers were loaded for %d trials; extras are ignored.', ...
+    warning('%d triggers loaded for %d trials; extras are ignored.', ...
         nTrig,n_Trials);
 
-    trig = trig(1:n_Trials);
+    trig_ms = trig_ms(1:n_Trials);
 end
 
 fprintf('Experiment file: %s\n',experiment_file);
-fprintf('Trials/triggers used: %d/%d\n',n_Trials,n_Trials);
+fprintf('Trials used: %d\n',n_Trials);
 
 %% =========================== DECODE AMPLITUDES ========================
 
@@ -420,13 +385,9 @@ secondPulseAmps = secondPulseAmps(1:n_Trials);
 trialAmps(trialAmps == -1) = 0;
 secondPulseAmps(secondPulseAmps == -1) = 0;
 
-amplitude_mismatch = ...
-    abs(trialAmps-secondPulseAmps) > 1e-6;
-
-if any(amplitude_mismatch)
-    warning(['The two pulses have different amplitudes in %d trials. ' ...
-        'Conditions will use the first-pulse amplitude.'], ...
-        sum(amplitude_mismatch));
+if any(abs(trialAmps-secondPulseAmps) > 1e-6)
+    warning(['Some trials contain different first- and second-pulse ' ...
+        'amplitudes. Conditions use the first-pulse amplitude.']);
 end
 
 [Amps,~,ampIdx] = unique(trialAmps(:));
@@ -452,7 +413,7 @@ stimNames = stimNames(1:n_Trials*sim_stim);
 [isMapped,idx_all] = ismember(stimNames,E_MAP(2:end));
 
 if any(~isMapped)
-    error('%d stimulation entries could not be mapped through E_MAP.', ...
+    error('%d stimulation entries could not be mapped.', ...
         sum(~isMapped));
 end
 
@@ -470,17 +431,14 @@ for trial_id = 1:n_Trials
         mapped_channels(:).';
 end
 
-% Preserve stimulation order
-[uniqueComb,~,combClass] = unique(stimSeq,'rows','stable');
+[uniqueComb,~,combClass] = unique( ...
+    stimSeq,'rows','stable');
+
 nSets = size(uniqueComb,1);
 
-fprintf('\nDetected amplitudes: %s uA\n', ...
-    num2str(Amps(:).'));
-
-fprintf('Detected PTDs: %s ms\n', ...
-    num2str(PTDs_ms(:).'));
-
-fprintf('Detected ordered stimulation sets: %d\n',nSets);
+fprintf('\nAmplitudes: %s uA\n',num2str(Amps(:).'));
+fprintf('PTDs: %s ms\n',num2str(PTDs_ms(:).'));
+fprintf('Ordered sets: %d\n',nSets);
 
 for si = 1:nSets
 
@@ -499,8 +457,8 @@ if isempty(d)
     error('Depth_s returned an empty channel map.');
 end
 
-% Plot_Channels is manually selected by the user.
-plot_channels = unique(double(Plot_Channels(:).'),'stable');
+plot_channels = unique( ...
+    double(Plot_Channels(:).'),'stable');
 
 valid_plot_channels = ...
     isfinite(plot_channels) & ...
@@ -510,26 +468,72 @@ valid_plot_channels = ...
 
 if any(~valid_plot_channels)
 
-    warning(['The following Plot_Channels are invalid and will be ' ...
-        'ignored: %s'], ...
+    warning('Invalid Plot_Channels were ignored: %s', ...
         num2str(plot_channels(~valid_plot_channels)));
 
-    plot_channels = plot_channels(valid_plot_channels);
+    plot_channels = ...
+        plot_channels(valid_plot_channels);
 end
 
 if isempty(plot_channels)
-    error('No valid Plot_Channels remain after channel validation.');
+    error('No valid Plot_Channels remain.');
 end
 
-fprintf('\nUser-selected plot channels: %s\n', ...
-    compact_number_list(plot_channels));
+fprintf('Plot channels: %s\n',number_list(plot_channels));
+
+%% ===================== CACHE SELECTED SPIKE TIMES =====================
+
+% Retain only the first column of sp_corr for selected channels.
+% This releases the much larger waveform matrices before plotting.
+
+spike_time_cache = cell(numel(d),1);
+valid_spike_cache = false(numel(d),1);
+
+fprintf('\nCaching selected spike-time columns...\n');
+
+for channel_position = 1:numel(plot_channels)
+
+    ich = plot_channels(channel_position);
+    spike_channel = d(ich);
+
+    valid_mapping = ...
+        isfinite(spike_channel) && ...
+        spike_channel >= 1 && ...
+        spike_channel <= nSpChannels && ...
+        fix(spike_channel) == spike_channel;
+
+    if ~valid_mapping || isempty(sp{spike_channel})
+        continue;
+    end
+
+    spike_times = double(sp{spike_channel}(:,1));
+    spike_times = spike_times(isfinite(spike_times));
+
+    % Binary window searches require sorted spike times
+    if ~issorted(spike_times)
+        spike_times = sort(spike_times);
+    end
+
+    spike_time_cache{ich} = spike_times(:);
+    valid_spike_cache(ich) = true;
+end
+
+fprintf('Channels containing spike data: %d/%d\n', ...
+    sum(valid_spike_cache(plot_channels)), ...
+    numel(plot_channels));
+
+% Release waveform data before creating figures
+clear sp SpikeLoad;
 
 %% ======================== SELECT CONDITIONS ==========================
 
 if isempty(Plot_Sets)
+
     selected_sets = 1:nSets;
+
 else
-    selected_sets = unique(double(Plot_Sets(:).'),'stable');
+    selected_sets = unique( ...
+        double(Plot_Sets(:).'),'stable');
 
     valid_sets = ...
         selected_sets >= 1 & ...
@@ -558,9 +562,25 @@ else
     selected_ptds = double(Plot_PTDs(:).');
 end
 
-fprintf('Selected sets: %s\n',num2str(selected_sets));
-fprintf('Selected amplitudes: %s uA\n',num2str(selected_amps));
-fprintf('Selected PTDs: %s ms\n',num2str(selected_ptds));
+fprintf('Selected sets: %s\n',number_list(selected_sets));
+fprintf('Selected amplitudes: %s uA\n',number_list(selected_amps));
+fprintf('Selected PTDs: %s ms\n',number_list(selected_ptds));
+
+%% =================== PRECOMPUTE CONDITION TRIALS =====================
+
+condition_trials = cell(nSets,nAMP,nPTD);
+
+for si = 1:nSets
+    for ai = 1:nAMP
+        for pi = 1:nPTD
+
+            condition_trials{si,ai,pi} = find( ...
+                combClass == si & ...
+                ampIdx == ai & ...
+                ptdIdx == pi);
+        end
+    end
+end
 
 %% =========================== PSTH SETTINGS ============================
 
@@ -568,8 +588,8 @@ edges = ras_win(1):bin_ms_raster:ras_win(2);
 ctrs = edges(1:end-1)+diff(edges)/2;
 bin_s = bin_ms_raster/1000;
 
-% Retain the existing smoothing method
-smooth_samples = max(1,round(smooth_ms/bin_ms_raster));
+smooth_samples = max( ...
+    1,round(smooth_ms/bin_ms_raster));
 
 g = exp(-0.5 * ...
     ((0:smooth_samples-1)/(smooth_samples/2)).^2);
@@ -594,19 +614,14 @@ for si = selected_sets
                 continue;
             end
 
-            trials_this = find( ...
-                combClass == si & ...
-                ampIdx == ai & ...
-                ptdIdx == pi);
-
-            if ~isempty(trials_this)
+            if ~isempty(condition_trials{si,ai,pi})
                 expected_figures = expected_figures+1;
             end
         end
     end
 end
 
-fprintf('Expected figures: %d\n',expected_figures);
+fprintf('Expected figure tabs: %d\n',expected_figures);
 
 %% =====================================================================
 % MAIN CONDITION LOOPS
@@ -618,20 +633,22 @@ for si = selected_sets
 
     stim_channels = uniqueComb(si,uniqueComb(si,:) > 0);
 
-    % Read the bad channels for this stimulation set
+    %% ---------------- BAD CHANNELS FOR THIS SET -----------------------
+
     if Use_Bad_Channels && ~isempty(bad_channel_file)
 
-        bad_channels_this_set = get_bad_channels_for_set( ...
+        bad_channels_this_set = ...
+            get_bad_channels_for_set( ...
             BadCh_perSet,BadCh_global,si);
 
     else
         bad_channels_this_set = [];
     end
 
-    % If bad-channel exclusion is enabled, omit those channel tiles
     channels_this_set = plot_channels;
 
     if Use_Bad_Channels
+
         channels_this_set = setdiff( ...
             channels_this_set, ...
             bad_channels_this_set, ...
@@ -640,7 +657,7 @@ for si = selected_sets
 
     if isempty(channels_this_set)
 
-        warning(['No plot channels remain for Set %d after applying ' ...
+        warning(['No channels remain for Set %d after applying ' ...
             'bad-channel exclusion.'],si);
 
         continue;
@@ -664,20 +681,16 @@ for si = selected_sets
                 continue;
             end
 
-            current_ptd_ms = PTDs_ms(pi);
-
-            trials_this = find( ...
-                combClass == si & ...
-                ampIdx == ai & ...
-                ptdIdx == pi);
+            trials_this = condition_trials{si,ai,pi};
 
             if isempty(trials_this)
                 continue;
             end
 
+            current_ptd_ms = PTDs_ms(pi);
             nConditionTrials = numel(trials_this);
 
-            %% ---------------- CONDITION LABEL -------------------------
+            %% ---------------- CONDITION TITLE -------------------------
 
             if abs(current_ptd_ms) < Condition_Tolerance
 
@@ -703,47 +716,61 @@ for si = selected_sets
                 nConditionTrials, ...
                 stimulation_mode);
 
-            %% ---------------- CREATE FIGURE ---------------------------
+            %% ---------------- CREATE DOCKED FIGURE ---------------------
 
-            figure( ...
-                'Color','w', ...
-                'Name',figTitle, ...
-                'Position',fig_position);
+            if Build_Figures_Invisibly
+                initial_visibility = 'off';
+            else
+                initial_visibility = 'on';
+            end
 
-            tiledlayout( ...
+            if strcmpi(Figure_Window_Style,'docked')
+
+                % Do not specify Position for a docked figure.
+                % Setting Position would undock it.
+                fig = figure( ...
+                    'Color','w', ...
+                    'Name',figTitle, ...
+                    'NumberTitle','off', ...
+                    'WindowStyle','docked', ...
+                    'Visible',initial_visibility);
+
+            else
+                fig = figure( ...
+                    'Color','w', ...
+                    'Name',figTitle, ...
+                    'NumberTitle','off', ...
+                    'WindowStyle','normal', ...
+                    'Position',fig_position, ...
+                    'Visible',initial_visibility);
+            end
+
+            layout = tiledlayout( ...
+                fig, ...
                 'flow', ...
                 'TileSpacing','compact', ...
                 'Padding','compact');
 
-            sgtitle( ...
+            title( ...
+                layout, ...
                 figTitle, ...
                 'FontSize',14, ...
                 'FontWeight','bold', ...
                 'Interpreter','none');
 
             figures_created = figures_created+1;
+            nChPlot = numel(channels_this_set);
 
             %% ---------------- CHANNEL LOOP ----------------------------
-
-            nChPlot = numel(channels_this_set);
 
             for channel_position = 1:nChPlot
 
                 ich = channels_this_set(channel_position);
-                spike_channel = d(ich);
 
-                ax = nexttile;
+                ax = nexttile(layout);
                 hold(ax,'on');
 
-                %% ------------ CHECK CHANNEL MAPPING -------------------
-
-                valid_spike_channel = ...
-                    isfinite(spike_channel) && ...
-                    spike_channel >= 1 && ...
-                    spike_channel <= nSpChannels && ...
-                    fix(spike_channel) == spike_channel;
-
-                if ~valid_spike_channel || isempty(sp{spike_channel})
+                if ~valid_spike_cache(ich)
 
                     title(ax,sprintf('Ch %d',ich), ...
                         'FontSize',11, ...
@@ -753,9 +780,9 @@ for si = selected_sets
                     continue;
                 end
 
-                spike_times = double(sp{spike_channel}(:,1));
+                spike_times = spike_time_cache{ich};
 
-                %% ------------ APPLY CHANNEL-SPECIFIC BAD TRIALS -------
+                %% ------------ CHANNEL-SPECIFIC VALID TRIALS -----------
 
                 if Use_Bad_Trials && ~isempty(bad_trial_file)
 
@@ -774,34 +801,71 @@ for si = selected_sets
 
                 nValidTrials = numel(valid_trials);
 
-                %% ------------ COLLECT RASTER AND PSTH -----------------
+                %% ------------ COLLECT ALL RASTER POINTS ---------------
 
-                allTrialSpikes = cell(nValidTrials,1);
-                counts = zeros(1,numel(edges)-1);
+                raster_x_cells = cell(nValidTrials,1);
+                raster_y_cells = cell(nValidTrials,1);
 
                 for trial_position = 1:nValidTrials
 
                     trial_id = valid_trials(trial_position);
-                    trigger_ms = trig(trial_id)/FS*1000;
+                    trigger_time_ms = trig_ms(trial_id);
 
-                    relative_spikes = spike_times-trigger_ms;
+                    absolute_start = ...
+                        trigger_time_ms+ras_win(1);
 
-                    relative_spikes = relative_spikes( ...
-                        relative_spikes >= ras_win(1) & ...
-                        relative_spikes <  ras_win(2));
+                    absolute_end = ...
+                        trigger_time_ms+ras_win(2);
 
-                    allTrialSpikes{trial_position} = ...
+                    % Use binary searches rather than scanning the entire
+                    % spike vector with a logical comparison.
+                    first_index = first_index_geq( ...
+                        spike_times,absolute_start);
+
+                    end_index = first_index_geq( ...
+                        spike_times,absolute_end);
+
+                    if first_index >= end_index
+                        continue;
+                    end
+
+                    relative_spikes = ...
+                        spike_times(first_index:end_index-1) ...
+                        -trigger_time_ms;
+
+                    relative_spikes = relative_spikes(:);
+
+                    raster_x_cells{trial_position} = ...
                         relative_spikes;
 
-                    counts = counts+histcounts( ...
-                        relative_spikes,edges);
+                    raster_y_cells{trial_position} = ...
+                        repmat( ...
+                        trial_position, ...
+                        numel(relative_spikes), ...
+                        1);
                 end
+
+                if nValidTrials == 0
+
+                    all_raster_x = [];
+                    all_raster_y = [];
+
+                else
+                    all_raster_x = ...
+                        vertcat(raster_x_cells{:});
+
+                    all_raster_y = ...
+                        vertcat(raster_y_cells{:});
+                end
+
+                %% ------------ PSTH CALCULATION ------------------------
 
                 if nValidTrials == 0
 
                     rate_s = zeros(size(ctrs));
 
                 else
+                    counts = histcounts(all_raster_x,edges);
                     rate = counts/(nValidTrials*bin_s);
                     rate_s = filter(g,1,rate);
                 end
@@ -812,7 +876,7 @@ for si = selected_sets
                     Minimum_PSTH_YMax, ...
                     ceil(maxRate*1.1/10)*10);
 
-                %% ------------ CHECK RESPONDING LABEL -----------------
+                %% ------------ RESPONDING LABEL ------------------------
 
                 isResp = false;
 
@@ -835,12 +899,10 @@ for si = selected_sets
                     end
                 end
 
-                %% ------------ RESPONDING-CHANNEL APPEARANCE ----------
+                %% ------------ CHANNEL APPEARANCE ----------------------
 
                 if isResp
-                    set(ax,'Color',[1.0 0.88 0.88]);
-                    ax.XColor = [0.6 0 0];
-                    ax.YColor = [0.6 0 0];
+                    ax.Color = [1.0 0.88 0.88];
                     ax.LineWidth = 1.4;
                 end
 
@@ -849,6 +911,7 @@ for si = selected_sets
                 yyaxis(ax,'left');
 
                 if any(rate_s)
+
                     plot(ax,ctrs,rate_s, ...
                         'LineWidth',PSTH_Line_Width);
                 end
@@ -861,19 +924,15 @@ for si = selected_sets
 
                 yyaxis(ax,'right');
 
-                for trial_position = 1:nValidTrials
-
-                    relative_spikes = ...
-                        allTrialSpikes{trial_position};
-
-                    if isempty(relative_spikes)
-                        continue;
-                    end
+                % One graphics object contains all raster points for this
+                % channel. This is much faster than one plot per trial.
+                if ~isempty(all_raster_x)
 
                     plot(ax, ...
-                        relative_spikes, ...
-                        trial_position*ones(size(relative_spikes)), ...
+                        all_raster_x, ...
+                        all_raster_y, ...
                         '.', ...
+                        'LineStyle','none', ...
                         'Color',[0 0 0], ...
                         'MarkerSize',Raster_Marker_Size);
                 end
@@ -884,17 +943,17 @@ for si = selected_sets
                     ylim(ax,[0 1]);
                 end
 
-                % Retain the existing presentation setting:
-                % do not display raster trial-number ticks.
+                % Retain the clean presentation setting
                 set(ax,'YTick',[]);
 
-                %% ------------ STIMULATION-TIME MARKERS ----------------
+                %% ------------ STIMULATION MARKERS ---------------------
 
                 xline(ax,0, ...
                     'r--', ...
                     'LineWidth',1);
 
                 if current_ptd_ms > Condition_Tolerance
+
                     xline(ax,current_ptd_ms, ...
                         'k:', ...
                         'LineWidth',1);
@@ -918,10 +977,8 @@ for si = selected_sets
                     'Interpreter','none');
 
                 if isResp
-                    set(title_handle,'Color',[0.7 0 0]);
+                    title_handle.Color = [0.7 0 0];
                 end
-
-                %% ------------ X-AXIS LABELS ---------------------------
 
                 if channel_position > ...
                         nChPlot-ceil(sqrt(nChPlot))
@@ -929,43 +986,91 @@ for si = selected_sets
                     xlabel(ax,'Time (ms)');
                 end
             end
+
+            %% ---------------- DISPLAY COMPLETED FIGURE ----------------
+
+            if Build_Figures_Invisibly
+                fig.Visible = 'on';
+            end
+
+            drawnow limitrate;
         end
     end
 end
 
 fprintf('\n============================================================\n');
-fprintf('RASTER + PSTH PLOTTING COMPLETE\n');
-fprintf('Figures created: %d\n',figures_created);
+fprintf('FAST RASTER + PSTH PLOTTING COMPLETE\n');
+fprintf('Figure tabs created: %d\n',figures_created);
 fprintf('Figures saved: NO\n');
 fprintf('Original experiment files modified: NO\n');
 fprintf('============================================================\n');
 
 %% =========================== LOCAL FUNCTIONS ==========================
 
+function index = first_index_geq(sorted_values,target)
+% Return the index of the first value greater than or equal to target.
+%
+% If every value is smaller than target, this returns:
+%       numel(sorted_values)+1
+%
+% This binary search avoids repeatedly scanning a full spike vector.
+
+nValues = numel(sorted_values);
+
+low = 1;
+high = nValues+1;
+
+while low < high
+
+    middle = floor((low+high)/2);
+
+    if middle <= nValues && ...
+            sorted_values(middle) < target
+
+        low = middle+1;
+    else
+        high = middle;
+    end
+end
+
+index = low;
+end
+
+function files = remove_metadata_and_backups(files)
+% Remove macOS metadata files and timestamped backup files.
+
+if isempty(files)
+    return;
+end
+
+keep = true(size(files));
+
+for file_index = 1:numel(files)
+
+    file_name = files(file_index).name;
+
+    if startsWith(file_name,'._') || ...
+            contains(file_name,'BACKUP','IgnoreCase',true)
+
+        keep(file_index) = false;
+    end
+end
+
+files = files(keep);
+end
+
 function file_name = find_first_qc_file(patterns)
-% Find the first suitable QC file while ignoring backups and macOS
-% metadata files beginning with ._.
+% Find the first QC file while ignoring metadata and backup files.
 
 file_name = '';
 
 for pattern_index = 1:numel(patterns)
 
     candidates = dir(patterns{pattern_index});
+    candidates = remove_metadata_and_backups(candidates);
 
-    for candidate_index = 1:numel(candidates)
-
-        candidate_name = candidates(candidate_index).name;
-
-        if startsWith(candidate_name,'._')
-            continue;
-        end
-
-        if contains(candidate_name,'BACKUP', ...
-                'IgnoreCase',true)
-            continue;
-        end
-
-        file_name = candidate_name;
+    if ~isempty(candidates)
+        file_name = candidates(1).name;
         return;
     end
 end
@@ -973,7 +1078,7 @@ end
 
 function bad_channels = get_bad_channels_for_set( ...
     BadCh_perSet,BadCh_global,set_index)
-% Return displayed bad-channel indices for one stimulation set.
+% Return bad displayed-channel indices for one stimulation set.
 
 bad_channels = [];
 
@@ -1014,9 +1119,7 @@ end
 
 function bad_trials = get_bad_trials_for_channel( ...
     BadTrials,channel_index)
-% Support either:
-%   1. One numeric global bad-trial list
-%   2. A cell array containing one bad-trial list per channel
+% Support numeric global lists or channel-specific cell arrays.
 
 bad_trials = [];
 
@@ -1028,11 +1131,10 @@ if isnumeric(BadTrials)
 
     bad_trials = BadTrials;
 
-elseif iscell(BadTrials)
+elseif iscell(BadTrials) && ...
+        channel_index <= numel(BadTrials)
 
-    if channel_index <= numel(BadTrials)
-        bad_trials = BadTrials{channel_index};
-    end
+    bad_trials = BadTrials{channel_index};
 end
 
 if isempty(bad_trials)
@@ -1094,8 +1196,8 @@ else
 end
 end
 
-function output = compact_number_list(values)
-% Produce a compact readable list for the command window.
+function output = number_list(values)
+% Convert a numeric vector into command-window text.
 
 if isempty(values)
     output = '(none)';
@@ -1105,7 +1207,7 @@ end
 end
 
 function output = logical_text(value)
-% Convert a logical setting to ON or OFF.
+% Convert a logical value to ON or OFF.
 
 if value
     output = 'ON';

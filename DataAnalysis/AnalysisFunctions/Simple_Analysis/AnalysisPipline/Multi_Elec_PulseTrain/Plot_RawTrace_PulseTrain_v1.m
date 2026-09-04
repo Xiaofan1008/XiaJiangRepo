@@ -14,7 +14,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ====================== USER SETTINGS ======================
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX028/Xia_Elec2_Train3';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ280/Xia_Train_SimSeq1';
 
 % Recording channels to plot, using Depth_s index.
 channels_to_plot = 1:2;

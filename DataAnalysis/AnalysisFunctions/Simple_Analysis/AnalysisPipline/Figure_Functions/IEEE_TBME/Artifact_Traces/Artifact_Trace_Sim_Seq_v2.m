@@ -1,0 +1,357 @@
+%% ============================================================
+%   Figure 1 Panel: Filtered Trace (standalone)
+%   - depth_channel can be a SCALAR (single clean panel) or a VECTOR
+%     (stacked montage across channels, to scan for a good example).
+%   - Change USER SETTINGS and re-run to browse for a good example.
+%   - Based on the loading logic in Raw_trace_Monitor.m
+% ============================================================
+clear all
+addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
+
+%% ====================== USER SETTINGS ======================
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim7';
+Electrode_Type  = 1;              % 0: rigid; 1: single-shank flex; 2: four-shank flex
+depth_channel   = 26;             % SCALAR for one channel (final panel), or a VECTOR (e.g. 1:32) to scan several at once
+
+% ---- Which segment to show ----
+% false = just grab a fixed window from the recording (simplest -- pick a
+%         clean spontaneous stretch away from stimulation artifacts)
+% true  = center the window on a specific stimulation trial, selected the
+%         same way Raw_trace_Monitor.m does (by set/PTD/amplitude)
+use_trigger_window = true;
+
+% -- If use_trigger_window = true --
+amp_to_plot    = 10;               % uA
+ptd_to_plot    = 0;               % ms (0 = simultaneous)
+set_to_plot    = 1;
+trial_pick     = 22;               % which matching trial (1st, 2nd, ...) to use
+plot_window_ms = [-30 3000];        % window relative to trigger (ms)
+
+% -- If use_trigger_window = false --
+window_start_sec = 30;            % start time in the recording (s) -- pick a quiet stretch
+window_length_ms = 500;           % length of the segment to display (ms)
+
+% ---- Which file to read ----
+% 'raw' = amplifier.dat (wideband)
+% 'dn'  = amplifier_dn_sab.dat (artifact-blanked)
+% 'mu'  = <base_name>.mu_sab.dat (filtered 300-6000 Hz multi-unit band)
+trace_type = 'mu';
+
+% mu_sab.dat is written by allExtract_sab_1.m as SCALEFACTOR*mu2 (SCALEFACTOR = 10),
+% where mu2 is already in uV -- so the correct read-back for 'mu' is value/10.
+% raw/dn files are read as value*0.195 (standard Intan bit->uV scaling).
+% This is left explicit (rather than silently assumed) so you can sanity-check
+% the resulting amplitude before trusting the panel.
+mu_scale_mode = 'divide10';       % 'divide10' (matches allExtract_sab_1.m) or 'times0195' (matches old Raw_trace_Monitor.m)
+
+% ---- Optional: overlay spike-time ticks on the trace ----
+% Requires a *.sp_xia_QC.mat / *.sp_xia_SSD.mat / *.sp_xia.mat file in data_folder.
+% Set to false to plot the trace alone with no spike-file dependency.
+show_spike_ticks     = false;      % set true if you want ticks while exploring; reference panel style has none
+amp_reject_threshold = 150;       % drop spikes with any waveform sample beyond +/- this (uV)
+
+% ---- Display (single-channel final panel) ----
+% NOTE: trace_ylim_uv and panel_height_in must match Fig1_SpikeWaveforms_only.m
+% exactly -- the trace has no amplitude scale bar of its own and borrows the
+% waveform panel's "100 uV" bar, which is only valid if both panels use the
+% same y-limits AND the same physical height (so uV-per-inch matches).
+show_title              = false;   % set false for the polished/final export
+show_amplitude_scalebar = true;  % target style only shows the time bar (amplitude comes from the waveform panel)
+auto_ylim               = false;  % keep false so this panel's scale is fixed and matches the waveform panel
+auto_ylim_margin        = 1.15;   % headroom multiplier on top of max(abs(trace)) when auto_ylim = true
+trace_ylim_uv           = [-250 250];   % *** must match wave_ylim_uv in the waveform script ***
+trace_scalebar          = [100 50];    % [amplitude_uV, time_ms] -- amplitude part only drawn if show_amplitude_scalebar = true
+line_color              = 'k';
+line_width              = 1;   % thinner line reads better at this wide/short aspect ratio
+
+% Final panel size in INCHES (not pixels) so point-sized text prints at the
+% correct physical size, and DPI for export.
+panel_width_in  = 4.6;            % *** trace + waveform + gap should sum to the target row width (e.g. 7.16 in) ***
+panel_height_in = 1.0;            % *** must match panel_height_in in the waveform script ***
+export_dpi      = 600;            % lineart minimum per IEEE TBME template (mixed figure meets the stricter rule)
+
+% ---- Display-only crop (single-channel final panel) ----
+% After loading the full window above, optionally display only a sub-range of
+% it (read the start/end in ms straight off the current plot) without having
+% to re-read a new window_start_sec from disk. e.g. [280 500] to skip a quiet
+% lead-in and keep only the active burst.
+% Leave this [] for your FIRST run below (to check the trigger-line diagnostic
+% on the full window), then set it (e.g. [280 500]) once you've confirmed
+% where the burst actually starts and decided what the ~140 ms spike is.
+crop_display_ms      = plot_window_ms;   % skip the 0-4 ms blanking/artifact region (matches the 4 ms max blanking duration in your Methods)
+crop_reset_time_zero = true;      % if true, the cropped snippet is shifted to start at t = 0
+
+% ---- Diagnostic: overlay trial trigger times ----
+% Confirmed already -- leave off for the final export.
+show_trigger_lines = false;
+
+% ---- Display (multi-channel scan/montage) ----
+montage_row_height_px = 90;       % only used when depth_channel has >1 entry
+
+save_fig_path  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_1/Fig1_trace_example5.png';   % '' to skip saving
+
+%% ====================== CHECK FOLDER ======================
+if ~isfolder(data_folder), error('Invalid folder: %s', data_folder); end
+cd(data_folder);
+
+%% ====================== BASE NAME ======================
+parts = split(data_folder, filesep);
+lastfld = parts{end};
+u = strfind(lastfld,'_');
+if numel(u) >= 4, base_name = lastfld(1:u(end-1)-1); else, base_name = lastfld; end
+
+%% ====================== CHOOSE FILE ======================
+switch trace_type
+    case 'raw', data_file = 'amplifier.dat';
+    case 'dn',  data_file = 'amplifier_dn_sab.dat';
+    case 'mu',  data_file = [base_name '.mu_sab.dat'];
+    otherwise, error('Unknown trace_type');
+end
+if ~isfile(data_file), error('Trace file not found: %s', data_file); end
+
+%% ====================== HEADER / MAPPING ======================
+[amp_channels, freq_params] = read_Intan_RHS2000_file;
+FS   = freq_params.amplifier_sample_rate;
+nChn = numel(amp_channels);
+d    = Depth_s(Electrode_Type);
+ch_intan_list = d(depth_channel(:)');     % row vector, one intan channel per requested depth channel
+
+%% ====================== DETERMINE TIME WINDOW ======================
+if use_trigger_window
+    if isempty(dir('*.trig.dat')), cleanTrig_sabquick; end
+    trig = loadTrig(0);
+
+    fDIR = dir('*_exp_datafile_*.mat');
+    Sx = load(fDIR(1).name, 'StimParams','simultaneous_stim','E_MAP','n_Trials');
+    StimParams = Sx.StimParams; simN = Sx.simultaneous_stim; E_MAP = Sx.E_MAP;
+
+    trialAmps = cell2mat(StimParams(2:end,16)); trialAmps = trialAmps(1:simN:end);
+    postTrig  = cell2mat(StimParams(2:end,6));  postTrig  = postTrig(2:simN:end);
+    stimNames = StimParams(2:end,1); [~, idx_all] = ismember(stimNames, E_MAP(2:end));
+    comb = zeros(Sx.n_Trials, simN);
+    for t = 1:Sx.n_Trials
+        v = idx_all((t-1)*simN + (1:simN)); v = v(v>0);
+        comb(t,1:numel(v)) = v(:)';
+    end
+    [~,~,combClass] = unique(comb,'rows','stable');
+
+    ptd_val_us = ptd_to_plot * 1000;
+    tidx = intersect(intersect(find(combClass==set_to_plot), find(postTrig==ptd_val_us)), ...
+                      find(trialAmps==amp_to_plot));
+    if isempty(tidx) || trial_pick > numel(tidx)
+        error('No matching trial found for the requested set/PTD/amp/trial_pick.');
+    end
+    tr = tidx(trial_pick);
+
+    samp_win = round(plot_window_ms/1000 * FS);
+    Nsamp    = samp_win(2) - samp_win(1) + 1;
+    t0_samp  = trig(tr) + samp_win(1);
+    time_ms  = (samp_win(1):samp_win(2)) / FS * 1000;
+else
+    Nsamp   = round(window_length_ms/1000 * FS);
+    t0_samp = round(window_start_sec * FS);
+    time_ms = (0:Nsamp-1) / FS * 1000;
+end
+t0_ms = t0_samp / FS * 1000;
+win_ms_total = Nsamp/FS*1000;
+
+%% ====================== DIAGNOSTIC: TRIGGER TIMES IN WINDOW ======================
+% Only used to draw overlay lines (show_trigger_lines); tells you whether a
+% deflection in the trace lines up with an actual stimulation trigger.
+trigger_times_rel_ms = [];
+if show_trigger_lines
+    if ~exist('trig','var')
+        if isempty(dir('*.trig.dat')), cleanTrig_sabquick; end
+        trig = loadTrig(0);
+    end
+    trig_ms_all = trig / FS * 1000;
+    trigger_times_rel_ms = trig_ms_all(trig_ms_all >= t0_ms & trig_ms_all < (t0_ms + win_ms_total)) - t0_ms;
+end
+
+%% ====================== READ TRACE (all requested channels at once) ======================
+fid = fopen(data_file,'r');
+if fid < 0, error('Cannot open %s', data_file); end
+byte_pos = t0_samp * nChn * 2;
+fseek(fid, byte_pos, 'bof');
+switch trace_type
+    case {'raw','dn'}
+        data_block = fread(fid, [nChn, Nsamp], 'int16');
+        trace_block_uv = data_block(ch_intan_list,:) .* 0.195;   % rows = requested channels
+    case 'mu'
+        data_block = fread(fid, [nChn, Nsamp], 'short');
+        switch mu_scale_mode
+            case 'divide10',  trace_block_uv = data_block(ch_intan_list,:) ./ 10;
+            case 'times0195', trace_block_uv = data_block(ch_intan_list,:) .* 0.195;
+            otherwise, error('Unknown mu_scale_mode');
+        end
+end
+fclose(fid);
+
+%% ====================== OPTIONAL SPIKE TICKS (load once, reuse per channel) ======================
+sp_use = [];
+if show_spike_ticks
+    qc_file   = [base_name '.sp_xia_QC.mat'];
+    ssd_file  = [base_name '.sp_xia_SSD.mat'];
+    base_file = [base_name '.sp_xia.mat'];
+    if isfile(qc_file)
+        S = load(qc_file);
+        if isfield(S,'sp_qc'), sp_use = S.sp_qc;
+        elseif isfield(S,'sp_corr'), sp_use = S.sp_corr;
+        elseif isfield(S,'sp_clipped'), sp_use = S.sp_clipped;
+        end
+    elseif isfile(ssd_file)
+        S = load(ssd_file);
+        if isfield(S,'sp_pca'), sp_use = S.sp_pca;
+        elseif isfield(S,'sp_corr'), sp_use = S.sp_corr;
+        elseif isfield(S,'sp_SSD'), sp_use = S.sp_SSD;
+        elseif isfield(S,'sp_in'), sp_use = S.sp_in;
+        end
+    elseif isfile(base_file)
+        S = load(base_file);
+        if isfield(S,'sp_clipped'), sp_use = S.sp_clipped;
+        elseif isfield(S,'sp'), sp_use = S.sp;
+        end
+    else
+        fprintf('No spike file found -- plotting traces without ticks.\n');
+    end
+end
+
+%% ====================== PLOT ======================
+nCh_plot = numel(depth_channel);
+
+if nCh_plot == 1
+    % ---- Single clean panel, styled to match the target reference (e.g. colleague's Fig. panel) ----
+    trace_uv_full = trace_block_uv(1,:);
+    time_ms_full  = time_ms;
+
+    spike_times_full = [];
+    if show_spike_ticks
+        spike_times_full = get_spike_ticks(sp_use, ch_intan_list(1), t0_ms, win_ms_total, amp_reject_threshold);
+    end
+    trigger_times_full = trigger_times_rel_ms;
+
+    % ---- Apply display-only crop, if requested ----
+    if ~isempty(crop_display_ms)
+        keep_mask = time_ms_full >= crop_display_ms(1) & time_ms_full <= crop_display_ms(2);
+        time_ms_disp = time_ms_full(keep_mask);
+        trace_disp   = trace_uv_full(keep_mask);
+        shift = crop_reset_time_zero * crop_display_ms(1);
+        spike_times_disp   = spike_times_full(spike_times_full >= crop_display_ms(1) & spike_times_full <= crop_display_ms(2)) - shift;
+        trigger_times_disp = trigger_times_full(trigger_times_full >= crop_display_ms(1) & trigger_times_full <= crop_display_ms(2)) - shift;
+        time_ms_disp = time_ms_disp - shift;
+    else
+        time_ms_disp = time_ms_full; trace_disp = trace_uv_full;
+        spike_times_disp = spike_times_full; trigger_times_disp = trigger_times_full;
+    end
+
+    fig = figure('Color','w','Units','inches','Position',[1 1 panel_width_in panel_height_in], ...
+        'PaperUnits','inches','PaperPosition',[0 0 panel_width_in panel_height_in]);
+    ax = axes; hold on;
+    plot(time_ms_disp, trace_disp, line_color, 'LineWidth', line_width);
+
+    if auto_ylim
+        ylim_max = max(abs(trace_disp)) * auto_ylim_margin;
+        this_ylim = [-ylim_max ylim_max];
+    else
+        this_ylim = trace_ylim_uv;
+    end
+
+    if ~isempty(spike_times_disp)
+        tick_y = this_ylim(2) * 0.92;
+        plot(spike_times_disp, tick_y*ones(size(spike_times_disp)), 'v', ...
+            'MarkerFaceColor','r','MarkerEdgeColor','none','MarkerSize',5);
+    end
+
+    if show_trigger_lines && ~isempty(trigger_times_disp)
+        for tt = trigger_times_disp(:)'
+            xline(tt, '--', 'Color', [0.2 0.6 1], 'LineWidth', 1);
+        end
+    end
+
+    ylim(this_ylim); xlim([time_ms_disp(1) time_ms_disp(end)]);
+    axis off;
+
+    if show_amplitude_scalebar
+        add_scalebar(ax, time_ms_disp(1), this_ylim(1)*0.95, trace_scalebar(2), trace_scalebar(1), ...
+            sprintf('%g ms', trace_scalebar(2)), sprintf('%g \\muV', trace_scalebar(1)));
+    else
+        add_xscalebar(ax, time_ms_disp(1), this_ylim(1)*0.95, trace_scalebar(2), sprintf('%g ms', trace_scalebar(2)));
+    end
+
+    if show_title
+        title(sprintf('%s | Ch %d (depth) | %s', base_name, depth_channel, trace_type), ...
+            'FontWeight','normal', 'Interpreter','none');
+    end
+else
+    % ---- Stacked montage across channels, to scan for a good example ----
+    figure('Color','w','Position',[100 50 900 min(montage_row_height_px*nCh_plot, 1400)]);
+    tl = tiledlayout(nCh_plot, 1, 'TileSpacing','none', 'Padding','compact');
+    for k = 1:nCh_plot
+        ax = nexttile; hold on;
+        trace_uv = trace_block_uv(k,:);
+        plot(time_ms, trace_uv, line_color, 'LineWidth', 1);
+
+        spike_times_rel = get_spike_ticks(sp_use, ch_intan_list(k), t0_ms, win_ms_total, amp_reject_threshold);
+        n_sp = numel(spike_times_rel);
+        if n_sp > 0
+            tick_y = trace_ylim_uv(2) * 0.9;
+            plot(spike_times_rel, tick_y*ones(size(spike_times_rel)), 'v', ...
+                'MarkerFaceColor','r','MarkerEdgeColor','none','MarkerSize',3);
+        end
+
+        ylim(trace_ylim_uv); xlim([time_ms(1) time_ms(end)]);
+        box off; set(gca,'YColor','none');
+        text(time_ms(end), 0, sprintf('Ch %d (n=%d)', depth_channel(k), n_sp), ...
+            'HorizontalAlignment','right','VerticalAlignment','bottom','FontSize',8);
+
+        if k < nCh_plot
+            set(gca,'XColor','none');
+        else
+            xlabel('Time (ms)');
+            set(gca,'XColor','k');
+        end
+    end
+    sgtitle(sprintf('%s | %s | scanning %d channels', base_name, trace_type, nCh_plot), 'Interpreter','none');
+end
+
+if ~isempty(save_fig_path)
+    % nCh_plot==1 exports at the true final physical size (panel_width_in x
+    % panel_height_in) and 600 dpi; the montage/scan mode just saves whatever
+    % is on screen since it's a diagnostic view, not a final panel.
+    if nCh_plot == 1
+        exportgraphics(gcf, save_fig_path, 'Resolution', export_dpi);
+    else
+        exportgraphics(gcf, save_fig_path, 'Resolution', 150);
+    end
+    fprintf('Saved to %s\n', save_fig_path);
+end
+
+%% ====================== LOCAL FUNCTIONS ======================
+function spike_times_rel = get_spike_ticks(sp_use, ch_intan, t0_ms, win_ms, amp_reject_threshold)
+    spike_times_rel = [];
+    if isempty(sp_use) || ch_intan > numel(sp_use) || isempty(sp_use{ch_intan}), return; end
+    sp_times_all = sp_use{ch_intan}(:,1);
+    sp_wave_all  = sp_use{ch_intan}(:,2:end);
+    valid_idx    = all(abs(sp_wave_all) <= amp_reject_threshold, 2);
+    sp_times_all = sp_times_all(valid_idx);
+    win_mask = sp_times_all >= t0_ms & sp_times_all < (t0_ms + win_ms);
+    spike_times_rel = sp_times_all(win_mask) - t0_ms;
+end
+
+function add_scalebar(ax, x0, y0, xlen, ylen, xlabelstr, ylabelstr)
+    axes(ax); %#ok<LAXES>
+    plot([x0 x0+xlen], [y0 y0], 'k-', 'LineWidth', 1.5);
+    plot([x0 x0], [y0 y0+ylen], 'k-', 'LineWidth', 1.5);
+    text(x0+xlen/2, y0 - 0.06*range(ylim), xlabelstr, ...
+        'HorizontalAlignment','center','VerticalAlignment','top','FontSize',9);
+    text(x0 - 0.02*range(xlim), y0+ylen/2, ylabelstr, ...
+        'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',9);
+end
+
+function add_xscalebar(ax, x0, y0, xlen, xlabelstr)
+    % Time-only scale bar (no amplitude tick), matching the reference panel style.
+    axes(ax); %#ok<LAXES>
+    plot([x0 x0+xlen], [y0 y0], 'k-', 'LineWidth', 1.5);
+    text(x0+xlen/2, y0 - 0.06*range(ylim), xlabelstr, ...
+        'HorizontalAlignment','center','VerticalAlignment','top','FontSize',9);
+end

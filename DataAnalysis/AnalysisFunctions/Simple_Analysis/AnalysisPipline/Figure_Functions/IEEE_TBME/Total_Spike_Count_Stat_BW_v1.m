@@ -98,7 +98,7 @@ file_paths = {
 % Plot Settings
 save_figure = false;
 save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Total_Spike_Count';
-fig_name    = 'Total_Spike_Count_SignedRank_v4_FormatChanged.tiff';
+fig_name    = 'Total_Spike_Count_SignedRank_v5_Larger.png';
 
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
@@ -159,7 +159,7 @@ end
 
 %% ================= 4. PLOT =================
 % [MODIFIED 1] Figure Size: Perfect IEEE single-column square (8.89 x 8.89 cm)
-figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'PaperPositionMode', 'auto'); hold on;
+figure('Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Color', 'w', 'PaperPositionMode', 'auto'); hold on;
 
 % A. Scatter (Background)
 jitter_w = 0.4; 
@@ -171,10 +171,10 @@ for i = 1:size(Pool_Sim, 1)
 end
 
 % B. Main Curves
-errorbar(Unique_Amps, Grand_Sim_Mean, Grand_Sim_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p1 = plot(Unique_Amps, Grand_Sim_Mean, '--o', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous');
-errorbar(Unique_Amps, Grand_Seq_Mean, Grand_Seq_SEM, '.', 'Color', 'k', 'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p2 = plot(Unique_Amps, Grand_Seq_Mean, '-s', 'Color', 'k', 'LineWidth', 1.5, 'MarkerSize', 6, 'MarkerFaceColor', 'k', 'DisplayName', 'Sequential');
+errorbar(Unique_Amps, Grand_Sim_Mean, Grand_Sim_SEM, '.', 'Color', 'k', 'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p1 = plot(Unique_Amps, Grand_Sim_Mean, '--o', 'Color', 'k', 'LineWidth', 2, 'MarkerSize', 7, 'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous');
+errorbar(Unique_Amps, Grand_Seq_Mean, Grand_Seq_SEM, '.', 'Color', 'k', 'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p2 = plot(Unique_Amps, Grand_Seq_Mean, '-s', 'Color', 'k', 'LineWidth', 2, 'MarkerSize', 7, 'MarkerFaceColor', 'k', 'DisplayName', 'Sequential');
 
 % --- 4b. STATS with TRIPLE FILTER (Bonferroni + Phys + Magnitude) ---
 fprintf('\n=== STATS FILTERING (Paired Signed Rank) ===\n');
@@ -237,15 +237,15 @@ end
 box off; 
 
 % Changed axes font to Arial 9pt, and thinned axis LineWidth to 1.0
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1);
+set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
 axis square;
 
 % Changed X/Y labels to Arial 9pt
-xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Normalized Spike Count (a.u.)', 'FontSize', 9,  'FontName', 'Arial');
+xlabel('Amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+ylabel('Normalized Spike Count (a.u.)', 'FontSize', 12,  'FontName', 'Arial');
 
 % Changed legend to Arial 9pt
-legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 9, 'FontName', 'Arial');
+legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 10, 'FontName', 'Arial');
 
 xlim([0, max(Unique_Amps)]);
 ylim([0 2]); 

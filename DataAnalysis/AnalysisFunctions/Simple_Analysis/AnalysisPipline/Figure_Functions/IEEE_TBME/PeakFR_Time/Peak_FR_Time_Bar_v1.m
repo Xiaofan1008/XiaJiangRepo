@@ -13,10 +13,10 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= 1. USER SETTINGS =================
 % List Result_PeakLatency_*.mat files
 file_paths = {
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX016/Result_PeakLatency_Separated_Xia_Exp1_Seq_Full_4.mat';
 
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX015/Result_PeakLatency_Separated_Xia_Seq_Sim1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX015/Result_PeakLatency_Separated_Xia_Seq_Sim2.mat';
@@ -74,8 +74,8 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX005/Result_PeakLatency_Separated_Xia_Exp1_Sim.mat';
 };
 % Plot Settings
-save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure3/Peak_FR_Time_Bar';
+save_figure = true;
+save_dir    =  '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/Peak_FR_Time_Bar';
 hist_bin_width = 1; % ms (Width of visual bars)
 
 %% ================= 2. POOL DATA ACROSS DATASETS =================
@@ -168,11 +168,10 @@ for i = 1:length(All_Amps)
     mean_sim = mean(sim_ch); sem_sim = std(sim_ch)/sqrt(length(sim_ch));
     mean_seq = mean(seq_ch); sem_seq = std(seq_ch)/sqrt(length(seq_ch));
     
-  
-    
+ 
     % --- Create Figure ---
-    fig_name = sprintf('PeakLatency_Dist_%.1fuA_RankSum_BW', curr_amp);
-    figure('Units', 'centimeters', 'Position', [5, 5, 8.8, 8.8], 'Color', 'w');
+    fig_name = sprintf('PeakLatency_Dist_%.1fuA_RankSum_BW_v1', curr_amp);
+    figure('Units', 'centimeters', 'Position', [5, 5, 9, 9], 'Color', 'w');
     hold on;
     
     % 1. Define Bins
@@ -209,10 +208,10 @@ for i = 1:length(All_Amps)
     med_seq = median(seq_data);
     
     if ~isempty(sim_data)
-        xline(med_sim, '--k', 'LineWidth', 1, 'HandleVisibility', 'off');
+        xline(med_sim, '--k', 'LineWidth', 1.5, 'HandleVisibility', 'off');
     end
     if ~isempty(seq_data)
-        xline(med_seq, '-k', 'LineWidth', 1, 'HandleVisibility', 'off');
+        xline(med_seq, '-k', 'LineWidth', 1.5, 'HandleVisibility', 'off');
     end
 
       % Print N to the Command Window instead of the legend
@@ -225,6 +224,11 @@ for i = 1:length(All_Amps)
     
     y_bracket = max_pct * 1.15; 
     y_tick    = max_pct * 0.05; 
+
+    max_y = ceil((y_bracket + max_pct*0.10) / 5) * 5;
+
+    ylim([0 max_y]);
+    yticks(0:5:max_y);
     
     plot([med_sim, med_sim, med_seq, med_seq], ...
          [y_bracket-y_tick, y_bracket, y_bracket, y_bracket-y_tick], ...
@@ -239,28 +243,27 @@ for i = 1:length(All_Amps)
     text((med_sim + med_seq)/2, y_bracket + (max_pct * 0.05), txt, ...
         'FontSize', 10, 'HorizontalAlignment', 'center', 'FontWeight', 'normal', 'FontName', 'Arial');
     
-    % --- IEEE Formatting ---
-    xlabel('Time (ms)', 'FontSize', 9, 'FontName', 'Arial');
-    ylabel('Percentage (%)', 'FontSize', 9, 'FontName', 'Arial');
-    
     % [MODIFIED 3] Shrank legend color boxes and manually nudged the legend right
-    lgd = legend('Location','northeast', 'Box','off', 'FontSize', 9, 'FontName', 'Arial');
+    lgd = legend('Location','northeast', 'Box','off', 'FontSize', 10, 'FontName', 'Arial');
     lgd.ItemTokenSize = [12, 10]; % Makes the color boxes smaller width/height
     lgd.Position(1) = lgd.Position(1) + 0.03; % Nudges the whole box further right
     
     box off; 
-    set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.0);
+    set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
     
     % Dynamic Limits
     xlim([0, 18]);
     set(gca, 'XTick', 0 : 2 : 18);
     
     % [MODIFIED 4] Force Y-axis to step cleanly by 5s all the way to a hard top limit
-    max_y = ceil((max_pct * 1.1) / 5) * 5; % Rounds top limit to the nearest 5 (e.g., 25, 30, 35)
-    ylim([0, max_y]); 
-    yticks(0 : 5 : max_y); % Explicit ticks so the axis line closes the gap at the top
+    % max_y = ceil((max_pct * 1.1) / 5) * 5; % Rounds top limit to the nearest 5 (e.g., 25, 30, 35)
+    % ylim([0, max_y]); 
+    % yticks(0 : 5 : max_y); % Explicit ticks so the axis line closes the gap at the top
     
     axis square;
+    % --- IEEE Formatting ---
+    xlabel('Time (ms)', 'FontSize', 12, 'FontName', 'Arial');
+    ylabel('Percentage (%)', 'FontSize', 12, 'FontName', 'Arial');
     if save_figure
         exportgraphics(gcf, fullfile(save_dir, [fig_name '.tiff']), 'ContentType', 'vector');
     end

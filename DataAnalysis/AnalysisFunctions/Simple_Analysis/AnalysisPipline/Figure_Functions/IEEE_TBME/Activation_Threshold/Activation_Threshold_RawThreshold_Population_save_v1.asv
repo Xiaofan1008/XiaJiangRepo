@@ -71,7 +71,7 @@ Target_Thresh = 0.45;
 
 % [MODIFIED] Save Settings
 save_figure = false;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_2/Activation_Threshold';
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Activation_Threshold';
 save_name = 'Threshold_Unity_Scatter_RawSpike_0.5';
 
 % Plot Settings
@@ -173,11 +173,14 @@ plot([0 max_val], [0 max_val], 'k--', 'LineWidth', 1.5, 'HandleVisibility', 'off
 scatter(Thresh_Sim_Pool, Thresh_Seq_Pool, dot_size, dot_color, 'filled', ...
     'MarkerFaceAlpha', dot_alpha,'MarkerEdgeColor', 'none');
 
-text(max_val*0.22, max_val*0.74,sprintf('Sim. lower: %.1f%%', pct_seq_higher), ...
-    'FontName', 'Arial','FontSize', 12,'HorizontalAlignment', 'center');
+text(max_val*0.22, max_val*0.74, sprintf('Sim. lower: %.1f%%', pct_seq_higher), ...
+    'FontName', 'Arial','FontSize', 10,'HorizontalAlignment', 'center','BackgroundColor', 'w', 'Margin', 2);
 
 text(max_val*0.65, max_val*0.20,sprintf('Seq. lower: %.1f%%', pct_seq_lower), ...
-    'FontName', 'Arial','FontSize', 12,'HorizontalAlignment', 'center');
+    'FontName', 'Arial','FontSize', 10,'HorizontalAlignment', 'center','BackgroundColor', 'w','Margin', 2);
+
+text(max_val*0.22, max_val*0.74, sprintf('Simultaneous. lower: %.1f%%', pct_seq_higher), ...
+    'FontName', 'Arial','FontSize', 10,'HorizontalAlignment', 'center');
 
 % Significance Formatting
 % if p_val < 0.001, star = '***'; elseif p_val < 0.01, star = '**'; elseif p_val < 0.05, star = '*'; else, star = 'n.s.'; end

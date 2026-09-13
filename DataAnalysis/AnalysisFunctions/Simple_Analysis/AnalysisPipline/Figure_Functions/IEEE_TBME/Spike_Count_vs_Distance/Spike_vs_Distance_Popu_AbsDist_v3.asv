@@ -69,7 +69,7 @@ min_n_threshold  = 5;
 
 % --- C. Plot Settings ---
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_2/SpikeCount_vs_Distance';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/SpikeCount_vs_Distance';
 
 %% ================= PRE-SCAN: FIND ALL AMPLITUDES =================
 fprintf('Scanning datasets to dynamically find all unique amplitudes...\n');
@@ -230,8 +230,8 @@ for aa = 1:length(Unique_Amps)
 
     %% ---------------- 4. TBME-STYLE PLOTTER (SEPARATE GRAYSCALE FIGURES) ----------------
     
-    fig_name_bar = sprintf('Spike_vs_Distance_%.1fuA_Bar.png', target_amp);
-    fig_name_line = sprintf('Spike_vs_Distance_%.1fuA_Line.png', target_amp);
+    fig_name_bar = sprintf('Spike_vs_Distance_%.1fuA_Bar.tiff', target_amp);
+    fig_name_line = sprintf('Spike_vs_Distance_%.1fuA_Line.tiff', target_amp);
     
     % ----------------------------------------------------
     % FIGURE 1: BAR PLOT (Grayscale)
@@ -347,7 +347,7 @@ for aa = 1:length(Unique_Amps)
     ylabel('Normalized Spike Count (a.u.)','FontSize', 12, 'FontName', 'Arial');
     % title(sprintf('Shaded Line Cloud (%.1f \\muA)', target_amp));
     % legend('Location', 'northeast', 'Box', 'off', 'FontSize', 8);
-    legend('Box', 'off', 'FontSize', 10);
+    legend('Box', 'off', 'FontSize', 8);
     
     xlim([200 700]);
     set(gca, 'XTick', 200:100:700); 

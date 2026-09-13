@@ -24,9 +24,9 @@ smooth_sigma = 5;
 
 % Saving and Visibility Settings
 show_title = false;
-save_figs = false;      
+save_figs = true;      
 show_figs = true;     
-save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster/DX012/Strobe_new_v3'; 
+save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Visul_Stim_Raster/DX012/Strobe_new_v5'; 
 
 % [MODIFIED 1] Trial Selection Toggle (Whitelist vs Blacklist)
 % Set to 'whitelist' to plot ONLY the listed trials.
@@ -118,7 +118,8 @@ for ich = raster_chn_start:raster_chn_end
     
     fig = figure('Color','w','Name',sprintf('Strobe - Ch %d', ich), 'Visible', fig_vis);
     set(fig, 'Units', 'centimeters');
-    set(fig, 'Position', [2, 2, 8.8, 8.8]); 
+    % set(fig, 'Position', [2, 2, 8.8, 8.8]); 
+    set(fig, 'Position', [2, 2, 9, 9]); 
     set(fig, 'PaperPositionMode', 'auto'); 
              
     ax = axes(fig); 
@@ -156,27 +157,30 @@ for ich = raster_chn_start:raster_chn_end
     fr_raw = spike_counts / (bin_size_ms / 1000) / N_valid;
     fr_smoothed = smoothdata(fr_raw, 'gaussian', smooth_sigma * 5);
     
-    yyaxis right
-    
-    N_spikes = length(rel_spike_times);
-    dash_w = 0.8; 
-    x_v = zeros(3 * N_spikes, 1); y_v = zeros(3 * N_spikes, 1);
-    x_v(1:3:end) = rel_spike_times; x_v(2:3:end) = rel_spike_times; x_v(3:3:end) = NaN;
-    y_v(1:3:end) = trial_numbers - dash_w/2; y_v(2:3:end) = trial_numbers + dash_w/2; y_v(3:3:end) = NaN;
-    
-    plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
-    
-    % Update Y-limit and N text label to use N_valid
-    ylim([0, N_valid + 1]); 
-    set(gca, 'YColor', 'none'); 
+
+    % % Raster plot section
+    % yyaxis right
+    % 
+    % N_spikes = length(rel_spike_times);
+    % dash_w = 0.8; 
+    % x_v = zeros(3 * N_spikes, 1); y_v = zeros(3 * N_spikes, 1);
+    % x_v(1:3:end) = rel_spike_times; x_v(2:3:end) = rel_spike_times; x_v(3:3:end) = NaN;
+    % y_v(1:3:end) = trial_numbers - dash_w/2; y_v(2:3:end) = trial_numbers + dash_w/2; y_v(3:3:end) = NaN;
+    % 
+    % plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
+    % 
+    % % Update Y-limit and N text label to use N_valid
+    % ylim([0, N_valid + 1]); 
+    % set(gca, 'YColor', 'none'); 
     
     % text(ras_win(2)*0.95, N_valid*0.95, sprintf('N = %d', N_valid), ...
     %     'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', ...
     %     'FontSize', 9, 'FontName', 'Arial', 'FontWeight', 'bold', 'Color', 'k');
-    yyaxis left
+
+    % yyaxis left
     
-    plot(bin_centers, fr_smoothed, 'k-', 'LineWidth', 1.5);
-    xline(0, 'r-', 'LineWidth', 1);
+    plot(bin_centers, fr_smoothed, 'k-', 'LineWidth', 2);
+    xline(0, 'r-', 'LineWidth', 1.5);
     
     maxRate = max(fr_smoothed);
     if maxRate > 0
@@ -185,10 +189,11 @@ for ich = raster_chn_start:raster_chn_end
         ylim([0 10]);
     end
     xlim(ras_win);
+    xticks(-150:50:150);
     ylim([0, 150]);
     
-    ylabel('Firing rate (sp/s)', 'Color', 'k');
-    xlabel('Time (ms)', 'Color', 'k');
+    ylabel('Firing rate (sp/s)', 'Color', 'k','FontName', 'Arial','FontSize', 12);
+    xlabel('Time (ms)', 'Color', 'k','FontName', 'Arial','FontSize', 12);
     
     set(gca, 'YColor', 'k'); 
     set(gca, 'XColor', 'k');
@@ -196,7 +201,9 @@ for ich = raster_chn_start:raster_chn_end
     axis square;
     box off;
     % set(gca, 'FontName', 'Arial', 'FontSize', 9);
-    set(gca, 'FontName', 'Arial','FontSize', 9,'LineWidth', 1.0, 'TickDir', 'out');
+    % set(gca, 'FontName', 'Arial','FontSize', 9,'LineWidth', 1.0, 'TickDir', 'out');
+    set(gca, 'FontName', 'Arial','FontSize', 10,'LineWidth', 1.2, 'TickDir', 'out');
+
 
 
     if show_title

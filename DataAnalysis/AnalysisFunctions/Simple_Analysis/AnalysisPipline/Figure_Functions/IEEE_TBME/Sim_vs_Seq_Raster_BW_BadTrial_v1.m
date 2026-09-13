@@ -7,13 +7,13 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 % Plot Settings
 save_figure = false;
 save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Sim_vs_Seq_Raster';
-fig_name    = 'Sim_vs_Seq_Raster_DX011_S1_ch30_v1.tiff';
+fig_name    = 'Sim_vs_Seq_Raster_DX011_S1_ch30_v2.tiff';
 
 %% =============== USER SETTINGS ==============================
 folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
 folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 Electrode_Type   = 1;
-target_channels  = [1:32];
+target_channels  = [25:32];
 plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;      % ms (Time of second pulse)
 stim_set_id_Sim = 1;      
@@ -169,7 +169,7 @@ end
 function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ...
                              ctrs, ras_win, stim_width, ptd_ms, r_col, dash_w, ch, amp)
     
-    figure('Units', 'centimeters', 'Position', [2, 2, 8.89, 8.89], 'Color', 'w', 'PaperPositionMode', 'auto');
+    figure('Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Color', 'w', 'PaperPositionMode', 'auto');
     
     max_rate = max([max(r_sim), max(r_seq)]) * 1.2; 
     if max_rate == 0 || isnan(max_rate), max_rate = 10; end
@@ -185,6 +185,9 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     patch([ras_win(1) ras_win(2) ras_win(2) ras_win(1)], ...
           [max_rate*0.5 max_rate*0.5 max_rate max_rate], ...
           [0.92 0.92 0.92], 'EdgeColor', 'none', 'HandleVisibility', 'off'); 
+    % patch([ras_win(1) ras_win(2) ras_win(2) ras_win(1)], ...
+    %     [max_rate*0.5 max_rate*0.5 max_rate max_rate], ...
+    %     [0.97 0.97 0.97], 'EdgeColor', 'none', 'HandleVisibility', 'off'); 
 
     % patch([0, 0+stim_width, 0+stim_width, 0], [y_lims(1), y_lims(1), y_lims(2), y_lims(2)], ...
     %       [0.6 0 0], 'FaceAlpha', 0.5, 'EdgeColor', 'none', 'HandleVisibility', 'off');
@@ -193,18 +196,18 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     %       [0.6 0 0], 'FaceAlpha', 0.5, 'EdgeColor', 'none', 'HandleVisibility', 'off');
 
     % [MODIFIED] Draw thick red lines instead of patches
-    xline(0, 'r-', 'LineWidth', 1, 'HandleVisibility', 'off');
+    xline(0, 'r-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
     
     % Only draw the second line if it's a sequential trial
     if ptd_ms > 0
-        xline(ptd_ms, 'r-', 'LineWidth', 1, 'HandleVisibility', 'off');
+        xline(ptd_ms, 'r-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
     end
 
-    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 1.5, 'DisplayName', 'Simultaneous');
-    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 1.5, 'DisplayName', 'Sequential');
+    p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 2, 'DisplayName', 'Simultaneous');
+    p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 2, 'DisplayName', 'Sequential');
     
-    ylabel('Firing rate (sp/s)', 'FontSize',9,'Color','k', 'FontName', 'Arial');
-    xlabel('Time (ms)', 'FontSize',9,'Color','k', 'FontName', 'Arial');
+    ylabel('Firing rate (sp/s)', 'FontSize',12,'Color','k', 'FontName', 'Arial');
+    xlabel('Time (ms)', 'FontSize',12,'Color','k', 'FontName', 'Arial');
     xlim(ras_win);
     xticks(ras_win(1):10:ras_win(2)); 
     
@@ -239,7 +242,8 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
         end
         x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
         % plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.5); 
-        plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
+        % plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
+        plot(x_v, y_v, '-', 'Color', [0.45 0.45 0.45], 'LineWidth', 0.8);
     end
     
     n_sim = numel(sp_sim);
@@ -259,7 +263,9 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
         end
         x_v = x_v(1:idx-1); y_v = y_v(1:idx-1);
         % plot(x_v, y_v, '-', 'Color', r_col, 'LineWidth', 1.5);
-        plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
+        % plot(x_v, y_v, '-', 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5);
+        plot(x_v, y_v, '-', 'Color', [0.45 0.45 0.45], 'LineWidth', 0.8);
+
     end
     
     % text(ras_win(1)+2, 0.95, 'Simultaneous', 'VerticalAlignment','top','FontSize',9,'FontWeight','bold','Color','k', 'FontName', 'Arial');
@@ -276,8 +282,8 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     set(gca, 'YColor', 'k');    
     set(gca, 'XColor', 'k');
     
-    set(gca, 'FontName', 'Arial', 'FontSize', 9, 'LineWidth', 1.0);
-    legend([p1, p2], 'Location', 'northwest', 'Box', 'off', 'FontSize', 9);
+    set(gca, 'FontName', 'Arial', 'FontSize', 10, 'LineWidth', 1.2,'TickDir', 'out');
+    legend([p1, p2], 'Location', 'northwest', 'Box', 'off', 'FontName', 'Arial','FontSize', 10);
     % title(sprintf('Channel %d', ch), 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
     axis square;
     hold off;

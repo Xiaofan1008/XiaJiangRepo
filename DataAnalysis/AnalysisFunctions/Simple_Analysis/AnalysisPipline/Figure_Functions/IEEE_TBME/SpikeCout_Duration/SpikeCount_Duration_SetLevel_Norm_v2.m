@@ -87,8 +87,8 @@ file_paths = {
 
 };
 
-save_figures = false;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/SpikeCount_Duration';
+save_figures = true;
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/SpikeCount_Duration';
 dot_size = 18;
 jitter_w = 0.10;
 
@@ -420,19 +420,17 @@ for b = 1:length(bin_centers)
 end
 
 fig2 = figure('Color','w', 'Units', 'centimeters', ...
-    'Position', [15, 5, 8.8, 8.8], 'Name', 'Population_Spike_vs_Duration_Binned_SetLevel'); 
+    'Position', [15, 5, 9, 9], 'Name', 'Population_Spike_vs_Duration_Binned_SetLevel'); 
 hold on;
 
 valid_sim = ~isnan(sim_bin_mean);
 valid_seq = ~isnan(seq_bin_mean);
 
 errorbar(bin_centers(valid_sim), sim_bin_mean(valid_sim), sim_bin_sem(valid_sim), ...
-    '--ok', 'LineWidth', 1, 'MarkerFaceColor', 'w', 'CapSize', 8, ...
-    'DisplayName', 'Simultaneous');
+    '--ok', 'LineWidth', 2, 'MarkerFaceColor', 'w', 'MarkerSize', 7, 'CapSize', 8, 'DisplayName', 'Simultaneous');
 
 errorbar(bin_centers(valid_seq), seq_bin_mean(valid_seq), seq_bin_sem(valid_seq), ...
-    '-sk', 'LineWidth', 1, 'MarkerFaceColor', 'k', 'CapSize', 8, ...
-    'DisplayName', 'Sequential');
+    '-sk', 'LineWidth', 2, 'MarkerFaceColor', 'k', 'MarkerSize', 7, 'CapSize', 8, 'DisplayName', 'Sequential');
 
 
 % Zero Point
@@ -451,15 +449,14 @@ errorbar(bin_centers(valid_seq), seq_bin_mean(valid_seq), seq_bin_sem(valid_seq)
 %     '-sk', 'LineWidth', 1, 'MarkerFaceColor', 'k', 'CapSize', 8, ...
 %     'DisplayName', 'Sequential');
 
-xlabel('Normalized Response Magnitude', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Mean Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
-legend('Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 xticks(0.2:0.2:1.0);
 xlim([0.2 1]);
 
 
-set(gca, 'FontSize', 9, 'FontName', 'Arial', ...
-    'LineWidth', 1.0, 'TickDir', 'out');
+set(gca, 'FontSize', 10, 'FontName', 'Arial','LineWidth', 1.2, 'TickDir', 'out');
+xlabel('Normalized response magnitude (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
+ylabel('Mean duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
+legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
 box off; axis square;
 
 if save_figures

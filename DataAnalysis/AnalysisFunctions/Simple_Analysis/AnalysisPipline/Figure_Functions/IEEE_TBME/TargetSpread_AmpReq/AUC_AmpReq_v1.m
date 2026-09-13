@@ -71,7 +71,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Radius/Result_Spatial_RawRadius_DX016_Xia_Exp1_Seq_Full_4.mat';
 };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/TargetSpread_AmpReq';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/TargetSpread_AmpReq';
 save_figures = false;
 tiff_dpi     = 600;
 
@@ -369,7 +369,7 @@ Plot_Target_Seq_SEM  = [0, Grand_Target_Seq_SEM];
 Plot_Target_Del_Mean = [0, Grand_Target_Del_Mean];
 Plot_Target_Del_SEM  = [0, Grand_Target_Del_SEM];
 
-fig2 = figure('Units', 'centimeters', 'Position', [15, 5, 8.8, 8.8], 'Color', 'w', 'Name', 'Matched_AUC_RequiredAmplitude');
+fig2 = figure('Units', 'centimeters', 'Position', [15, 5, 9, 9], 'Color', 'w', 'Name', 'Matched_AUC_RequiredAmplitude');
 hold on;
 
 % jitter_w = 8;
@@ -393,14 +393,14 @@ hold on;
 %     'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sequential');
 
 errorbar(Plot_Targets, Plot_Target_Sim_Mean, Plot_Target_Sim_SEM, '.', 'Color', 'k', ...
-    'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p1 = plot(Plot_Targets, Plot_Target_Sim_Mean, '--o', 'Color', 'k', 'LineWidth', 1.5, ...
-    'MarkerFaceColor', 'w', 'MarkerSize', 5, 'DisplayName', 'Simultaneous');
+    'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p1 = plot(Plot_Targets, Plot_Target_Sim_Mean, '--o', 'Color', 'k', 'LineWidth', 2, ...
+    'MarkerFaceColor', 'w', 'MarkerSize', 7, 'DisplayName', 'Simultaneous');
 
 errorbar(Plot_Targets, Plot_Target_Seq_Mean, Plot_Target_Seq_SEM, '.', 'Color', 'k', ...
-    'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p2 = plot(Plot_Targets, Plot_Target_Seq_Mean, '-s', 'Color', 'k', 'LineWidth', 1.5, ...
-    'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sequential');
+    'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p2 = plot(Plot_Targets, Plot_Target_Seq_Mean, '-s', 'Color', 'k', 'LineWidth', 2, ...
+    'MarkerFaceColor', 'k', 'MarkerSize', 7, 'DisplayName', 'Sequential');
 
 for k = 1:length(Unique_Targets)
     if isnan(Grand_Target_P(k)), continue; end
@@ -418,10 +418,11 @@ for k = 1:length(Unique_Targets)
     end
 end
 
-xlabel('Matched Effective Spread Index (a.u.)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Required Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
-set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1, 'FontSize', 9, 'FontName', 'Arial');
+set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 9, 'FontName', 'Arial');
+
+xlabel('Matched effective spread index (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
+ylabel('Required amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
 % xlim([min(Unique_Targets)-10, max(Unique_Targets)+10]);
 xlim([0, max(Unique_Targets)]);
 % set(gca, 'XTick', Unique_Targets);

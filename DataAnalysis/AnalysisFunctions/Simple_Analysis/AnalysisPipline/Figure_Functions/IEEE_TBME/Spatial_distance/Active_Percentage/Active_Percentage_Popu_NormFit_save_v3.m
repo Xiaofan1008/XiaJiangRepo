@@ -65,7 +65,7 @@ file_paths = {
 };
 
 save_figs = false; 
-save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Active_Percentage';
+save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/Active_Percentage';
 
 %% =================== 1. AGGREGATE POOLED DATA =================
 fprintf('Pooling Potency data from %d datasets...\n', length(file_paths));
@@ -163,9 +163,10 @@ elseif p_anova < 0.05, anova_star = '*';
 else, anova_star = 'n.s.'; end
 
 % --- Common IEEE Formatting Settings ---
-fig_Width = 8.8;  % IEEE single column width in cm
-fig_Height = 8.8; % Square aspect ratio
-fSize = 9;        % IEEE standard font size
+fig_Width = 9;  % IEEE single column width in cm
+fig_Height = 9; % Square aspect ratio
+fSize = 10;        % IEEE standard font size
+fLabel = 12;
 fName_Font = 'Arial';
 
 % --- PANEL 1: Standard Normalization ---
@@ -174,16 +175,17 @@ hold on;
 % errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
 % errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
 % MODIFY: Multiply Mean and SEM by 100
-errorbar(sum_amps, mSimStd(:,1)*100, mSimStd(:,2)*100, '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
-errorbar(sum_amps, mSeqStd(:,1)*100, mSeqStd(:,2)*100, '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
+errorbar(sum_amps, mSimStd(:,1)*100, mSimStd(:,2)*100, '--ok', 'LineWidth', 2, 'MarkerFaceColor','w','MarkerSize',7, 'DisplayName', 'Simultaneous');
+errorbar(sum_amps, mSeqStd(:,1)*100, mSeqStd(:,2)*100, '-sk', 'LineWidth', 2, 'MarkerFaceColor','k','MarkerSize',7, 'DisplayName', 'Sequential');
 
-ylabel('Normalized Active Percentage (%)', 'FontName', fName_Font, 'FontSize', fSize); 
-xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fSize);
 % title('Standard (Max-Scaled)', 'FontName', fName_Font, 'FontSize', fSize); 
-set(gca, 'FontSize', fSize, 'FontName', fName_Font, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1);
+set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2);
+ylabel('Normalized active percentage (%)', 'FontName', fName_Font, 'FontSize', fLabel); 
+xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fLabel);
+
 grid off; axis square;
 add_sig_stars(sum_amps, mSimStd(:,1), mSeqStd(:,1), mSeqStd(:,2), p_std);
-legend('Location', 'northwest', 'Box', 'off', 'FontSize', fSize);
+legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10,'FontName', 'Arial');
 
 % --- PANEL 2: Delta Change (Naka-Rushton Fit) ---
 figure('Color','w', 'Units', 'centimeters', 'Position', [12, 5, fig_Width, fig_Height], 'Name', 'Panel_B_Delta');

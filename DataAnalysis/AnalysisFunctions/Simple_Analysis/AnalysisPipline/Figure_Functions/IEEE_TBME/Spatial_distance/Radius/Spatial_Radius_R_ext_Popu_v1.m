@@ -69,7 +69,7 @@ file_paths = {
 
     };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Spatial_Radius';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/Spatial_Radius';
 save_figures = false; % Set to true to export .tiff files
 tiff_dpi     = 600;  % High resolution for publication
 
@@ -200,7 +200,7 @@ fprintf('\n');
 
 %% ================= 5. PLOTTING: R_ext TUNING CURVE =================
 % fig = figure('Units', 'centimeters', 'Position', [5, 5, 12, 11], 'Color', 'w', 'Name', 'Population R_ext');
-fig = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8.8], 'Color', 'w', 'Name', 'Population R_ext');
+fig = figure('Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Color', 'w', 'Name', 'Population R_ext');
 hold on; 
 
 % Extract valid data for plotting
@@ -216,11 +216,11 @@ end
 
 % --- PLOT LINES WITH ERROR BARS ---
 % Sim: Dashed, White Marker
-errorbar(v_amps, sim_m, sim_s, '--ok', 'LineWidth', 1, 'MarkerSize', 7, ...
+errorbar(v_amps, sim_m, sim_s, '--ok', 'LineWidth', 2, 'MarkerSize', 7, ...
     'MarkerFaceColor', 'w', 'DisplayName', 'Simultaneous', 'CapSize', 8);
 
 % Seq: Solid, Black Marker
-errorbar(v_amps, seq_m, seq_s, '-sk', 'LineWidth', 1, 'MarkerSize', 7, ...
+errorbar(v_amps, seq_m, seq_s, '-sk', 'LineWidth', 2, 'MarkerSize', 7, ...
     'MarkerFaceColor', 'k', 'DisplayName', 'Sequential', 'CapSize', 8);
 
 % --- ADD SIGNIFICANCE ASTERISKS ---
@@ -258,11 +258,12 @@ end
 % axis square;
 
 % --- IEEE FORMATTING ---
-xlabel('Amplitude (µA)', 'FontSize', 9, 'FontName', 'Arial');
-ylabel('Maximal Active Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); 
 
-set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1, 'FontSize', 9, 'FontName', 'Arial');
-lgd = legend('Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
+
+set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 10, 'FontName', 'Arial');
+xlabel('Amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+ylabel('Maximal active distance (µm)', 'FontSize', 12, 'FontName', 'Arial'); 
+lgd = legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
 lgd.Position(2) = 0.82;
 lgd.Position(1) = 0.15;
 % xlim([0, max(v_amps)+1]); 

@@ -65,8 +65,8 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Outer_Spatial_Percentage/Result_Spatial_D90_DX016_Xia_Exp1_Seq_Full_4.mat';
 };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure4/Outer_Spatial_Analysis_100um_to600um';
-save_figures = true; % Switch to true to export .tiff
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/Outer_Spatial_Analysis_100um_to600um';
+save_figures = false; % Switch to true to export .tiff
 tiff_dpi     = 600; 
 
 %% ================= 1. DYNAMIC DATA HARVESTING =================
@@ -210,7 +210,7 @@ for a = 1:length(MasterAmps)
     P = PopResults.Amp(a); if isempty(P.N) || P.N < 2, continue; end 
     
     % --- FIGURE 1: PROBABILITY (CAPPED ERROR BARS) ---
-    fig1 = figure('Units', 'centimeters', 'Position', [2, 2, 8.8, 8], 'Color', 'w','Name', sprintf('Prob_%.1fuA', P.Val)); hold on;
+    fig1 = figure('Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Color', 'w','Name', sprintf('Prob_%.1fuA', P.Val)); hold on;
     y1 = P.Prob_Sim_Mean * 100; e1 = P.Prob_Sim_SEM * 100;
     y2 = P.Prob_Seq_Mean * 100; e2 = P.Prob_Seq_SEM * 100;
     errorbar(bin_centers, y1, e1, '--ok', 'LineWidth', 1, 'MarkerSize', 4, 'MarkerFaceColor', 'w', 'CapSize', 3, 'DisplayName', 'Simultaneous');
@@ -224,21 +224,23 @@ for a = 1:length(MasterAmps)
     xlim([0 600]); ylim([0 100]); axis square; legend('Location', 'northeast', 'Box', 'off');
 
     % --- FIGURE 2: DENSITY (WIDE BARS, NO CAPS) ---
-    fig2 = figure('Units', 'centimeters', 'Position', [11, 2, 8.8, 8], 'Color', 'w','Name', sprintf('Dens_%.1fuA', P.Val)); hold on;
+    fig2 = figure('Units', 'centimeters', 'Position', [11, 2, 9, 9], 'Color', 'w','Name', sprintf('Dens_%.1fuA', P.Val)); hold on;
     b_plot = bar(bin_centers, [P.Dens_Sim_Mean(:), P.Dens_Seq_Mean(:)], 'grouped', 'BarWidth', 1.0);
     b_plot(1).FaceColor = [0.8 0.8 0.8]; 
     b_plot(1).DisplayName = 'Simultaneous';
     b_plot(2).FaceColor = [0 0 0];
     b_plot(2).DisplayName = 'Sequential';
-    errorbar(b_plot(1).XEndPoints, P.Dens_Sim_Mean, zeros(size(P.Dens_Sim_SEM)), P.Dens_Sim_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1, 'CapSize', 0, 'HandleVisibility','off');
-    errorbar(b_plot(2).XEndPoints, P.Dens_Seq_Mean, zeros(size(P.Dens_Seq_SEM)), P.Dens_Seq_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1, 'CapSize', 0, 'HandleVisibility','off');
+    errorbar(b_plot(1).XEndPoints, P.Dens_Sim_Mean, zeros(size(P.Dens_Sim_SEM)), P.Dens_Sim_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1.2, 'CapSize', 0, 'HandleVisibility','off');
+    errorbar(b_plot(2).XEndPoints, P.Dens_Seq_Mean, zeros(size(P.Dens_Seq_SEM)), P.Dens_Seq_SEM, 'k', 'LineStyle', 'none', 'LineWidth', 1.2, 'CapSize', 0, 'HandleVisibility','off');
     % for b = 1:num_bins
     %     p = P.Dens_pvals(b); s = ''; if p < 0.001, s='***'; elseif p < 0.01, s='**'; elseif p < 0.05, s='*'; end
     %     if ~isempty(s), text(bin_centers(b), max([P.Dens_Sim_Mean(b)+P.Dens_Sim_SEM(b), P.Dens_Seq_Mean(b)+P.Dens_Seq_SEM(b)])+0.02, s, 'FontSize', 9, 'HorizontalAlignment', 'center', 'FontWeight', 'bold'); end
     % end
-    xlabel('Distance (µm)', 'FontSize', 9, 'FontName', 'Arial'); ylabel('Fraction of Total Response', 'FontSize', 9, 'FontName', 'Arial');
-    set(gca, 'FontSize', 9, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1, 'Box', 'off', 'XTick', 0:100:700);
-    xlim([0 600]); ylim([0 0.25]); axis square; legend('Location', 'northeast', 'Box', 'off', 'FontName', 'Arial');
+   
+    set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2, 'Box', 'off', 'XTick', 0:100:700);
+    xlabel('Distance (µm)', 'FontSize', 12, 'FontName', 'Arial'); 
+    ylabel('Fraction of total response', 'FontSize', 12, 'FontName', 'Arial');
+    xlim([0 600]); ylim([0 0.25]); axis square; legend('Location', 'northeast', 'Box', 'off', 'FontName', 'Arial', 'FontSize', 10);
 
     if save_figures
         % Ensure the directory exists

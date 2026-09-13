@@ -61,8 +61,8 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = false;
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure3/Duration_AmpRequired_v3_StaticAdd';
+save_figures = true;
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/Duration_AmpRequired_v3_StaticAdd';
 
 % --- Black and White Settings ---
 color_sim    = 'k'; 
@@ -549,7 +549,7 @@ end
 
 
 %% ================= 6. PLOT 3: REQUIRED AMPLITUDE AT SELECTED MATCHED DURATIONS =================
-figure('Color','w', 'Units', 'centimeters', 'Position', [15, 5, 8.8, 8.8], 'Name', 'SelectedMatchedDuration_RequiredAmplitude'); hold on;
+figure('Color','w', 'Units', 'centimeters', 'Position', [15, 5, 9, 9], 'Name', 'SelectedMatchedDuration_RequiredAmplitude'); hold on;
 
 jitter_w = 0.20;
 for i = 1:size(Pool_Seq_Target, 1)
@@ -562,14 +562,14 @@ for i = 1:size(Pool_Sim_Target, 1)
 end
 
 errorbar(Unique_Targets, Grand_Target_Sim_Mean, Grand_Target_Sim_SEM, '.', 'Color', color_sim, ...
-    'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p4 = plot(Unique_Targets, Grand_Target_Sim_Mean, '--o', 'Color', color_sim, 'LineWidth', 1.5, ...
-    'MarkerFaceColor', 'w', 'MarkerSize', 5, 'DisplayName', 'Simultaneous');
+    'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p4 = plot(Unique_Targets, Grand_Target_Sim_Mean, '--o', 'Color', color_sim, 'LineWidth', 2, ...
+    'MarkerFaceColor', 'w', 'MarkerSize', 7, 'DisplayName', 'Simultaneous');
 
 errorbar(Unique_Targets, Grand_Target_Seq_Mean, Grand_Target_Seq_SEM, '.', 'Color', color_seq, ...
-    'LineWidth', 1, 'CapSize', 8, 'HandleVisibility', 'off');
-p5 = plot(Unique_Targets, Grand_Target_Seq_Mean, '-s', 'Color', color_seq, 'LineWidth', 1.5, ...
-    'MarkerFaceColor', 'k', 'MarkerSize', 5, 'DisplayName', 'Sequential');
+    'LineWidth', 1.2, 'CapSize', 8, 'HandleVisibility', 'off');
+p5 = plot(Unique_Targets, Grand_Target_Seq_Mean, '-s', 'Color', color_seq, 'LineWidth', 2, ...
+    'MarkerFaceColor', 'k', 'MarkerSize', 7, 'DisplayName', 'Sequential');
 
 % NEW: stats stars for matched-duration required amplitude
 fprintf('\n=== MATCHED DURATION REQUIRED AMPLITUDE STATS (Paired Signed Rank) ===\n');
@@ -607,11 +607,13 @@ for k = 1:length(Unique_Targets)
     end
 end
 
-ylabel('Required Amplitude (\muA)', 'FontSize', 9, 'FontName', 'Arial');
-xlabel('Matched Duration (ms)', 'FontSize', 9, 'FontName', 'Arial');
-legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 9, 'FontName', 'Arial');
 
-set(gca, 'FontSize', 9, 'FontName', 'Arial', 'LineWidth', 1.0, 'TickDir', 'out');
+set(gca, 'FontSize', 10, 'FontName', 'Arial', 'LineWidth', 1.2, 'TickDir', 'out');
+
+ylabel('Required 1mplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+xlabel('Matched duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
+legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
+
 xlim([min(Unique_Targets), max(target_durations)]);
 set(gca, 'XTick', 4:1:max(target_durations));
 ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]) + 1.0)]);

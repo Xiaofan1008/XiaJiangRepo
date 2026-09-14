@@ -10,49 +10,49 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 %% ================= USER SETTINGS ============================
 % 1. Define your datasets here. 
 dataset_files = {
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX014/Result_SpikeCount_FixWin_DX014_5_10uA_Xia_Seq_Sim3.mat';
 
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_4.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX016/Result_SpikeCount_FixWin_DX016_10uA_Xia_Exp1_Seq_Full_4.mat';
 
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_10uA_Xia_ISI_SimSeq1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_5_10uA_Xia_ISI_SimSeq2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX018/Result_SpikeCount_FixWin_DX018_10uA_Xia_ISI_SimSeq1.mat';
 
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX019/Result_SpikeCount_FixWin_DX019_5_10uA_Xia_ISI_SimSeq1.mat';
-    
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX019/Result_SpikeCount_FixWin_DX019_5_10uA_Xia_ISI_SimSeq1.mat';
+
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq1.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq2.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq3.mat';
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
-    
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq2.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_10uA_Xia_ISI_10uA_SimSeq3.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/Result_SpikeCount_FixWin_DX020_5_10uA_Xia_ISI_SimSeq2.mat';
+
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/Result_SpikeCount_FixWin_DX021_5_10uA_Xia_ISI_SimSeq1.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX021/Result_SpikeCount_FixWin_DX021_5_10uA_Xia_ISI_SimSeq2.mat';
-    
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX022/Result_SpikeCount_FixWin_DX022_10uA_Xia_ISI_10uA_SimSeq1.mat';
 
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX023/Result_SpikeCount_FixWin_DX023_10uA_Xia_ISI_10uA_SinSeq1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX022/Result_SpikeCount_FixWin_DX022_10uA_Xia_ISI_10uA_SimSeq1.mat';
 
-    '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX024/Result_SpikeCount_FixWin_DX024_10uA_Xia_ISI_10uA_SimSeq1.mat';
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX023/Result_SpikeCount_FixWin_DX023_10uA_Xia_ISI_10uA_SinSeq1.mat';
+
+    % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX024/Result_SpikeCount_FixWin_DX024_10uA_Xia_ISI_10uA_SimSeq1.mat';
 };
 
 
 % 2. Plotting Aesthetics
-line_width = 1.5;
-marker_size = 4;
-cap_size = 6;
+line_width = 2;
+marker_size = 7;
+cap_size = 8;
 
 % --- Paper Figure Settings ---
-fig_width_cm  = 8.8;     % IEEE single-column width
-fig_height_cm = 8.8;     % slightly shorter than square
-axis_fontsize = 9;
-label_fontsize = 9;
+fig_width_cm  = 9;     % IEEE single-column width
+fig_height_cm = 9;     % slightly shorter than square
+axis_fontsize = 10;
+label_fontsize = 12;
 title_fontsize = 10;
-legend_fontsize = 8;
-axis_linewidth = 1.0;
+legend_fontsize = 10;
+axis_linewidth = 1.2;
 font_name = 'Arial';
 
 % 3. Statistical Settings
@@ -65,8 +65,8 @@ friedman_target_ISIs = [0 5 9 10 12 15];
 min_valid_denominator = 0;
 
 % 5. Figure Saving
-save_figures = false;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure5/ISI/ISI_SingeAnimal';
+save_figures = true;
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_5/ISI_DX021';
 save_name = 'ISI_DX021_Average_MaxNorm';
 save_dpi = 600;
 
@@ -161,7 +161,7 @@ Pop_Mean = nanmean(Pop_Data_Pooled, 4);
 Pop_N    = sum(~isnan(Pop_Data_Pooled), 4);
 Pop_Std  = nanstd(Pop_Data_Pooled, 0, 4);
 % Pop_SEM  = Pop_Std ./ sqrt(Pop_N);
-% Pop_SEM  = Pop_Std ./ sqrt(5); 
+% Pop_SEM  = Pop_Std ./ sqrt(3); 
 Pop_SEM  = Pop_Std./sqrt(1);
 
 %% =================== 3.5 STATISTICAL TEST (REDUCED FRIEDMAN) =================
@@ -406,26 +406,21 @@ for a = 1:length(Union_Amps)
         ls  = line_styles{mod(a-1, length(line_styles))+1};
         mk  = markers{mod(a-1, length(markers))+1};
         mfc = marker_faces{mod(a-1, length(marker_faces))+1};
-        lbl = sprintf('%.1f µA', current_amp);
+        lbl = sprintf('%.0f µA', current_amp);
         
         plot_x   = Union_ISIs(valid_idx);
         plot_y   = y_mean(valid_idx);
         plot_err = y_sem(valid_idx);
+        % plot_err = y_sem(valid_idx).*0.6;
         
         % --- MODIFIED: standard error bars instead of shaded band ---
-        errorbar(plot_x, plot_y, plot_err, ...
-            'LineStyle', ls, 'Marker', mk, 'Color', col, ...
-            'LineWidth', 1.2, 'MarkerFaceColor', mfc, ...
-            'MarkerEdgeColor', col, ...
-            'MarkerSize', marker_size, ...
-            'CapSize', 5, ...
-            'DisplayName', lbl);
+        errorbar(plot_x, plot_y, plot_err,'LineStyle', ls, 'Marker', mk, 'Color', col, ...
+            'LineWidth', 1.5, 'MarkerFaceColor', mfc,'MarkerEdgeColor', col,'MarkerSize', 5, ...
+            'CapSize', 6,'DisplayName', lbl);
     end
 end
 
-xlabel('Inter-Stimulus Interval (ms)', 'FontSize', label_fontsize, 'FontName', font_name);
-ylabel('Normalized Spike Count Response', 'FontSize', label_fontsize, 'FontName', font_name);
-% title('ISI Population Average', 'FontSize', title_fontsize, 'FontName', font_name, 'FontWeight', 'bold');
+
 
 xticks([0 3 5 7 9 10 12 15 20]);
 
@@ -437,16 +432,17 @@ yticks(0.1:0.2:1.1);
 
 axis square;
 
-set(gca, 'FontSize', axis_fontsize, ...
-         'FontName', font_name, ...
-         'LineWidth', axis_linewidth, ...
-         'TickDir', 'out', ...
-         'XTickLabelRotation', 0);
+set(gca, 'FontSize', axis_fontsize,'FontName', font_name, 'LineWidth', axis_linewidth, ...
+         'TickDir', 'out','XTickLabelRotation', 0);
 
 box off;
 
-lgd = legend('Location','southeast', 'Box','off', ...
-    'FontSize', legend_fontsize, 'FontName', font_name);
+lgd = legend('Location','southeast', 'Box','off', 'FontSize', legend_fontsize, 'FontName', font_name);
+
+xlabel('Inter-Stimulus Interval (ms)', 'FontSize', label_fontsize, 'FontName', font_name);
+ylabel('Normalized Spike Count Response', 'FontSize', label_fontsize, 'FontName', font_name);
+% title('ISI Population Average', 'FontSize', title_fontsize, 'FontName', font_name, 'FontWeight', 'bold');
+
 % title(lgd, 'Amplitudes');
 lgd.Title.FontSize = legend_fontsize;
 lgd.Title.FontName = font_name;

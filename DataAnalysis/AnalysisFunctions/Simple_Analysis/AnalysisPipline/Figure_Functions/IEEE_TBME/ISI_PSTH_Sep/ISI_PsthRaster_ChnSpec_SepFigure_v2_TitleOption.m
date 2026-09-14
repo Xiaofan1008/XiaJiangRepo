@@ -30,7 +30,7 @@ plot_all_responsive_channels = false;   % true = plot all responsive channels
 Plot_Channels = [19];                % only used when plot_all_responsive_channels = false
 
 % ---- plotting windows ----
-ras_win       = [-40 40];      
+ras_win       = [-45 45];      
 bin_ms_raster = 1; 
 smooth_ms     = 6;             
 
@@ -40,7 +40,7 @@ Plot_PTDs = [];
 
 % ---- export settings ----
 save_figures   = true;
-save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure5/ISI_PSTH_Raster/DX021_Ch19_LargeFontNoLabel';
+save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_5/ISI_PSTH_Raster/DX021_Ch19_LargeFontNoLabel';
 tiff_dpi       = 600;
 
 % ---- figure title settings ----
@@ -48,11 +48,11 @@ show_figure_title = false;     % true = show title in figure, false = no title
 title_fontsize    = 7;
 
 % ---- paper figure formatting ----
-fig_width_cm   = 6;
-fig_height_cm  = 6;
+fig_width_cm   = 5.0;
+fig_height_cm  = 3.8;
 font_name      = 'Arial';
-axis_fontsize  = 14;
-label_fontsize = 14;
+axis_fontsize  = 10;
+label_fontsize = 11;
 axis_linewidth = 1.0;
 fig_bg_color   = 'w';
 
@@ -61,8 +61,8 @@ psth_color   = [0 0 0];          % black PSTH
 raster_color = [0.35 0.35 0.35]; % dark gray raster
 stim1_color  = [0 0 0];          % black dashed line at 0 ms
 stim2_color  = [0 0 0];          % black dotted line at 2nd pulse
-raster_msize = 3.5;
-psth_lw      = 1.3;
+raster_msize = 2;
+psth_lw      = 2;
 
 %% ===================== INITIAL SETUP =========================
 if ~isfolder(data_folder)
@@ -417,7 +417,19 @@ for target_set = sets_to_plot
             end
             
             % ---- PSTH axis (left) ----
-            yyaxis(ax,'left');
+
+            if jj == 1
+                yyaxis(ax,'left');
+                % yticks(ax,[0 250]);
+                yticks([0 50 150 250]);
+                ylabel(ax,'');
+                % ylabel(ax,'Firing rate (sp/s)','FontSize',11,'FontName','Arial');
+            else
+                yyaxis(ax,'left');
+                yticks(ax,[]);
+                ylabel(ax,'');
+            end
+            % yyaxis(ax,'left');
             ax.YColor = [0 0 0];
             if any(rate_s)
                 plot(ax, ctrs, rate_s, 'Color', psth_color, 'LineWidth', psth_lw);
@@ -425,8 +437,7 @@ for target_set = sets_to_plot
             xlim(ax, ras_win); 
             % ylim(ax, [0 yMaxPSTH]); 
             ylim(ax, [0 250]);
-            xticks([-40 0 40]);
-            yticks([0 50 150 250]);
+            xticks([-35 0 35]);
             % yticks([]);
             % ylabel(ax,'Rate (sp/s)', 'FontSize', label_fontsize, 'FontName', font_name);
             

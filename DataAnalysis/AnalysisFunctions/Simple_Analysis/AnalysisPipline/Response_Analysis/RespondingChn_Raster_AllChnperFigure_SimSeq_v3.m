@@ -44,10 +44,10 @@ Plot_Channels = 1:64;
 % Empty means all available sets
 Plot_Sets = [1];
 % Empty means all available amplitudes
-Plot_Amps = [];
+Plot_Amps = [5];
 % Empty means all available PTDs
 % Example: Plot_PTDs = [0 3 5 10 20];
-Plot_PTDs = [0 3];
+Plot_PTDs = [];
 
 Condition_Tolerance = 1e-4;
 
@@ -55,7 +55,7 @@ Condition_Tolerance = 1e-4;
 
 % false = show all trials
 % true  = load and exclude bad trials separately for each channel
-Use_Bad_Trials = false;
+Use_Bad_Trials = true;
 
 % false = ignore bad-channel files
 % true  = load and omit bad channels from each set

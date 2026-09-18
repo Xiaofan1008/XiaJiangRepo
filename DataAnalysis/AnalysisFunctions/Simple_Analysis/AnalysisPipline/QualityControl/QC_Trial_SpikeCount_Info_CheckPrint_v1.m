@@ -35,7 +35,7 @@ matFilePath = '/Volumes/MACData/Data/Data_Xia/DX023/Xia_ISI_SimSeq1/Xia_ISI_SimS
 % Flag a trial if its (baseline-corrected, 2-40ms) spike count total is
 % < lowThreshold OR > highThreshold
 lowThreshold  = 0;
-highThreshold = 80;
+highThreshold = 50;
 
 % Which channels to sum for the per-trial total.
 %   Leave empty [] to use the SAME channels the file was originally saved
@@ -46,7 +46,7 @@ highThreshold = 80;
 %   because Channel_Results (saved per trial) contains the baseline-
 %   corrected analysis-window count for EVERY recording channel, not just
 %   the channels originally used for totals.
-InspectChannels = [];
+InspectChannels = [1:16,33:63];
 
 %% =========================== LOAD THE FILE ============================
 

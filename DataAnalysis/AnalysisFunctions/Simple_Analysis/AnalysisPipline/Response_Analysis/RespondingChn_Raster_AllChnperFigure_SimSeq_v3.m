@@ -44,7 +44,7 @@ Plot_Channels = 1:64;
 % Empty means all available sets
 Plot_Sets = [1];
 % Empty means all available amplitudes
-Plot_Amps = [5];
+Plot_Amps = [10];
 % Empty means all available PTDs
 % Example: Plot_PTDs = [0 3 5 10 20];
 Plot_PTDs = [];

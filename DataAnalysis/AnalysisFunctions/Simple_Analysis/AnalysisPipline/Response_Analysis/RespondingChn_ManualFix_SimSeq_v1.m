@@ -23,7 +23,7 @@ clear;
 %% ========================================================================
 %  1. FILE PATH SETTINGS
 % ========================================================================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX018/Xia_Exp1_Sim4';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX023/Xia_ISI_SimSeq1';
 
 % ========================================================================
 %  [MODIFIED SECTION 1]

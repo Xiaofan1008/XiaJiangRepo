@@ -10,7 +10,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ================= USER SETTINGS ============================
 % Single dataset folder containing both Sim (PTD=0) and Seq
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX020/Xia_ISI_SimSeq1'; 
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX023/Xia_ISI_SimSeq1'; 
 Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 % Select which ISIs (PTDs) you want to analyze. 
@@ -18,7 +18,7 @@ Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank fl
 target_ISIs = []; 
 
 % Choose the FIXED macro window [start, end]
-fixed_macro_win_ms = [0, 40]; 
+fixed_macro_win_ms = [2, 40]; 
 
 % Added baseline window for spontaneous noise subtraction
 baseline_win_ms = [-50, -10]; 
@@ -299,7 +299,7 @@ end
 %% ============================================================
 %   6. SAVE RESULTS
 % ============================================================
- save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX020/';
+ save_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Multi_ISIs_SpikeCount/DX023/';
 if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 parts = split(data_folder, filesep); exp_id = parts{end};
 
@@ -381,7 +381,7 @@ end
 
 function [R, sp, trig, S, QC] = load_experiment_data(folder)
     cd(folder);
-    f = dir('*MultiISIRespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
+    f = dir('*_MultiISI_RespondingChannels.mat'); if isempty(f), error('No Responding file in %s', folder); end
     R = load(f(1).name).Responding;
     
     f = dir('*sp_xia_SSD.mat'); if isempty(f), f=dir('*sp_xia.mat'); end

@@ -61,12 +61,28 @@ FS = 30000;
 IncludePairedConditions = {
     % 1, 5, 0;
     % 1, 5, 5;
+    2,   10,      0;
+    2,   10,      3;
+    2,   10,      4;
+    2,   10,      5;
+    2,   10,      6;
+    2,   10,      7;
+    2,   10,      8;
+    2,   10,      9;
+    2,   10,      10;
+    2,   10,      11;
+    2,   10,      12;
+    2,   10,      13;
+    2,   10,      14;
+    2,   10,      15;
+    2,   10,      17;
+    2,   10,      20;
 };
 IncludeSingleConditions = {
     % 5, 5;
 };
 
-output_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Luke_Data/DX023/';
+output_dir = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Luke_Data/DX023_v2';
 
 %% ================= RESTORE WORKING DIRECTORY ON EXIT =========
 origDir = pwd;

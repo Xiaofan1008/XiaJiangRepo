@@ -83,14 +83,13 @@ for si = 1:numel(Paired)
         valid = ~isnan(y_mean);
         if ~any(valid), continue; end
 
-        errorbar(isisToPlot(valid), y_mean(valid), y_sem(valid), '-o', ...
-            'Color', colors(a,:), 'LineWidth', 2, 'MarkerFaceColor','w', ...
+        errorbar(isisToPlot(valid), y_mean(valid), y_sem(valid), '-o','Color', colors(a,:), 'LineWidth', 2, 'MarkerFaceColor','w', ...
             'MarkerSize', 8, 'DisplayName', sprintf('%.1f uA', target_amp));
     end
 
     xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold');
-    ylabel('Mean Net Spike Count / Trial', 'FontWeight','bold');
-    title(sprintf('Set %d (Electrodes %s) -- Spike Count vs ISI', ...
-        setEntry.SetNumber, num2str(elecs)), 'FontWeight','bold');
+    ylabel('Baseline corrected Spike / Trial', 'FontWeight','bold');
+    ylim([0.5,1.4]);
+    title(sprintf('Set %d -- Spike Count vs ISI',setEntry.SetNumber), 'FontWeight','bold');
     box off; legend('Location','best','Box','off');
 end

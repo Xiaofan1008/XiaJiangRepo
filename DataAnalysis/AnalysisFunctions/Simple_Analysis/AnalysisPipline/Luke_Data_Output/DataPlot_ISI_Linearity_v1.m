@@ -21,7 +21,7 @@
 clear;
 
 %% ================= USER SETTINGS ============================
-mat_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Luke_Data/DX023_10uA_v1/DX023_10uA_Export.mat';
+mat_path = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Luke_Data/DX023_10uA_v2/DX023_10uA_Export.mat';
 
 FilterSets = [];   % Set number(s), e.g. [2]; [] = all Sets in the file
 FilterAmps = [];   % Amplitude(s) in uA; [] = all
@@ -128,8 +128,9 @@ for si = 1:numel(Paired)
 
     xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold');
     ylabel('Ratio (Actual / Predicted Linear Sum)', 'FontWeight','bold');
-    title(sprintf('Set %d (Electrodes %s) -- Linearity Ratio', ...
-        setEntry.SetNumber, num2str(setEntry.Electrodes)), 'FontWeight','bold');
+    ylim([0.5 1.4]);
+    title(sprintf('Set %d -- Linearity Ratio', ...
+        setEntry.SetNumber), 'FontWeight','bold');
     box off; legend('Location','best','Box','off');
 
     %% ---- Plot B: Actual vs ISI, with predicted lines overlaid ----
@@ -150,8 +151,8 @@ for si = 1:numel(Paired)
     end
 
     xlabel('Inter-Stimulus Interval (ms)', 'FontWeight','bold');
-    ylabel('Mean Net Spike Count / Trial', 'FontWeight','bold');
-    title(sprintf('Set %d (Electrodes %s) -- Actual vs Predicted', ...
-        setEntry.SetNumber, num2str(setEntry.Electrodes)), 'FontWeight','bold');
+    ylabel('Baseline corrected spike count / Trial', 'FontWeight','bold');
+    ylim([0.5 1.4]);
+    title(sprintf('Set %d -- Actual vs Predicted', setEntry.SetNumber), 'FontWeight','bold');
     box off; legend('Location','best','Box','off');
 end

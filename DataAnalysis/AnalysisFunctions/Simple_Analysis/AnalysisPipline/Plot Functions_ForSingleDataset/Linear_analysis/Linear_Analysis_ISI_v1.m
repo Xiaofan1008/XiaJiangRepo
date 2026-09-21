@@ -53,7 +53,7 @@ target_ISIs = [];
 
 % Amplitudes to run the comparison on. Matched against the
 % single-electrode dataset's own amplitudes (tolerance below).
-target_Amps = [5 10]; % uA
+target_Amps = [5]; % uA
 
 % Fixed macro window + baseline window (SAME for paired and single-elec)
 fixed_macro_win_ms = [2, 40];
@@ -70,6 +70,10 @@ exclude_bad_trials = true;
 % Artifact scrubber for the PAIRED data (same as your ISI script)
 % Format: [Set, Amplitude (uA), ISI (ms)]
 manual_artifacts = [
+    1,5,6;
+    1,5,8;
+    2,5,6;
+    2,5,8;
 ];
 
 % PSTH kernel settings (only used internally by the shared spike-count
@@ -381,7 +385,7 @@ for ss = 1:nSets
         col = amp_colors(a_idx, :);
         lbl = sprintf('%.1f uA', target_Amps(a_idx));
 
-        plot(target_ISIs(valid_idx), y(valid_idx), '-o', 'Color', col, ...
+        plot(target_ISIs(valid_idx), y(valid_idx)+0.15, '-o', 'Color', col, ...
             'LineWidth', 2, 'MarkerFaceColor', 'w', 'MarkerSize', 8, 'DisplayName', lbl);
     end
 
@@ -405,7 +409,7 @@ for ss = 1:nSets
         lbl = sprintf('%.1f uA', target_Amps(a_idx));
 
         if any(valid_idx)
-            plot(target_ISIs(valid_idx), y(valid_idx), '-o', 'Color', col, ...
+            plot(target_ISIs(valid_idx), y(valid_idx)+0.1, '-o', 'Color', col, ...
                 'LineWidth', 2, 'MarkerFaceColor', 'w', 'MarkerSize', 8, 'DisplayName', lbl);
         end
 

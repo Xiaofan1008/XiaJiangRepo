@@ -19,6 +19,8 @@ switch caseType
         p = 5; % single shank flex
     case 2
         p = 6; % four shank flex
+    case 3                   
+        p = 7; % 64chn+32chn hybrid 
     otherwise
         error('Invalid caseType. Use 0 (rigid), 1 (flex), or 2 (4-shank flex).');
 end

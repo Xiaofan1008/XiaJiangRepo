@@ -97,8 +97,8 @@ file_paths = {
 
 % Plot Settings
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Total_Spike_Count';
-fig_name    = 'Total_Spike_Count_SignedRank_v5_Larger.png';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_2/Total_Spike_Count';
+fig_name    = 'Total_Spike_Count_SignedRank_v1_Larger.png';
 
 %% ================= 2. AGGREGATE DATA =================
 fprintf('Processing %d datasets...\n', length(file_paths));
@@ -226,7 +226,7 @@ for k = 1:length(Unique_Amps)
     if ~isempty(txt)
         y_top = max(mean(data_s)+std(data_s)/sqrt(n_pairs), mean(data_q)+std(data_q)/sqrt(n_pairs));
         % [MODIFIED 2] Reduced star font size to 10pt (so they don't look massive) and changed to Arial
-        text(amp, y_top + 0.15, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
+        text(amp, y_top + 0.15, txt, 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
         fprintf('Amp %.1f: MARKED with %s (p=%.10f, Diff=%.3f)\n', amp, txt, p, mean_diff);
     else
         fprintf('Amp %.1f: Not Significant (p=%.10f)\n', amp, p);
@@ -237,19 +237,21 @@ end
 box off; 
 
 % Changed axes font to Arial 9pt, and thinned axis LineWidth to 1.0
-set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
+set(gca, 'FontSize', 14, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
 axis square;
 
 % Changed X/Y labels to Arial 9pt
-xlabel('Amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
-ylabel('Normalized Spike Count (a.u.)', 'FontSize', 12,  'FontName', 'Arial');
+% xlabel('Amplitude (µA)', 'FontSize', 16, 'FontName', 'Arial');
+% ylabel('Normalized Spike Count (a.u.)', 'FontSize', 16,  'FontName', 'Arial');
 
 % Changed legend to Arial 9pt
-legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 10, 'FontName', 'Arial');
+legend([p1, p2], 'Location','northwest', 'Box','off', 'FontSize', 14, 'FontName', 'Arial');
 
 xlim([0, max(Unique_Amps)]);
+xticks([0 2 4 6 8 10]);
 ylim([0 2]); 
-set(gca, 'YTick', 0 : 0.4 : 2);
+ytick([0 0.4 0.8 1.2 1.6 2.0])
+% set(gca, 'YTick', 0 : 0.4 : 2);
 
 % Upgraded save engine to 300 DPI TIFF export
 if save_figure

@@ -3,9 +3,9 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/CJ280/Xia_Train_SimSeq1';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX035/Xia_100um_SimSeq2_260924_163252';
 
-channels_to_plot = 15:20;                % channels to plot (Depth_s index)
+channels_to_plot = 55:56;                % channels to plot (Depth_s index)
 amps_to_plot     = [10];                 % amplitudes to include (µA)
 ptd_to_plot      = [];                  % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
@@ -13,12 +13,12 @@ sets_to_plot     = [];                  % stimulation sets, [] means all
 nTrials_to_plot  = 30;                  % how many trials to draw per condition
 plot_window_ms   = [-5 25];             % window around trigger
 
-Electrode_Type   = 2;                   % 0 rigid, 1 flex, 2 4-shank flex
+Electrode_Type   = 3;                   % 0 rigid, 1 flex, 2 4-shank flex
 
 % 'raw'  = amplifier.dat
 % 'dn'   = amplifier_dn_sab.dat   (denoised)
 % 'mu'   = <base_name>.mu_sab.dat (filtered / MUA)
-trace_type = 'raw';    % raw trace
+trace_type = 'dn';    % raw trace
 % trace_type = 'dn';    % artifact blanked trace
 % trace_type = 'mu';    % bandpass filtered trace
 

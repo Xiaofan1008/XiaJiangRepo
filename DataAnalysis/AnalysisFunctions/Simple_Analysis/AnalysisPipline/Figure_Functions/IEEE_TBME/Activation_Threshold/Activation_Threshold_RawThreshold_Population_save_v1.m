@@ -71,7 +71,7 @@ Target_Thresh = 0.45;
 
 % [MODIFIED] Save Settings
 save_figure = false;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_2/Activation_Threshold';
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_2/Activation_Threshold';
 save_name = 'Threshold_Unity_Scatter_RawSpike_0.5';
 
 % Plot Settings
@@ -173,11 +173,11 @@ plot([0 max_val], [0 max_val], 'k--', 'LineWidth', 1.5, 'HandleVisibility', 'off
 scatter(Thresh_Sim_Pool, Thresh_Seq_Pool, dot_size, dot_color, 'filled', ...
     'MarkerFaceAlpha', dot_alpha,'MarkerEdgeColor', 'none');
 
-text(max_val*0.22, max_val*0.74,sprintf('Sim. lower: %.1f%%', pct_seq_higher), ...
-    'FontName', 'Arial','FontSize', 12,'HorizontalAlignment', 'center');
-
-text(max_val*0.65, max_val*0.20,sprintf('Seq. lower: %.1f%%', pct_seq_lower), ...
-    'FontName', 'Arial','FontSize', 12,'HorizontalAlignment', 'center');
+% text(max_val*0.22, max_val*0.74,sprintf('Sim. lower: %.1f%%', pct_seq_higher), ...
+%     'FontName', 'Arial','FontSize', 14,'HorizontalAlignment', 'center');
+% 
+% text(max_val*0.65, max_val*0.20,sprintf('Seq. lower: %.1f%%', pct_seq_lower), ...
+%     'FontName', 'Arial','FontSize', 14,'HorizontalAlignment', 'center');
 
 % Significance Formatting
 % if p_val < 0.001, star = '***'; elseif p_val < 0.01, star = '**'; elseif p_val < 0.05, star = '*'; else, star = 'n.s.'; end
@@ -192,13 +192,13 @@ elseif p_val < 0.05
 else
     stat_text = 'n.s.';
 end
-text(max_val * 0.05, max_val * 0.95, stat_text, 'FontSize', 10, 'FontName', 'Arial');
+text(max_val * 0.05, max_val * 0.95, stat_text, 'FontSize', 12, 'FontName', 'Arial');
 
 
 axis square; box off;
-set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
-xlabel('Simultaneous threshold (µA)','FontSize', 12, 'FontName', 'Arial'); 
-ylabel('Sequential threshold (µA)','FontSize', 12, 'FontName', 'Arial');
+set(gca, 'FontSize', 14, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
+% xlabel('Simultaneous threshold (µA)','FontSize', 12, 'FontName', 'Arial'); 
+% ylabel('Sequential threshold (µA)','FontSize', 12, 'FontName', 'Arial');
 xlim([0 max_val]); ylim([0 max_val]);
 xticks(0:2:max_val); yticks(0:2:max_val);
 hold off;

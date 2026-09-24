@@ -8,6 +8,7 @@ E_MAP(1,3) = {'I-Series NN'};
 E_MAP(1,4)={'2 Shank I-Series NN'};
 E_MAP(1,5)={'FLEXIBLE I-Series NN'};
 E_MAP(1,6)={'4SHANK FLEXIBLE I-Series NN'};
+E_MAP(1,7)={'64chn+32chn HYBRID I-Series NN'}; 
 
 
 MOLC_MALE = [32,30,31,28,29,27,25,22,23,21,17,18,19,20,24,26,1,4,13,14,15,16,12,10,8,6,2,3,5,7,9,11];
@@ -95,4 +96,32 @@ for n = 1:128
     E_MAP(n+1,6) = {temp};
     
 end 
+
+for n = 1:96
+    if n<33
+        T=NN_flexible_4SHANKA(n);
+        if (T < 10)
+            temp = strcat('A-00',num2str(T));
+        else
+            temp = strcat('A-0',num2str(T));
+        end
+    elseif n<65
+        T=NN_flexible_4SHANKB(n-32);
+        if (T < 10)
+            temp = strcat('B-00',num2str(T));
+        else
+            temp = strcat('B-0',num2str(T));
+        end
+    else
+        T=NN_flexible(n-64);
+        if (T < 10)
+            temp = strcat('C-00',num2str(T));
+        else
+            temp = strcat('C-0',num2str(T));
+        end
+    end
+    E_MAP(n+1,7) = {temp};
+end
+
+
 end

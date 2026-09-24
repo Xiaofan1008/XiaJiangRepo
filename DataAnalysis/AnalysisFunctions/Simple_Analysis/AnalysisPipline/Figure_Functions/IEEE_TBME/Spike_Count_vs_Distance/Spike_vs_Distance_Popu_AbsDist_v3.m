@@ -69,7 +69,7 @@ min_n_threshold  = 5;
 
 % --- C. Plot Settings ---
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_2/SpikeCount_vs_Distance';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_2/SpikeCount_vs_Distance';
 
 %% ================= PRE-SCAN: FIND ALL AMPLITUDES =================
 fprintf('Scanning datasets to dynamically find all unique amplitudes...\n');
@@ -342,12 +342,12 @@ for aa = 1:length(Unique_Amps)
             'FontName', 'Arial');
     end
 
-    box off; set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
-    xlabel('Distance (µm)','FontSize', 12, 'FontName', 'Arial'); 
-    ylabel('Normalized Spike Count (a.u.)','FontSize', 12, 'FontName', 'Arial');
+    box off; set(gca, 'FontSize', 14, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
+    % xlabel('Distance (µm)','FontSize', 12, 'FontName', 'Arial'); 
+    % ylabel('Normalized Spike Count (a.u.)','FontSize', 12, 'FontName', 'Arial');
     % title(sprintf('Shaded Line Cloud (%.1f \\muA)', target_amp));
     % legend('Location', 'northeast', 'Box', 'off', 'FontSize', 8);
-    legend('Box', 'off', 'FontSize', 10);
+    legend('Box', 'off', 'FontSize', 14);
     
     xlim([200 700]);
     set(gca, 'XTick', 200:100:700); 

@@ -24,14 +24,22 @@ end
 if (NN_I)
     p = 3;
 end
-if nChn>=64
+% if nChn>=64
+%     p=6;
+if nChn==96
+    p=7;
+elseif nChn>=64
     p=6;
 elseif datetime(fileinfo.date) > Flex_cutoff
     p = 5;
 end
 if nargin==1
     E_Mapnumber=cell2mat(varargin(1));
-    if E_Mapnumber>0 || nChn>64
+    % if E_Mapnumber>0 || nChn>64
+    %     p=6;
+    if nChn==96
+        p=7;
+    elseif E_Mapnumber>0 || nChn>64
         p=6;
     elseif datetime(fileinfo.date) > Flex_cutoff
         p=5;

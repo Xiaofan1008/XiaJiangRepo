@@ -7,18 +7,18 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX023/Xia_ISI_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX035/Xia_150um_SimSeq2_260924_174921';
 
 %% Choice
 Spike_filtering = 0;
 raster_chn_start = 1;
 raster_chn_end = 32; %nChn
-Electrode_Type = 2; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
-PTD_to_plot = [5];   % e.g., [500 1000], empty for all PTD
+Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+PTD_to_plot = [0 5];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
 %% Spike Amplitude Filtering Parameters
-pos_limit = 100;    % upper bound (µV)
-neg_limit = -100;  % lower bound (µV)
+pos_limit = 500;    % upper bound (µV)
+neg_limit = -500;  % lower bound (µV)
 
 baseline_window_ms = [-60, -5];        % Baseline window (ms)
 response_window_ms = [2, 25];          % Response window (ms)

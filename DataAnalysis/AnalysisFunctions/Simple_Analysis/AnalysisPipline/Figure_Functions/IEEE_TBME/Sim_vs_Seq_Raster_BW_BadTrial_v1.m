@@ -6,14 +6,14 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % Plot Settings
 save_figure = false;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Figure2/Sim_vs_Seq_Raster';
-fig_name    = 'Sim_vs_Seq_Raster_DX011_S1_ch30_v2.tiff';
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure2/Sim_vs_Seq_Raster';
+fig_name    = 'Sim_vs_Seq_Raster_DX011_S1_ch29_v3.tiff';
 
 %% =============== USER SETTINGS ==============================
 folder_sim = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Sim1';
 folder_seq = '/Volumes/MACData/Data/Data_Xia/DX011/Xia_Exp1_Seq1_5ms';
 Electrode_Type   = 1;
-target_channels  = [25:32];
+target_channels  = [29:29];
 plot_amp         = 5;     % µA
 plot_PTD_ms      = 5;      % ms (Time of second pulse)
 stim_set_id_Sim = 1;      
@@ -206,11 +206,12 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     p1 = plot(ctrs, r_sim, 'k--', 'LineWidth', 2, 'DisplayName', 'Simultaneous');
     p2 = plot(ctrs, r_seq, 'k-',  'LineWidth', 2, 'DisplayName', 'Sequential');
     
-    ylabel('Firing rate (sp/s)', 'FontSize',12,'Color','k', 'FontName', 'Arial');
-    xlabel('Time (ms)', 'FontSize',12,'Color','k', 'FontName', 'Arial');
+    ylabel('Firing rate (sp/s)', 'FontSize',16,'Color','k', 'FontName', 'Arial');
+    xlabel('Time (ms)', 'FontSize',16,'Color','k', 'FontName', 'Arial');
     xlim(ras_win);
-    xticks(ras_win(1):10:ras_win(2)); 
-    
+    % xticks(ras_win(1):10:ras_win(2)); 
+    xticks([-30 -15 0 15 30]); 
+    yticks([0 100 200 300]); 
     yyaxis right
     
     ax_r = gca; 
@@ -282,10 +283,11 @@ function plot_overlay_figure(fig_num, type_str, r_sim, r_seq, sp_sim, sp_seq, ..
     set(gca, 'YColor', 'k');    
     set(gca, 'XColor', 'k');
     
-    set(gca, 'FontName', 'Arial', 'FontSize', 10, 'LineWidth', 1.2,'TickDir', 'out');
-    legend([p1, p2], 'Location', 'northwest', 'Box', 'off', 'FontName', 'Arial','FontSize', 10);
+    set(gca, 'FontName', 'Arial', 'FontSize', 14, 'LineWidth', 1.2,'TickDir', 'out');
+    % legend([p1, p2], 'Location', 'northwest', 'Box', 'off', 'FontName', 'Arial','FontSize', 10);
     % title(sprintf('Channel %d', ch), 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
     axis square;
+    ylim([0 300]);
     hold off;
 end
 

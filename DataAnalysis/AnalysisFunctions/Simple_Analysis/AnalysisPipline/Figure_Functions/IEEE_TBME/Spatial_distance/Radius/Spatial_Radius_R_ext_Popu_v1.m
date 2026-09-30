@@ -65,11 +65,9 @@ file_paths = {
     % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Radius/Result_Spatial_RawRadius_DX016_Xia_Exp1_Seq_Full_2.mat';
     % '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Radius/Result_Spatial_RawRadius_DX016_Xia_Exp1_Seq_Full_3.mat';
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Radius/Result_Spatial_RawRadius_DX016_Xia_Exp1_Seq_Full_4.mat';
-
-
     };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/Spatial_Radius';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_4/Spatial_Radius';
 save_figures = false; % Set to true to export .tiff files
 tiff_dpi     = 600;  % High resolution for publication
 
@@ -244,7 +242,7 @@ for i = 1:length(v_amps)
         y_max_local = max([sim_m(i)+sim_s(i), seq_m(i)+seq_s(i)]);
         % y_pos = y_max_local + (max(sim_m)*0.05); 
         y_pos = max([sim_m(i)+sim_s(i), seq_m(i)+seq_s(i)]) + (max(sim_m)*0.08); 
-        text(v_amps(i), y_pos, sig_str, 'FontSize', 10, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
+        text(v_amps(i), y_pos, sig_str, 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
     end
 end
 
@@ -260,16 +258,18 @@ end
 % --- IEEE FORMATTING ---
 
 
-set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 10, 'FontName', 'Arial');
-xlabel('Amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
-ylabel('Maximal active distance (µm)', 'FontSize', 12, 'FontName', 'Arial'); 
-lgd = legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
-lgd.Position(2) = 0.82;
-lgd.Position(1) = 0.15;
+set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 14, 'FontName', 'Arial');
+% xlabel('Amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+% ylabel('Maximal active distance (µm)', 'FontSize', 12, 'FontName', 'Arial'); 
+lgd = legend('Location', 'southeast', 'Box', 'off', 'FontSize', 14, 'FontName', 'Arial');
+lgd.Position(2) = 0.15;
+lgd.Position(1) = 0.45;
 % xlim([0, max(v_amps)+1]); 
 % ylim([0, 550]);
 xlim([0, 10]); 
 ylim([0, 450]);
+yticks([0 50 150 250 350 450]);
+xticks([0:2:10]);
 axis square;
 
 % --- SAVE TIFF ---

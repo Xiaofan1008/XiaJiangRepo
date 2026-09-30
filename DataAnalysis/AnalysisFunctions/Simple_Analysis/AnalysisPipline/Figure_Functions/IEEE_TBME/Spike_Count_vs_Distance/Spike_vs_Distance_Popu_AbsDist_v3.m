@@ -69,7 +69,7 @@ min_n_threshold  = 5;
 
 % --- C. Plot Settings ---
 save_figure = false;
-save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_2/SpikeCount_vs_Distance';
+save_dir    = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_3/SpikeCount_vs_Distance';
 
 %% ================= PRE-SCAN: FIND ALL AMPLITUDES =================
 fprintf('Scanning datasets to dynamically find all unique amplitudes...\n');

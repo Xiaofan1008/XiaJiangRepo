@@ -2,8 +2,8 @@
 %  + separate threshold settings per probe (and per channel if needed)
 %  + rejection of bad trials, judged separately for each probe
 close all; clear all; clc;
-filename = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1/Xia_Linearity_250um_SimSeq1.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1/Xia_Linearity_250um_SimSeq1.sp.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_Single1_260929_155142/Xia_Linearity_600_700um_Single1.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_Single1_260929_155142/Xia_Linearity_600_700um_Single1.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive
@@ -346,19 +346,20 @@ if show_trial_figure
 end
 
 %% -------- Standard-format outputs for the rest of the pipeline --------
-% sp: cell array indexed by PHYSICAL recording channel (the same
+% sp_clipped: cell array indexed by PHYSICAL recording channel (the same
 % convention used everywhere else), spike times in ms, ALL trials (not
-% only the good ones) -- this is what Plot_Raster_Seq_PTDVeried.m and
-% the other scripts look for when they load a *.sp.mat file and check
-% for a variable called 'sp'.
-% NOTE: this detector doesn't keep spike waveform snippets, so sp{ch} is
-% Nx1 (spike times only). Anything reading sp{ch}(:,1) works fine;
-% anything reading sp{ch}(:,2:end) for waveform-based filtering will
-% find nothing there.
-sp = cell(1, nChannels);
+% only the good ones) -- this is the variable name + file
+% (*.sp_xia.mat) the raster/PSTH script and the rest of the later
+% pipeline actually read, so it's written directly here rather than via
+% an intermediate *.sp.mat file.
+% NOTE: this detector doesn't keep spike waveform snippets, so
+% sp_clipped{ch} is Nx1 (spike times only). Anything reading
+% sp_clipped{ch}(:,1) works fine; anything reading sp_clipped{ch}(:,2:end)
+% for waveform-based filtering will find nothing there.
+sp_clipped = cell(1, nChannels);
 for e_number = 1:nChannels
     ch = map_nums_plus(e_number);
-    sp{ch} = locs_all{e_number}(:) / fs * 1000;   % samples -> ms
+    sp_clipped{ch} = locs_all{e_number}(:) / fs * 1000;   % samples -> ms
 end
 
 % BadTrials: cell array indexed by PHYSICAL recording channel, listing
@@ -374,29 +375,18 @@ for e_number = 1:nChannels
 end
 
 % -------- Save once at end --------
-% saveFile (*.sp.mat) now also contains 'sp' in the standard format, so
-% it can be loaded directly by the rest of the pipeline -- e.g.
-% Plot_Raster_Seq_PTDVeried.m's dir('*.sp.mat') + isfield(S,'sp') check
-% -- with no changes needed to those other scripts. AllSpikes (with the
-% richer per-probe QC info) stays in the same file too.
-save(saveFile, 'sp', 'AllSpikes', 'fs', 'pre_ms', 'post_ms', 'stim_dur_ms', ...
+% saveFile is now *.sp_xia.mat directly -- the file and variable name
+% ('sp_clipped') the raster/PSTH script and the rest of the later
+% pipeline actually read, so no separate *.sp.mat file is written or
+% needed. AllSpikes (with the richer per-probe QC info) is saved
+% alongside it in the same file for reference.
+save(saveFile, 'sp_clipped', 'AllSpikes', 'fs', 'pre_ms', 'post_ms', 'stim_dur_ms', ...
      'good_trials_probe', 'trial_bad_probe', 'tb_art', 'tb_noise', 'tb_spk', 'tr_idx', ...
      'probe_names', 'probe_elecs', 'coeff_ch', 'thr_ch', 'threshold_method', '-v7.3');
-fprintf('All spike data (including standard-format "sp") saved to %s\n', saveFile);
-
-% -------- Also save in the format/variable name the raster/PSTH script
-% (and the rest of your later pipeline) expects, so that script no
-% longer needs to run first just to produce this file. sp_clipped here
-% is an exact copy of sp -- this detector has no spike waveforms to run
-% any further (amplitude/SSD/correlation) filtering on, so there is
-% nothing to actually "clip" at this stage.
-sp_clipped = sp; %#ok<NASGU>
-spXiaFile = strrep(saveFile, '.sp.mat', '.sp_xia.mat');
-save(spXiaFile, 'sp_clipped', '-v7.3');
-fprintf('Spike data also saved in pipeline format to %s\n', spXiaFile);
+fprintf('All spike data (including pipeline-format "sp_clipped") saved to %s\n', saveFile);
 
 % Bad trials saved separately, in the *.BadTrials.mat convention already
 % used elsewhere in the pipeline.
-badTrialsFile = strrep(saveFile, '.sp.mat', '.BadTrials.mat');
+badTrialsFile = strrep(saveFile, '.sp_xia.mat', '.BadTrials.mat');
 save(badTrialsFile, 'BadTrials', '-v7.3');
 fprintf('Bad-trial list (standard format) saved to %s\n', badTrialsFile);

@@ -3,10 +3,10 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_300_500um_SimSeq1';
 
-channels_to_plot = 49;                % channels to plot (Depth_s index)
-amps_to_plot     = [];                 % amplitudes to include (µA)
+channels_to_plot = 55:56;                % channels to plot (Depth_s index)
+amps_to_plot     = [10];                 % amplitudes to include (µA)
 ptd_to_plot      = [];                  % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
 
@@ -73,12 +73,26 @@ trig = loadTrig(0);
 %% ====================== LOAD StimParams ======================
 fDIR = dir('*_exp_datafile_*.mat');
 assert(~isempty(fDIR),'No *_exp_datafile_*.mat found.');
-S = load(fDIR(1).name, 'StimParams','simultaneous_stim','E_MAP','n_Trials');
+S = load(fDIR(1).name, 'StimParams','simultaneous_stim','E_MAP','n_Trials','rand_order');
 
 StimParams        = S.StimParams;
 simultaneous_stim = S.simultaneous_stim;
 n_Trials          = S.n_Trials;
 E_MAP             = S.E_MAP;
+
+%% ====================== TRIAL <-> trig() ALIGNMENT ======================
+% This recording's very first real trigger (true trial 1) never got
+% detected on the digital line at all -- confirmed via
+% check_dropped_first_trigger.m / find_earlier_missing_trigger.m (no
+% doubled gap anywhere, because a missing FIRST pulse leaves no gap to
+% detect against). That means trig(k) in this file actually holds true
+% trial (k+1)'s trigger, for every k. trigOffset = -1 corrects for this:
+% start_idx below uses trig(tr + trigOffset) = trig(tr - 1).
+%
+% Trial 1 itself has no recoverable raw data (there is no trig(0)) and is
+% skipped automatically below if it ever shows up in a condition's trial
+% list.
+trigOffset = -1;
 
 %% ====================== AMPLITUDES ======================
 trialAmps_all = cell2mat(StimParams(2:end,16));
@@ -190,13 +204,19 @@ for ich = 1:length(channels_to_plot)
 
                 if isempty(tlist), continue; end
                 tlist = tlist(1:min(nTrials_to_plot, numel(tlist)));
+                fprintf('Set %d (%s) | %d uA | PTD %g ms | trials = %s\n',set_id, set_label, amp_val, ptd_val/1000, mat2str(tlist));
 
                 subplot(nRows, nCols, i_ptd); hold on
 
                 for k = 1:numel(tlist)
                     tr = tlist(k);
-                    start_idx = trig(tr) + samp_win(1);
-                    byte_pos  = start_idx * nChn * 2;
+                    trigIdx = tr + trigOffset;
+                    if trigIdx < 1 || trigIdx > numel(trig)
+                        fprintf('Skipping trial %d: no valid trig() entry at index %d (likely trial 1, which has no recoverable trigger in this recording).\n', tr, trigIdx);
+                        continue;
+                    end
+                    start_idx  = trig(trigIdx) + samp_win(1);
+                    byte_pos   = start_idx * nChn * 2;
 
                     fseek(fid, byte_pos, 'bof');
                     data_block = fread(fid, [nChn, Nsamp], 'int16') * 0.195;

@@ -3,10 +3,10 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_300_500um_SimSeq1';
 
-channels_to_plot = 49;                % channels to plot (Depth_s index)
-amps_to_plot     = [];                 % amplitudes to include (µA)
+channels_to_plot = 55:56;                % channels to plot (Depth_s index)
+amps_to_plot     = [10];                 % amplitudes to include (µA)
 ptd_to_plot      = [];                  % PTDs (ms), [] means all
 sets_to_plot     = [];                  % stimulation sets, [] means all
 
@@ -73,12 +73,44 @@ trig = loadTrig(0);
 %% ====================== LOAD StimParams ======================
 fDIR = dir('*_exp_datafile_*.mat');
 assert(~isempty(fDIR),'No *_exp_datafile_*.mat found.');
-S = load(fDIR(1).name, 'StimParams','simultaneous_stim','E_MAP','n_Trials');
+S = load(fDIR(1).name, 'StimParams','simultaneous_stim','E_MAP','n_Trials','rand_order');
 
 StimParams        = S.StimParams;
 simultaneous_stim = S.simultaneous_stim;
 n_Trials          = S.n_Trials;
 E_MAP             = S.E_MAP;
+
+%% ====================== DE-RANDOMIZE TRIAL ORDER ======================
+% StimParams lists trials in TABLE order (trial 1, 2, 3, ... as written to
+% the experiment file). The hardware, however, may have delivered them in
+% a SHUFFLED order recorded in rand_order (a permutation of the StimParams
+% row indices, grouped in consecutive blocks of `simultaneous_stim` rows
+% per trial). trig(k) is the k-th trigger actually recorded, i.e. it is in
+% DELIVERY order, not StimParams table order. If we index trig() directly
+% by a StimParams trial number without correcting for this, we silently
+% pull a completely different trial's raw data.
+%
+% trigSlotForTrial(tr) tells you which position in trig() holds the
+% trigger for StimParams trial tr. Use trig(trigSlotForTrial(tr)),
+% never trig(tr) directly.
+if isfield(S,'rand_order') && ~isempty(S.rand_order)
+    rand_order   = double(S.rand_order(:)');
+    firstRowOfDeliveredTrial = rand_order(1:simultaneous_stim:end);      % 1st StimParams row of each trial, in DELIVERY order
+    deliveredTrial           = (firstRowOfDeliveredTrial - 1) / simultaneous_stim + 1;  % -> StimParams trial number
+
+    if numel(deliveredTrial) ~= n_Trials || ~isequal(sort(deliveredTrial), 1:n_Trials)
+        warning(['rand_order did not decode into a clean 1:n_Trials permutation -- ' ...
+            'falling back to identity trial order (trig(tr) used as-is). ' ...
+            'Please double-check this file''s rand_order convention.']);
+        trigSlotForTrial = 1:n_Trials;
+    else
+        trigSlotForTrial = zeros(1, n_Trials);
+        trigSlotForTrial(deliveredTrial) = 1:n_Trials;   % invert: StimParams trial -> delivery slot
+    end
+else
+    warning('No rand_order found in the exp datafile -- assuming trials were delivered in StimParams table order.');
+    trigSlotForTrial = 1:n_Trials;
+end
 
 %% ====================== AMPLITUDES ======================
 trialAmps_all = cell2mat(StimParams(2:end,16));
@@ -195,8 +227,9 @@ for ich = 1:length(channels_to_plot)
 
                 for k = 1:numel(tlist)
                     tr = tlist(k);
-                    start_idx = trig(tr) + samp_win(1);
-                    byte_pos  = start_idx * nChn * 2;
+                    trigSlot   = trigSlotForTrial(tr);   % StimParams trial -> actual delivery slot in trig()
+                    start_idx  = trig(trigSlot) + samp_win(1);
+                    byte_pos   = start_idx * nChn * 2;
 
                     fseek(fid, byte_pos, 'bof');
                     data_block = fread(fid, [nChn, Nsamp], 'int16') * 0.195;

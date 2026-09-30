@@ -27,10 +27,10 @@ target_amp  = 10;
 
 % ---- select channels to plot ----
 plot_all_responsive_channels = false;   % true = plot all responsive channels
-Plot_Channels = [19];                % only used when plot_all_responsive_channels = false
+Plot_Channels = [20];                % only used when plot_all_responsive_channels = false
 
 % ---- plotting windows ----
-ras_win       = [-45 45];      
+ras_win       = [-25 35];      
 bin_ms_raster = 1; 
 smooth_ms     = 6;             
 
@@ -39,8 +39,8 @@ smooth_ms     = 6;
 Plot_PTDs = [];    
 
 % ---- export settings ----
-save_figures   = true;
-save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_5/ISI_PSTH_Raster/DX021_Ch19_LargeFontNoLabel';
+save_figures   = false;
+save_dir       = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_5/ISI_PSTH_Raster/DX021_Ch20_Win25_35ms_NoXYLabel';
 tiff_dpi       = 600;
 
 % ---- figure title settings ----
@@ -48,12 +48,12 @@ show_figure_title = false;     % true = show title in figure, false = no title
 title_fontsize    = 7;
 
 % ---- paper figure formatting ----
-fig_width_cm   = 5.0;
+fig_width_cm   = 3.6;
 fig_height_cm  = 3.8;
 font_name      = 'Arial';
-axis_fontsize  = 10;
-label_fontsize = 11;
-axis_linewidth = 1.0;
+axis_fontsize  = 14;
+label_fontsize = 14;
+axis_linewidth = 1.2;
 fig_bg_color   = 'w';
 
 % ---- plotting style settings ----
@@ -421,7 +421,8 @@ for target_set = sets_to_plot
             if jj == 1
                 yyaxis(ax,'left');
                 % yticks(ax,[0 250]);
-                yticks([0 50 150 250]);
+                % yticks([0 50 150 250]);
+                yticks(ax,[]);
                 ylabel(ax,'');
                 % ylabel(ax,'Firing rate (sp/s)','FontSize',11,'FontName','Arial');
             else
@@ -437,7 +438,8 @@ for target_set = sets_to_plot
             xlim(ax, ras_win); 
             % ylim(ax, [0 yMaxPSTH]); 
             ylim(ax, [0 250]);
-            xticks([-35 0 35]);
+            % xticks([-25 0 25]);
+            xticks([]);
             % yticks([]);
             % ylabel(ax,'Rate (sp/s)', 'FontSize', label_fontsize, 'FontName', font_name);
             
@@ -476,7 +478,7 @@ for target_set = sets_to_plot
                     'LineWidth', axis_linewidth, ...
                     'TickDir', 'out');
             box(ax,'off');
-            axis(ax,'square');
+            % axis(ax,'square');
             
             % =====================================================
             % SAVE FIGURE

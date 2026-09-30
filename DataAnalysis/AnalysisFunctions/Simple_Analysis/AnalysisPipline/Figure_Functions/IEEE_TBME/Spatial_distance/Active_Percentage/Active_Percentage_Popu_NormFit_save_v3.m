@@ -65,7 +65,7 @@ file_paths = {
 };
 
 save_figs = false; 
-save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/Active_Percentage';
+save_dir  = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_4/Active_Percentage';
 
 %% =================== 1. AGGREGATE POOLED DATA =================
 fprintf('Pooling Potency data from %d datasets...\n', length(file_paths));
@@ -165,12 +165,12 @@ else, anova_star = 'n.s.'; end
 % --- Common IEEE Formatting Settings ---
 fig_Width = 9;  % IEEE single column width in cm
 fig_Height = 9; % Square aspect ratio
-fSize = 10;        % IEEE standard font size
-fLabel = 12;
+fSize = 14;        % IEEE standard font size
+fLabel = 6;
 fName_Font = 'Arial';
 
 % --- PANEL 1: Standard Normalization ---
-figure('Color','w', 'Units', 'centimeters', 'Position', [2, 5, fig_Width, fig_Height], 'Name', 'Panel_A_Standard');
+figure('Color','w', 'Units', 'centimeters', 'Position', [5, 5, fig_Width, fig_Height], 'Name', 'Panel_A_Standard');
 hold on;
 % errorbar(sum_amps, mSimStd(:,1), mSimStd(:,2), '--ok', 'LineWidth', 1, 'MarkerFaceColor','w', 'DisplayName', 'Simultaneous');
 % errorbar(sum_amps, mSeqStd(:,1), mSeqStd(:,2), '-sk', 'LineWidth', 1, 'MarkerFaceColor','k', 'DisplayName', 'Sequential');
@@ -179,16 +179,17 @@ errorbar(sum_amps, mSimStd(:,1)*100, mSimStd(:,2)*100, '--ok', 'LineWidth', 2, '
 errorbar(sum_amps, mSeqStd(:,1)*100, mSeqStd(:,2)*100, '-sk', 'LineWidth', 2, 'MarkerFaceColor','k','MarkerSize',7, 'DisplayName', 'Sequential');
 
 % title('Standard (Max-Scaled)', 'FontName', fName_Font, 'FontSize', fSize); 
-set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2);
-ylabel('Normalized active percentage (%)', 'FontName', fName_Font, 'FontSize', fLabel); 
-xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fLabel);
+set(gca, 'FontSize', 14, 'FontName', 'Arial', 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2);
+% ylabel('Normalized active percentage (%)', 'FontName', fName_Font, 'FontSize', fLabel); 
+% xlabel('Amplitude (µA)', 'FontName', fName_Font, 'FontSize', fLabel);
 
 grid off; axis square;
 add_sig_stars(sum_amps, mSimStd(:,1), mSeqStd(:,1), mSeqStd(:,2), p_std);
-legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10,'FontName', 'Arial');
+legend('Location', 'northwest', 'Box', 'off', 'FontSize', 14,'FontName', 'Arial');
+xticks([0:2:10]);
 
 % --- PANEL 2: Delta Change (Naka-Rushton Fit) ---
-figure('Color','w', 'Units', 'centimeters', 'Position', [12, 5, fig_Width, fig_Height], 'Name', 'Panel_B_Delta');
+figure('Color','w', 'Units', 'centimeters', 'Position', [5, 5, fig_Width, fig_Height], 'Name', 'Panel_B_Delta');
 hold on;
 % Calculate Naka-Rushton Fit (Bio-Inspired Sigmoid)
 % Response = (alpha * x^beta) / (x^beta + gamma^beta)
@@ -295,7 +296,7 @@ function add_sig_stars(x, y1, y2, y2_err, pvals)
         if ~isempty(txt)
             % y_max = max(y1(i), y2(i) + y2_err(i));
             y_max = max(y1(i)*100, (y2(i) + y2_err(i))*100);
-            text(x(i), y_max * 1.05, txt, 'FontSize', 9, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+            text(x(i), y_max * 1.05, txt, 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
         end
     end
 end

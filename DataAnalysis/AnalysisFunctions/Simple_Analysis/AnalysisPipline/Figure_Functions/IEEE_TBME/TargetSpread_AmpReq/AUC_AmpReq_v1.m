@@ -71,7 +71,7 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Spatial_Radius/Result_Spatial_RawRadius_DX016_Xia_Exp1_Seq_Full_4.mat';
 };
 
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_4/TargetSpread_AmpReq';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_4/TargetSpread_AmpReq';
 save_figures = false;
 tiff_dpi     = 600;
 
@@ -418,17 +418,20 @@ for k = 1:length(Unique_Targets)
     end
 end
 
-set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 9, 'FontName', 'Arial');
+set(gca, 'TickDir', 'out', 'Box', 'off', 'LineWidth', 1.2, 'FontSize', 14, 'FontName', 'Arial');
 
-xlabel('Matched effective spread index (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
-ylabel('Required amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
-legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
+% xlabel('Matched effective spread index (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
+% ylabel('Required amplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+legend([p1, p2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 14, 'FontName', 'Arial');
 % xlim([min(Unique_Targets)-10, max(Unique_Targets)+10]);
 xlim([0, max(Unique_Targets)]);
+xticks([0:100:400]);
 % set(gca, 'XTick', Unique_Targets);
-set(gca, 'XTick', Plot_Targets);
+% set(gca, 'XTick', Plot_Targets);
 % ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]) + 1)]);
-ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]))]);
+% ylim([0, ceil(max([Grand_Target_Sim_Mean + Grand_Target_Sim_SEM, Grand_Target_Seq_Mean + Grand_Target_Seq_SEM]))]);
+ylim([0 10]);
+yticks([0,2,4,6,8,10])
 
 axis square;
 

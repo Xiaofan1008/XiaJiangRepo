@@ -61,8 +61,8 @@ file_paths = {
 };
 
 % Plot Settings
-save_figures = true;
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/Duration_AmpRequired_v3_StaticAdd';
+save_figures = false;
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_3/Duration_AmpRequired_v3_StaticAdd';
 
 % --- Black and White Settings ---
 color_sim    = 'k'; 
@@ -549,7 +549,7 @@ end
 
 
 %% ================= 6. PLOT 3: REQUIRED AMPLITUDE AT SELECTED MATCHED DURATIONS =================
-figure('Color','w', 'Units', 'centimeters', 'Position', [15, 5, 9, 9], 'Name', 'SelectedMatchedDuration_RequiredAmplitude'); hold on;
+figure('Color','w', 'Units', 'centimeters', 'Position', [5, 5, 9, 9], 'Name', 'SelectedMatchedDuration_RequiredAmplitude'); hold on;
 
 jitter_w = 0.20;
 for i = 1:size(Pool_Seq_Target, 1)
@@ -599,7 +599,7 @@ for k = 1:length(Unique_Targets)
     if ~isempty(txt)
         y_top = max(Grand_Target_Sim_Mean(k) + Grand_Target_Sim_SEM(k), ...
                     Grand_Target_Seq_Mean(k) + Grand_Target_Seq_SEM(k));
-        text(target_val, y_top + 0.30, txt, 'FontSize', 10, ...
+        text(target_val, y_top + 0.30, txt, 'FontSize', 12, ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontName', 'Arial');
         fprintf('Duration %.1f ms: MARKED with %s (p=%.5f)\n', target_val, txt, p);
     else
@@ -608,11 +608,11 @@ for k = 1:length(Unique_Targets)
 end
 
 
-set(gca, 'FontSize', 10, 'FontName', 'Arial', 'LineWidth', 1.2, 'TickDir', 'out');
+set(gca, 'FontSize', 14, 'FontName', 'Arial', 'LineWidth', 1.2, 'TickDir', 'out');
 
-ylabel('Required 1mplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
-xlabel('Matched duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
-legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
+% ylabel('Required 1mplitude (µA)', 'FontSize', 12, 'FontName', 'Arial');
+% xlabel('Matched duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
+legend([p4, p5], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 14, 'FontName', 'Arial');
 
 xlim([min(Unique_Targets), max(target_durations)]);
 set(gca, 'XTick', 4:1:max(target_durations));

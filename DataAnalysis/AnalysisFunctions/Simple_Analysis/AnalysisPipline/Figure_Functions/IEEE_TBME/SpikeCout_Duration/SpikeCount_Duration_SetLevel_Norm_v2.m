@@ -87,8 +87,8 @@ file_paths = {
 
 };
 
-save_figures = true;
-save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/SpikeCount_Duration';
+save_figures = false;
+save_dir = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_3/SpikeCount_Duration';
 dot_size = 18;
 jitter_w = 0.10;
 
@@ -453,10 +453,10 @@ xticks(0.2:0.2:1.0);
 xlim([0.2 1]);
 
 
-set(gca, 'FontSize', 10, 'FontName', 'Arial','LineWidth', 1.2, 'TickDir', 'out');
-xlabel('Normalized response magnitude (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
-ylabel('Mean duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
-legend('Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
+set(gca, 'FontSize', 14, 'FontName', 'Arial','LineWidth', 1.2, 'TickDir', 'out');
+% xlabel('Normalized response magnitude (a.u.)', 'FontSize', 12, 'FontName', 'Arial');
+% ylabel('Mean duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
+legend('Location', 'northwest', 'Box', 'off', 'FontSize', 14, 'FontName', 'Arial');
 box off; axis square;
 
 if save_figures

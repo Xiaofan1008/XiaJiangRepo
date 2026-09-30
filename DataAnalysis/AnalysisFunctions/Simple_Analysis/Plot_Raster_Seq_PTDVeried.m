@@ -7,14 +7,14 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742'; 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX035/Xia_150um_SimSeq2_260924_174921';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1';
 
 %% Choice
 Spike_filtering = 0;
-raster_chn_start = 1;
-raster_chn_end = 32; %nChn
+raster_chn_start = 48;
+raster_chn_end = 64; %nChn
 Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
-PTD_to_plot = [0 5];   % e.g., [500 1000], empty for all PTD
+PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
 %% Spike Amplitude Filtering Parameters
 pos_limit = 500;    % upper bound (µV)
@@ -39,7 +39,7 @@ fprintf('Changed directory to:\n%s\n', data_folder);
 parts = split(data_folder, filesep);
 last_folder = parts{end};
 underscores = strfind(last_folder, '_');
-if numel(underscores) >= 4
+if numel(underscores) >= 5
     base_name = last_folder(1 : underscores(end-1) - 1);  % 'Xia_Exp1_Seq'
 else
     base_name = last_folder;  % fallback if no underscores

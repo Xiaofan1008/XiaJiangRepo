@@ -59,7 +59,7 @@ file_paths = {
 
 % Plot Settings
 save_figures = false;
-save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/Duration_3SD';
+save_dir     = '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_3/Duration_3SD';
 
 % --- Black and White Settings ---
 color_sim    = 'k'; 
@@ -167,7 +167,7 @@ end
 %% ================= 3. PLOT 1: BINNED BOX PLOTS =================
 fprintf('Generating Binned Box Plot...\n');
 % [MODIFIED] Changed to 8.8 cm width
-figure('Color','w', 'Units', 'centimeters', 'Position', [5, 5, 9, 9], 'Name', 'Duration_Binned_BoxPlot'); hold on;
+figure('Color','w', 'Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Name', 'Duration_Binned_BoxPlot'); hold on;
 pos_ctr = 1; warning('off', 'all');
 
 for k = 1:length(fields)
@@ -203,28 +203,28 @@ for k = 1:length(fields)
             y_star = y_limit_val * 0.92;
         end
         y_star = 15;
-        text(pos_ctr, y_star, txt, 'FontSize', 10, 'HorizontalAlignment', 'center', ...
+        text(pos_ctr, y_star, txt, 'FontSize', 12, 'HorizontalAlignment', 'center', ...
             'FontName', 'Arial', 'FontWeight', 'bold');
         
         % Adjust the bracket line to match
-        plot([pos1, pos2], [y_star - (y_limit_val*0.02), y_star - (y_limit_val*0.02)], '-k', 'LineWidth', 1);
+        plot([pos1, pos2], [y_star - (y_limit_val*0.02), y_star - (y_limit_val*0.02)], '-k', 'LineWidth', 1.2);
     end
     pos_ctr = pos_ctr + 1;
 end
 warning('on', 'all');
 
 % [MODIFIED] Set Fonts to Arial 9pt, Box Plot Y-Limit to [0 25]
-set(gca, 'XTick', 1:3, 'XTickLabel', BinLabels, 'FontSize', 10, 'FontName', 'Arial', 'LineWidth', 1.2, 'TickDir', 'out');
-ylabel('Duration (ms)', 'FontSize', 12, 'FontName', 'Arial');
-xlabel('Amplitude Range', 'FontSize', 12, 'FontName', 'Arial');
+set(gca, 'XTick', 1:3, 'XTickLabel', BinLabels, 'FontSize', 14, 'FontName', 'Arial', 'LineWidth', 1.2, 'TickDir', 'out');
+% ylabel('Duration (ms)', 'FontSize', 16, 'FontName', 'Arial');
+% xlabel('Amplitude Range', 'FontSize', 16, 'FontName', 'Arial');
 xlim([0.5, 3.5]); 
 ylim([0 20]); 
 box off; axis square;
 
 h1 = plot(NaN,NaN, 's', 'MarkerFaceColor', 'w', 'MarkerEdgeColor', 'k', 'MarkerSize', 7);
 h2 = plot(NaN,NaN, 's', 'MarkerFaceColor', [0.8 0.8 0.8], 'MarkerEdgeColor', 'k', 'MarkerSize', 7);
-legend([h1, h2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 10, 'FontName', 'Arial');
-if save_figures, exportgraphics(gcf, fullfile(save_dir, 'Duration_Binned_BoxPlot.tiff'), 'ContentType', 'vector', 'Resolution', 300); end
+legend([h1, h2], {'Simultaneous', 'Sequential'}, 'Location', 'northwest', 'Box', 'off', 'FontSize', 14, 'FontName', 'Arial');
+if save_figures, exportgraphics(gcf, fullfile(save_dir, 'Duration_Binned_BoxPlot.png'), 'ContentType', 'vector', 'Resolution', 600); end
 
 %% ================= 4. PLOT 2: LINE PLOT (Binned) =================
 fprintf('Generating Binned Line Plot...\n');

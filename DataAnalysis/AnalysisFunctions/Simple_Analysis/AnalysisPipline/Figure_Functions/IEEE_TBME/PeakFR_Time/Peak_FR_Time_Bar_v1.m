@@ -74,8 +74,8 @@ file_paths = {
     '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Peak_FR_Time/DX005/Result_PeakLatency_Separated_Xia_Exp1_Sim.mat';
 };
 % Plot Settings
-save_figure = true;
-save_dir    =  '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures/Figure_3/Peak_FR_Time_Bar';
+save_figure = false;
+save_dir    =  '/Users/xiaofan/Desktop/PhD Study/Paper/IEEE_TBME/Figures/Revision_Figures_v2/Figure_3/Peak_FR_Time_Bar';
 hist_bin_width = 1; % ms (Width of visual bars)
 
 %% ================= 2. POOL DATA ACROSS DATASETS =================
@@ -138,7 +138,6 @@ All_Amps = unique(All_Amps);
 All_Amps = sort(All_Amps);
 
 %% ================= 3. PLOT HISTOGRAMS (With Bracket Stats) =================
-if ~exist(save_dir, 'dir'), mkdir(save_dir); end
 fprintf('\nGenerating plots and Calculating Stats (RankSum on Channels)...\n');
 % [NEW] Initialize Global Arrays for All-Data Test
 Global_Sim_Ch = [];
@@ -171,7 +170,7 @@ for i = 1:length(All_Amps)
  
     % --- Create Figure ---
     fig_name = sprintf('PeakLatency_Dist_%.1fuA_RankSum_BW_v1', curr_amp);
-    figure('Units', 'centimeters', 'Position', [5, 5, 9, 9], 'Color', 'w');
+    figure('Units', 'centimeters', 'Position', [2, 2, 9, 9], 'Color', 'w');
     hold on;
     
     % 1. Define Bins
@@ -241,20 +240,23 @@ for i = 1:length(All_Amps)
     end
     
     text((med_sim + med_seq)/2, y_bracket + (max_pct * 0.05), txt, ...
-        'FontSize', 10, 'HorizontalAlignment', 'center', 'FontWeight', 'normal', 'FontName', 'Arial');
+        'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'normal', 'FontName', 'Arial');
     
     % [MODIFIED 3] Shrank legend color boxes and manually nudged the legend right
-    lgd = legend('Location','northeast', 'Box','off', 'FontSize', 10, 'FontName', 'Arial');
+    lgd = legend('Location','northeast', 'Box','off', 'FontSize', 14, 'FontName', 'Arial');
     lgd.ItemTokenSize = [12, 10]; % Makes the color boxes smaller width/height
     lgd.Position(1) = lgd.Position(1) + 0.03; % Nudges the whole box further right
     
     box off; 
-    set(gca, 'FontSize', 10, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
+    set(gca, 'FontSize', 14, 'FontName', 'Arial', 'TickDir', 'out', 'LineWidth', 1.2);
     
     % Dynamic Limits
-    xlim([0, 18]);
-    set(gca, 'XTick', 0 : 2 : 18);
-    
+    % xlim([0, 18]);
+    xlim([0, 14]);
+    set(gca, 'XTick', 0 : 2 : 14);
+    % set(gca, 'XTick', 0 : 4 : 18);
+    ylim([0 30]);
+    yticks([0:10:30]);
     % [MODIFIED 4] Force Y-axis to step cleanly by 5s all the way to a hard top limit
     % max_y = ceil((max_pct * 1.1) / 5) * 5; % Rounds top limit to the nearest 5 (e.g., 25, 30, 35)
     % ylim([0, max_y]); 
@@ -262,9 +264,10 @@ for i = 1:length(All_Amps)
     
     axis square;
     % --- IEEE Formatting ---
-    xlabel('Time (ms)', 'FontSize', 12, 'FontName', 'Arial');
-    ylabel('Percentage (%)', 'FontSize', 12, 'FontName', 'Arial');
+    % xlabel('Time (ms)', 'FontSize', 16, 'FontName', 'Arial');
+    % ylabel('Percentage (%)', 'FontSize', 16, 'FontName', 'Arial');
     if save_figure
+        if ~exist(save_dir, 'dir'), mkdir(save_dir); end
         exportgraphics(gcf, fullfile(save_dir, [fig_name '.tiff']), 'ContentType', 'vector');
     end
 end

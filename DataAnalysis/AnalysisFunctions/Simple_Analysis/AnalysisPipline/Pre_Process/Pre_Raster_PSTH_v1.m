@@ -7,7 +7,7 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysi
 
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
 % data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_350_750m_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_SimSeq1';
 
 %% Choice
 raster_chn_start = 48;

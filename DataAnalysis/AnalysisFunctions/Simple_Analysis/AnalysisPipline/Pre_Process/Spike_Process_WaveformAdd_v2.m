@@ -2,8 +2,8 @@
 %  + separate threshold settings per probe (and per channel if needed)
 %  + rejection of bad trials, judged separately for each probe
 close all; clear all; clc;
-filename = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_SimSeq1/Xia_Linearity_600.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_SimSeq1/Xia_Linearity_600.sp_xia.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_Single1/Xia_Linearity_600_700um_Single1.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_Single1/Xia_Linearity_600_700um_Single1.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive
@@ -128,6 +128,7 @@ cols_base = t_rel_ms < 0;                           % noise measured before the 
 
 % -------- Storage --------
 locs_all     = cell(1, nChannels);
+snips_all    = cell(1, nChannels);   % surviving waveform snippets, same order as locs_all
 thr_ch       = NaN(1, nChannels);
 noise_ch     = NaN(1, nChannels);
 trial_maxabs = NaN(nChannels, nV);
@@ -183,17 +184,21 @@ for e_number = 1:nChannels
     locs = locs(locs > half_snip & locs < (nSamples - half_snip));
 
     % ----- Amplitude filtering (probe-specific limits, vectorised) -----
-    keep  = false(size(locs));
-    offs  = -half_snip:half_snip;
-    chunk = 50000;
+    keep       = false(size(locs));
+    offs       = -half_snip:half_snip;
+    chunk      = 50000;
+    snip_chunks = cell(ceil(numel(locs)/chunk), 1);   % surviving snippets, chunk by chunk
     for i0 = 1:chunk:numel(locs)
         i1    = min(numel(locs), i0 + chunk - 1);
         snips = channelData(locs(i0:i1) + offs);
         ptp   = max(snips, [], 2) - min(snips, [], 2);
-        keep(i0:i1) = ptp >= ptp_min_ch(e_number) & ptp <= ptp_max_ch(e_number) & ...
+        keep_here = ptp >= ptp_min_ch(e_number) & ptp <= ptp_max_ch(e_number) & ...
                       all(abs(snips) <= abs_max_ch(e_number), 2);
+        keep(i0:i1) = keep_here;
+        snip_chunks{ceil(i0/chunk)} = snips(keep_here, :);
     end
-    locs = locs(keep);
+    locs  = locs(keep);
+    snips_all{e_number} = vertcat(snip_chunks{:});   % rows line up with locs, in order
 
     % ----- Per-trial metrics for bad-trial rejection -----
     seg = channelData(idx_tr);
@@ -352,14 +357,25 @@ end
 % (*.sp_xia.mat) the raster/PSTH script and the rest of the later
 % pipeline actually read, so it's written directly here rather than via
 % an intermediate *.sp.mat file.
-% NOTE: this detector doesn't keep spike waveform snippets, so
-% sp_clipped{ch} is Nx1 (spike times only). Anything reading
-% sp_clipped{ch}(:,1) works fine; anything reading sp_clipped{ch}(:,2:end)
-% for waveform-based filtering will find nothing there.
+% sp_clipped{ch} stays Nx1 (spike times only, ms) -- this is the
+% lightweight file the raster/PSTH script and the rest of the pipeline
+% read every time, so it's kept free of waveform data.
 sp_clipped = cell(1, nChannels);
 for e_number = 1:nChannels
     ch = map_nums_plus(e_number);
     sp_clipped{ch} = locs_all{e_number}(:) / fs * 1000;   % samples -> ms
+end
+
+% sp_waveforms{ch}: [time_ms, waveform...] rows, same spikes/order as
+% sp_clipped{ch}, for scripts that need the actual snippet shape (e.g.
+% waveform-based spike QC/filtering). Saved to a SEPARATE, disposable
+% file (*.sp_xia_waveforms.mat) so the everyday sp_xia.mat stays small --
+% delete the waveform file by hand once you're done with it, or keep it
+% around if you want to inspect/analyze waveform shapes later.
+sp_waveforms = cell(1, nChannels);
+for e_number = 1:nChannels
+    ch = map_nums_plus(e_number);
+    sp_waveforms{ch} = [sp_clipped{ch}, snips_all{e_number}];
 end
 
 % BadTrials: cell array indexed by PHYSICAL recording channel, listing
@@ -390,3 +406,10 @@ fprintf('All spike data (including pipeline-format "sp_clipped") saved to %s\n',
 badTrialsFile = strrep(saveFile, '.sp_xia.mat', '.BadTrials.mat');
 save(badTrialsFile, 'BadTrials', '-v7.3');
 fprintf('Bad-trial list (standard format) saved to %s\n', badTrialsFile);
+
+% Waveforms saved separately too -- disposable, only needed for
+% waveform-shape-based filtering/inspection, kept out of the everyday
+% sp_xia.mat so that file stays small and fast to load.
+waveformsFile = strrep(saveFile, '.sp_xia.mat', '.sp_xia_waveforms.mat');
+save(waveformsFile, 'sp_waveforms', 'fs', 'snippet_ms', '-v7.3');
+fprintf('Spike waveform snippets saved to %s\n', waveformsFile);

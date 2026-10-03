@@ -3,7 +3,7 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% ====================== USER SETTINGS ======================
-data_folder     = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_250um_SimSeq1';
+data_folder     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1';
 
 channels_to_plot = 49;                % channels to plot (Depth_s index)
 amps_to_plot     = [];                 % amplitudes to include (µA)

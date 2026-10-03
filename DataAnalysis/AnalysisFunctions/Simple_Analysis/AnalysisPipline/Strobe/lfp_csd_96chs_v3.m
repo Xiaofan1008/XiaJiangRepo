@@ -1,6 +1,11 @@
-function R = lfp_csd_4shanks()
+function R = lfp_csd_analysis()
 % LFP depth profile + CSD for Intan RHS recordings (one-file-per-signal-type)
-% Supports the 64-ch 4-shank flexible probe and the 32-ch single-shank probes.
+%
+% Probes (picked automatically from the number of channels in amplifier.dat):
+%   32 ch : single-shank flexible ('flex1') or rigid ('rigid1')  -> cfg.probe32
+%   64 ch : 4-shank flexible ('flex4')
+%   96 ch : hybrid = 4-shank flexible (ports A+B) + single-shank flexible (port C)
+%
 % Self-contained: probe maps and the info.rhs header reader are built in, so
 % ProbeMAP.m, Depth_s.m and read_Intan_RHS2000_file.m are NOT needed.
 % (loadTrig.m is only needed if cfg.trigSource = 'loadTrig'.)
@@ -14,39 +19,48 @@ function R = lfp_csd_4shanks()
 %   -> light spatial smoothing -> CSD (Vaknin boundary) -> plots
 %
 % Conventions
-%   Depth axis: surface at the top.
+%   Depth axis: top contact at the top.
+%   Red = negative, blue = positive in every plot.
 %   CSD: -sigma * d2(phi)/dz2, units µA/mm^3.  Sink = negative = RED,
 %        source = positive = BLUE.
-%   Blanked (artifact) periods are shown as gaps / grey, not cut out.
 %
 % Requires: Signal Processing Toolbox, MATLAB R2020b or newer.
 
 %% ============================ CONFIG ==================================
-cfg.folder      = '/Volumes/MACData/Data/Data_Xia/DX037/strobe_261002_103144';
+cfg.folder      = '/Volumes/MACData/Data/Data_Xia/DX037/strobe_261002_111422';
                                % must contain amplifier.dat, time.dat, info.rhs (+ digitalin.dat)
 cfg.gain        = 0.195;       % µV per bit (Intan)
 
-% Probe. 'auto' picks by channel count: 64 -> 'flex4', 32 -> cfg.probe32.
-%   'flex4'  : 4-shank flexible, 64 ch (ProbeMAP column 6, ports A+B)
-%   'flex1'  : single-shank flexible, 32 ch (ProbeMAP column 5)
-%   'rigid1' : single-shank rigid, 32 ch (ProbeMAP column 3)
+% Probe. 'auto' picks by channel count: 96 -> 'hybrid96', 64 -> 'flex4',
+%        32 -> cfg.probe32.  Or set one of these explicitly:
+%   'hybrid96' : 4-shank flex + single-shank flex (ProbeMAP column 7)
+%   'flex4'    : 4-shank flexible, 64 ch (ProbeMAP column 6)
+%   'flex1'    : single-shank flexible, 32 ch (ProbeMAP column 5)
+%   'rigid1'   : single-shank rigid, 32 ch (ProbeMAP column 3)
 cfg.probeType   = 'auto';
 cfg.probe32     = 'flex1';     % which 32-ch probe 'auto' should assume
-cfg.flipDepth   = false;       % true if electrode 1 of each shank is at the TIP
-cfg.badElec     = [];          % electrode numbers (E#) to interpolate, e.g. [7 40]
+cfg.badElec     = [];          % electrode numbers (E#) to interpolate, e.g. [7 40 70]
+
+% Geometry, separately for the 4-shank part and the single shank
+% (the hybrid probe has both; other probes use only one of these).
+%   pitch_um  : contact spacing along the shank
+%   angle_deg : insertion angle
+%   angleRef  : 'vertical' = angle from the cortical normal -> dz = pitch*cos(angle)
+%               'surface'  = angle from the cortical surface -> dz = pitch*sin(angle)
+%   offset_um : depth of the top contact (0 = depths relative to the top contact)
+%   flipDepth : true if the first electrode of each shank is at the TIP
+%               (true for our probes: E1 is the tip, so the list is reversed
+%               to run top -> tip)
+cfg.geom.shank4 = struct('pitch_um', 50, 'angle_deg', 30, 'angleRef', 'vertical', ...
+                         'offset_um', 0, 'flipDepth', true);
+cfg.geom.single = struct('pitch_um', 50, 'angle_deg', 30, 'angleRef', 'vertical', ...
+                         'offset_um', 0, 'flipDepth', true);
 
 % Triggers
 cfg.trigSource  = 'digitalin'; % 'digitalin' (reads digitalin.dat) or 'loadTrig'
 cfg.trigBit     = [];          % digital input bit (0 = DIGITAL-IN-01); [] = auto-detect
 cfg.trigEdge    = 'rising';    % 'rising' or 'falling'
 cfg.trigMinGap_ms = 5;         % ignore edges closer than this (debounce)
-
-% Geometry
-cfg.pitch_um    = 50;          % contact spacing along the shank
-cfg.angle_deg   = 30;
-cfg.angleRef    = 'vertical';  % 'vertical': angle from the cortical normal -> dz = pitch*cos(angle)
-                               % 'surface' : angle from the cortical surface -> dz = pitch*sin(angle)
-cfg.depthOffset_um = 0;        % depth of the most superficial contact (if known)
 
 % LFP
 cfg.fs_lfp      = 2000;        % Hz after downsampling
@@ -73,9 +87,16 @@ cfg.smoothW     = [0.23 0.54 0.23];   % spatial (Hamming) smoothing of LFP; [] =
 cfg.sigma       = 0.3;         % extracellular conductivity, S/m
 cfg.plotUpsample = 4;          % depth interpolation for CSD DISPLAY only (1 = off)
 
-% LFP display
-cfg.lfpGain     = 1.5;         % trace size: 1 = biggest deflection fills one channel gap
+% Display
+cfg.lfpGain     = 1.0;         % trace size: 1 = biggest deflection fills one channel gap
 cfg.troughWin_ms = [40 150];   % window to find each channel's main negative peak
+cfg.blankDisplay = 'marks';    % 'marks': draw through blanked windows (interpolated),
+                               %          grey ticks at the top show where they are
+                               % 'gaps' : leave blanked windows empty
+cfg.scaleMode   = 'shared';    % 'shared': same µV / CSD scale on every shank (comparable)
+                               % 'perShank': each shank scaled to its own range
+cfg.chanLabel   = 'E';         % channel labels on the y axis: 'E' (electrode E#),
+                               % 'intan' (e.g. A-012) or 'both'
 
 cfg.saveFile    = 'lfp_csd_results.mat';
 cfg.useSaved    = false;       % true = skip processing, just re-plot cfg.saveFile
@@ -83,12 +104,19 @@ cfg.useSaved    = false;       % true = skip processing, just re-plot cfg.saveFi
 %% ===================== RE-PLOT FROM SAVED RESULTS =====================
 if cfg.useSaved && isfile(cfg.saveFile)
     R = load(cfg.saveFile);
+    if ~iscell(R.depths)                        % file from the older 4-shank script
+        R.depths = repmat({R.depths}, 1, numel(R.lfp));
+        R.dz     = repmat(R.dz, 1, numel(R.lfp));
+    end
     R.cfg.lfpGain      = cfg.lfpGain;           % display settings from this run
     R.cfg.troughWin_ms = cfg.troughWin_ms;
     R.cfg.plotUpsample = cfg.plotUpsample;
+    R.cfg.blankDisplay = cfg.blankDisplay;
+    R.cfg.scaleMode    = cfg.scaleMode;
+    R.cfg.chanLabel    = cfg.chanLabel;
     iv = artifact_intervals(R.cfg);
     plot_lfp(R, iv);
-    plot_csd(R);
+    plot_csd(R, iv);
     return;
 end
 
@@ -104,16 +132,19 @@ assert(mod(cfg.nChanFile, 1) == 0, 'amplifier.dat size does not match time.dat.'
 % Probe
 if strcmpi(cfg.probeType, 'auto')
     switch cfg.nChanFile
+        case 96, cfg.probeType = 'hybrid96';
         case 64, cfg.probeType = 'flex4';
         case 32, cfg.probeType = cfg.probe32;
         otherwise, error('No automatic probe for %d channels: set cfg.probeType.', cfg.nChanFile);
     end
 end
 P = probe_definition(cfg.probeType);
-if cfg.flipDepth
-    P.shanks = cellfun(@fliplr, P.shanks, 'UniformOutput', false);
+for s = 1:numel(P.shanks)
+    if cfg.geom.(P.part{s}).flipDepth
+        P.shanks{s} = fliplr(P.shanks{s});
+    end
 end
-cfg.shanks = P.shanks;  cfg.shankNames = P.shankNames;
+cfg.shanks = P.shanks;  cfg.shankNames = P.shankNames;  cfg.shankPart = P.part;
 
 % Recorded channel names and settings from info.rhs
 H = [];
@@ -147,17 +178,21 @@ fprintf('amplifier.dat: %d channels, %.1f min, probe ''%s''\n', ...
 elec2row = labels_to_rows(P.labels, ampNames);   % E# -> row in amplifier.dat
 
 %% ============================ SETUP ===================================
-nS  = numel(cfg.shanks);
-nCh = numel(cfg.shanks{1});
-assert(all(cellfun(@numel, cfg.shanks) == nCh), 'All shanks must have the same number of electrodes.');
-
-switch lower(cfg.angleRef)
-    case 'vertical', dz = cfg.pitch_um * cosd(cfg.angle_deg);
-    case 'surface',  dz = cfg.pitch_um * sind(cfg.angle_deg);
-    otherwise, error('cfg.angleRef must be ''vertical'' or ''surface''.');
+nS   = numel(cfg.shanks);
+nChS = cellfun(@numel, cfg.shanks);
+depths = cell(1, nS);  dz = zeros(1, nS);
+for s = 1:nS
+    G = cfg.geom.(cfg.shankPart{s});
+    switch lower(G.angleRef)
+        case 'vertical', dz(s) = G.pitch_um * cosd(G.angle_deg);
+        case 'surface',  dz(s) = G.pitch_um * sind(G.angle_deg);
+        otherwise, error('angleRef must be ''vertical'' or ''surface''.');
+    end
+    depths{s} = G.offset_um + (0:nChS(s)-1) * dz(s);
+    fprintf('%-14s %2d contacts, %.1f µm/channel, span %.0f µm\n', ...
+        cfg.shankNames{s}, nChS(s), dz(s), depths{s}(end) - depths{s}(1));
 end
-depths = cfg.depthOffset_um + (0:nCh-1) * dz;
-fprintf('Depth step %.1f µm/channel, span %.0f µm\n', dz, depths(end) - depths(1));
+shankRows = mat2cell(1:sum(nChS), 1, nChS);      % rows of each shank in ep/mu
 
 trig    = get_triggers(cfg, nSamples);
 nTrials = numel(trig);
@@ -221,13 +256,18 @@ end
 %% ============================ QC ======================================
 isBad = ismember(allE, cfg.badElec);
 
-% Noisy / dead channel hint: median single-trial baseline SD per electrode
+% Noisy / dead channel hint: median single-trial baseline SD per electrode,
+% compared within each shank (the two probe parts may differ in noise)
 bsd   = squeeze(std(ep(:, base, valid), 0, 2));
 noise = median(bsd, 2, 'omitnan');
-mn    = median(noise(~isBad));
-sus   = allE(noise > 3*mn | noise < mn/3);
+sus   = [];
+for s = 1:nS
+    r  = shankRows{s};
+    mn = median(noise(r(~isBad(r))));
+    sus = [sus, allE(r(noise(r) > 3*mn | noise(r) < mn/3))]; %#ok<AGROW>
+end
 if ~isempty(sus)
-    fprintf('Check these electrodes (baseline noise far from median): %s\n', mat2str(sus));
+    fprintf('Check these electrodes (baseline noise far from their shank''s median): %s\n', mat2str(sus));
 end
 
 % Trial rejection on peak |LFP| across good electrodes, artifact-free samples
@@ -241,8 +281,7 @@ end
 fprintf('Trials kept: %d / %d valid\n', sum(keep), sum(valid));
 
 %% ======================= AVERAGE, FIX, CSD ============================
-mu = mean(ep(:, :, keep), 3);
-mu(:, blank) = NaN;                             % interpolated samples are not data
+mu = mean(ep(:, :, keep), 3);   % blanked samples hold interpolated values; see R.blank
 
 R = struct();
 R.cfg = cfg;  R.t_ms = t_ms;  R.depths = depths;  R.dz = dz;
@@ -251,11 +290,11 @@ R.electrodeRow = elec2row;  R.ampNames = ampNames;
 R.lfp = cell(nS,1);  R.csd = cell(nS,1);  R.bad = cell(nS,1);
 
 for s = 1:nS
-    rows = (s-1)*nCh + (1:nCh);
+    rows = shankRows{s};
     bad  = isBad(rows);
-    lfp  = fix_bad_channels(mu(rows, :), bad, depths);
-    R.lfp{s} = lfp;                                            % µV
-    R.csd{s} = compute_csd(lfp, dz, cfg.smoothW, cfg.sigma);   % µA/mm^3
+    lfp  = fix_bad_channels(mu(rows, :), bad, depths{s});
+    R.lfp{s} = lfp;                                               % µV
+    R.csd{s} = compute_csd(lfp, dz(s), cfg.smoothW, cfg.sigma);   % µA/mm^3
     R.bad{s} = bad;
 end
 
@@ -266,7 +305,7 @@ end
 
 %% ============================ PLOTS ===================================
 plot_lfp(R, iv);
-plot_csd(R);
+plot_csd(R, iv);
 end
 
 
@@ -275,21 +314,37 @@ end
 %% ======================================================================
 
 function P = probe_definition(type)
-% P.labels{E} = Intan channel name for electrode E; P.shanks = E# per shank.
+% P.labels{E} = Intan channel name for electrode E
+% P.shanks    = electrode numbers per shank (top -> tip assumed)
+% P.part      = which cfg.geom entry each shank uses ('shank4' or 'single')
 lab = @(port, ch) arrayfun(@(c) sprintf('%c-%03d', port, c), ch(:)', 'UniformOutput', false);
+
+% 4-shank flexible (ProbeMAP NN_flexible_4SHANKA / B)
+A4 = [31,7,0,24,30,6,1,25,29,5,2,26,28,4,3,27,  8,16,23,15,9,17,22,14,10,18,21,13,11,19,20,12]; % E1-16 S1 | E17-32 S4
+B4 = [8,11,9,15,10,19,12,23,13,22,14,21,16,20,17,18,  4,7,0,6,28,5,24,3,25,2,26,1,27,31,29,30]; % E33-48 S2 | E49-64 S3
+% Single-shank flexible (ProbeMAP NN_flexible)
+F1 = [8,7,9,6,10,5,12,3,13,2,14,1,23,24,22,25,21,26,19,28,18,29,17,30,16,31,20,27,15,0,11,4];
+
+shanks4 = {1:16, 33:48, 49:64, 17:32};
+names4  = {'Shank 1', 'Shank 2', 'Shank 3', 'Shank 4'};
+
 switch lower(type)
-    case 'flex4'        % 4-shank flexible, 64 ch (ProbeMAP column 6, E1-64)
-        A = [31,7,0,24,30,6,1,25,29,5,2,26,28,4,3,27,  8,16,23,15,9,17,22,14,10,18,21,13,11,19,20,12]; % E1-16 S1 | E17-32 S4
-        B = [8,11,9,15,10,19,12,23,13,22,14,21,16,20,17,18,  4,7,0,6,28,5,24,3,25,2,26,1,27,31,29,30]; % E33-48 S2 | E49-64 S3
-        P.labels     = [lab('A', A), lab('B', B)];
-        P.shanks     = {1:16, 33:48, 49:64, 17:32};
-        P.shankNames = {'Shank 1', 'Shank 2', 'Shank 3', 'Shank 4'};
-    case 'flex1'        % single-shank flexible, 32 ch (ProbeMAP column 5)
-        T = [8,7,9,6,10,5,12,3,13,2,14,1,23,24,22,25,21,26,19,28,18,29,17,30,16,31,20,27,15,0,11,4];
-        P.labels     = lab('A', T);
+    case 'hybrid96'     % ProbeMAP column 7: 4-shank on A+B, single shank on C (E65-96)
+        P.labels     = [lab('A', A4), lab('B', B4), lab('C', F1)];
+        P.shanks     = [shanks4, {65:96}];
+        P.shankNames = [names4, {'Single shank'}];
+        P.part       = {'shank4', 'shank4', 'shank4', 'shank4', 'single'};
+    case 'flex4'        % ProbeMAP column 6, E1-64
+        P.labels     = [lab('A', A4), lab('B', B4)];
+        P.shanks     = shanks4;
+        P.shankNames = names4;
+        P.part       = {'shank4', 'shank4', 'shank4', 'shank4'};
+    case 'flex1'        % ProbeMAP column 5
+        P.labels     = lab('A', F1);
         P.shanks     = {1:32};
         P.shankNames = {'Single shank (flex)'};
-    case 'rigid1'       % single-shank rigid, 32 ch (ProbeMAP column 3, via connectors)
+        P.part       = {'single'};
+    case 'rigid1'       % ProbeMAP column 3, via connectors
         MOLC_MALE     = [32,30,31,28,29,27,25,22,23,21,17,18,19,20,24,26,1,4,13,14,15,16,12,10,8,6,2,3,5,7,9,11];
         MOLC_FEMALE   = 32:-1:1;
         OMNETICS_MALE = [23,25,27,29,31,19,17,21,11,15,13,1,3,5,7,9,10,8,6,4,2,14,16,12,22,18,20,32,30,28,26,24];
@@ -301,6 +356,7 @@ switch lower(type)
         P.labels     = lab('A', T);
         P.shanks     = {1:32};
         P.shankNames = {'Single shank (rigid)'};
+        P.part       = {'single'};
     otherwise
         error('Unknown probe type ''%s''.', type);
 end
@@ -517,11 +573,17 @@ end
 %  Plotting
 %% ======================================================================
 
-function shade_blanks(ax, iv, t_ms, yl)
+function shade_blanks(ax, iv, t_ms, yl, mode)
+% 'gaps' : full-height light band;  'marks': short grey tick at the top edge
 for k = 1:size(iv,1)
     a = max(iv(k,1), t_ms(1));  b = min(iv(k,2), t_ms(end));
     if a >= b, continue; end
-    patch(ax, [a b b a], [yl(1) yl(1) yl(2) yl(2)], [0.95 0.95 0.95], ...
+    if strcmpi(mode, 'gaps')
+        y = yl;  col = [0.95 0.95 0.95];
+    else
+        y = [yl(1), yl(1) + 0.015 * diff(yl)];  col = [0.55 0.55 0.55];
+    end
+    patch(ax, [a b b a], [y(1) y(1) y(2) y(2)], col, ...
         'EdgeColor', 'none', 'HandleVisibility', 'off');
 end
 end
@@ -531,19 +593,45 @@ p = 10^floor(log10(x));  f = x / p;
 if f >= 5, v = 5*p; elseif f >= 2, v = 2*p; else, v = p; end
 end
 
-function set_depth_axis(ax, s, d)
-set(ax, 'YDir', 'reverse', 'YTick', d, 'TickDir', 'out', 'Box', 'off');
-if numel(d) > 16                                   % label every other contact
-    lbl = arrayfun(@(x) sprintf('%.0f', x), d, 'UniformOutput', false);
-    lbl(2:2:end) = {''};
-else
-    lbl = arrayfun(@(x) sprintf('%.0f', x), d, 'UniformOutput', false);
+function [showLbl, showBar] = panel_flags(R, s)
+% Depth labels on the first panel of each probe part; scale bar / colour bar
+% on the last panel of each part (or on every panel when scaled per shank).
+nS = numel(R.lfp);
+showLbl = s == 1 || ~isequal(R.depths{s}, R.depths{s-1});
+showBar = s == nS || ~isequal(R.depths{s}, R.depths{s+1}) || strcmpi(R.cfg.scaleMode, 'perShank');
 end
-if s == 1
-    ylabel(ax, 'Cortical depth (µm)');
-    ax.YTickLabel = lbl;
+
+function pk = panel_peaks(R, field, pct)
+% Robust peak |value| per shank (blanked samples excluded); shared = max over shanks.
+pk = cellfun(@(X) prctile(reshape(abs(X(:, ~R.blank)), [], 1), pct), R.(field));
+if ~strcmpi(R.cfg.scaleMode, 'perShank'), pk(:) = max(pk); end
+end
+
+function set_depth_axis(ax, showLbl, d, chLbl)
+% One tick per contact, labelled with its channel; depth added on the first
+% panel of each probe part.
+set(ax, 'YDir', 'reverse', 'YTick', d, 'TickDir', 'out', 'Box', 'off', 'FontSize', 9);
+if showLbl
+    lbl = arrayfun(@(k) sprintf('%s  %.0f', chLbl{k}, d(k)), 1:numel(d), 'UniformOutput', false);
+    ylabel(ax, 'Channel   depth (µm)');
 else
-    ax.YTickLabel = [];
+    lbl = chLbl;
+end
+ax.TickLabelInterpreter = 'none';
+ax.YTickLabel = lbl;
+if numel(d) > 16, ax.YAxis.FontSize = 7; end
+end
+
+function lbl = channel_labels(R, s)
+% Label for each contact of shank s, in plot order (top -> tip).
+E = R.cfg.shanks{s};
+switch lower(R.cfg.chanLabel)
+    case 'e'
+        lbl = arrayfun(@(e) sprintf('E%d', e), E, 'UniformOutput', false);
+    case 'intan'
+        lbl = R.ampNames(R.electrodeRow(E));
+    otherwise
+        lbl = arrayfun(@(e) sprintf('E%d %s', e, R.ampNames{R.electrodeRow(e)}), E, 'UniformOutput', false);
 end
 end
 
@@ -551,40 +639,44 @@ function plot_lfp(R, iv)
 % Row 1: stacked traces, negative deflections filled red, positive blue,
 %        black dot = each channel's main negative peak (trough).
 % Row 2: the same LFP as a colour image (red = negative, blue = positive).
-nS = numel(R.lfp);  d = R.depths;  dz = R.dz;  t = R.t_ms;
-allL  = cat(1, R.lfp{:});
-peak  = prctile(abs(allL(:)), 99.5);
-scale = R.cfg.lfpGain * dz / peak;                  % µm on the plot per µV
-barUV = nice_value(0.5 * peak);
-yl    = [d(1) - dz, d(end) + dz];
+nS    = numel(R.lfp);  t = R.t_ms;
+gaps  = strcmpi(R.cfg.blankDisplay, 'gaps');
 red   = [0.85 0.15 0.15];  blue = [0.15 0.35 0.85];
-tw    = t >= R.cfg.troughWin_ms(1) & t <= R.cfg.troughWin_ms(2);
+tw    = t >= R.cfg.troughWin_ms(1) & t <= R.cfg.troughWin_ms(2) & ~R.blank;
 tt    = t(tw);
+peaks = panel_peaks(R, 'lfp', 99.5);
 
-figure('Color', 'w', 'Name', 'LFP depth profile', 'Position', [40 40 300 + 420*nS 1000]);
+figure('Color', 'w', 'Name', 'LFP depth profile', 'Position', [40 40 260 + 330*nS 1000]);
 tl = tiledlayout(2, nS, 'TileSpacing', 'compact', 'Padding', 'compact');
 
 for s = 1:nS
+    d = R.depths{s};  dz = R.dz(s);  peak = peaks(s);
+    scale = R.cfg.lfpGain * dz / peak;              % µm on the plot per µV
+    yl    = [d(1) - dz, d(end) + dz];
+    [showLbl, showBar] = panel_flags(R, s);
+    chLbl = channel_labels(R, s);
     L = R.lfp{s};
+    if gaps, L(:, R.blank) = NaN; end
 
     % ---- traces ----
     ax = nexttile(tl, s);  hold(ax, 'on');
-    shade_blanks(ax, iv, t, yl);
+    shade_blanks(ax, iv, t, yl, R.cfg.blankDisplay);
     fprintf('\n%s: main negative peak per channel (%d-%d ms)\n', R.cfg.shankNames{s}, R.cfg.troughWin_ms);
-    fprintf('  depth(µm)  latency(ms)  amplitude(µV)\n');
+    fprintf('  channel        depth(µm)  latency(ms)  amplitude(µV)\n');
     for c = 1:numel(d)
-        fill_trace(ax, t, L(c,:), d(c), scale, red, blue, 0.55);
+        fill_trace(ax, t, L(c,:), d(c), scale, red, blue, 0.35);
         lc = [0.15 0.15 0.15];  if R.bad{s}(c), lc = [0.6 0 0.6]; end   % purple = interpolated
         plot(ax, t, d(c) - L(c,:) * scale, 'Color', lc, 'LineWidth', 0.8);
         [mn, ix] = min(L(c, tw));
         plot(ax, tt(ix), d(c) - mn * scale, 'k.', 'MarkerSize', 10);
-        fprintf('  %8.0f  %11.1f  %13.1f\n', d(c), tt(ix), mn);
+        fprintf('  %-12s %9.0f  %11.1f  %13.1f\n', chLbl{c}, d(c), tt(ix), mn);
     end
     xline(ax, 0, 'k--', 'LineWidth', 1);
-    set_depth_axis(ax, s, d);
+    set_depth_axis(ax, showLbl, d, chLbl);
     xlim(ax, [t(1) t(end)]);  ylim(ax, yl);
     title(ax, R.cfg.shankNames{s}, 'FontSize', 12);
-    if s == nS                                      % amplitude scale bar
+    if showBar                                      % amplitude scale bar
+        barUV = nice_value(0.5 * peak);
         x0 = t(end) - 0.04 * (t(end) - t(1));
         y0 = d(end) - dz/2;
         plot(ax, [x0 x0], [y0, y0 - barUV * scale], 'k', 'LineWidth', 2.5);
@@ -595,18 +687,19 @@ for s = 1:nS
     % ---- colour image ----
     ax2 = nexttile(tl, nS + s);  hold(ax2, 'on');
     imagesc(ax2, t, d, L, 'AlphaData', ~isnan(L));
+    if ~gaps, shade_blanks(ax2, iv, t, [d(1) - dz/2, d(end) + dz/2], 'marks'); end
     xline(ax2, 0, 'k--', 'LineWidth', 1);
-    set_depth_axis(ax2, s, d);
+    set_depth_axis(ax2, showLbl, d, chLbl);
     set(ax2, 'CLim', [-peak peak], 'Color', [0.92 0.92 0.92], 'Layer', 'top', 'Box', 'on');
     colormap(ax2, sinksource(256));
     xlim(ax2, [t(1) t(end)]);  ylim(ax2, [d(1) - dz/2, d(end) + dz/2]);
     xlabel(ax2, 'Time (ms)');
-    if s == nS
-        cb = colorbar(ax2);  cb.Label.String = 'LFP (µV)   negative red | positive blue';
+    if showBar
+        cb = colorbar(ax2);  cb.Label.String = 'LFP (µV)';
     end
 end
-title(tl, sprintf('LFP  (n = %d trials, %.1f µm/channel; red = negative, blue = positive; grey = blanked)', ...
-    R.nKept, dz), 'FontSize', 13);
+title(tl, sprintf('LFP  (n = %d trials; red = negative, blue = positive; grey ticks = blanked)', ...
+    R.nKept), 'FontSize', 13);
 end
 
 function fill_trace(ax, t, v, y0, scale, colNeg, colPos, alpha)
@@ -624,38 +717,42 @@ for k = 1:numel(st)
 end
 end
 
-function plot_csd(R)
-nS = numel(R.csd);  d = R.depths;  dz = R.dz;  t = R.t_ms;
-allC = cat(1, R.csd{:});
-cl   = prctile(abs(allC(:)), 99);                  % robust shared colour limit
+function plot_csd(R, iv)
+nS   = numel(R.csd);  t = R.t_ms;
+gaps = strcmpi(R.cfg.blankDisplay, 'gaps');
+cls  = panel_peaks(R, 'csd', 99);                   % colour limits
+lpk  = panel_peaks(R, 'lfp', 100);                  % for overlaid traces
 up   = max(1, round(R.cfg.plotUpsample));
-dq   = linspace(d(1), d(end), (numel(d)-1) * up + 1);
-allL  = cat(1, R.lfp{:});
-scale = 0.8 * dz / max(abs(allL(:)));
 
-figure('Color', 'w', 'Name', 'CSD', 'Position', [50 100 250 + 330*nS 650]);
-tl = tiledlayout(1, nS, 'TileSpacing', 'compact');
+figure('Color', 'w', 'Name', 'CSD', 'Position', [50 100 260 + 330*nS 650]);
+tl = tiledlayout(1, nS, 'TileSpacing', 'compact', 'Padding', 'compact');
 for s = 1:nS
-    ax = nexttile(tl);  hold(ax, 'on');
-    C = R.csd{s};
+    d  = R.depths{s};  dz = R.dz(s);  cl = cls(s);
+    scale = 0.8 * dz / lpk(s);
+    [showLbl, showBar] = panel_flags(R, s);
+    dq = linspace(d(1), d(end), (numel(d)-1) * up + 1);
+    C  = R.csd{s};  L = R.lfp{s};
+    if gaps, C(:, R.blank) = NaN;  L(:, R.blank) = NaN; end
     if up > 1, C = interp1(d, C, dq, 'linear'); end % display only
+
+    ax = nexttile(tl);  hold(ax, 'on');
     imagesc(ax, t, dq, C, 'AlphaData', ~isnan(C));
     for c = 1:numel(d)                              % LFP traces on top for reference
-        plot(ax, t, d(c) - R.lfp{s}(c,:) * scale, 'Color', [0 0 0 0.5], 'LineWidth', 0.6);
+        plot(ax, t, d(c) - L(c,:) * scale, 'Color', [0 0 0 0.5], 'LineWidth', 0.6);
     end
+    if ~gaps, shade_blanks(ax, iv, t, [d(1) - dz/2, d(end) + dz/2], 'marks'); end
     xline(ax, 0, 'k--', 'LineWidth', 1);
-    set_depth_axis(ax, s, d);
+    set_depth_axis(ax, showLbl, d, channel_labels(R, s));
     set(ax, 'CLim', [-cl cl], 'Color', [0.85 0.85 0.85], 'Layer', 'top', 'Box', 'on');
     colormap(ax, sinksource(256));
     xlim(ax, [t(1) t(end)]);  ylim(ax, [d(1) - dz/2, d(end) + dz/2]);
-    xlabel(ax, 'Time (ms)');  title(ax, R.cfg.shankNames{s});
-    if s == nS
-        cb = colorbar(ax);  cb.Layout.Tile = 'east';
-        cb.Label.String = 'CSD (µA/mm^3)   sink (-) red  |  source (+) blue';
+    xlabel(ax, 'Time (ms)');  title(ax, R.cfg.shankNames{s}, 'FontSize', 12);
+    if showBar
+        cb = colorbar(ax);  cb.Label.String = 'CSD (µA/mm^3)';
     end
 end
-title(tl, sprintf('CSD (n = %d trials, sigma = %.2f S/m, shared scale ±%.3g)', ...
-    R.nKept, R.cfg.sigma, cl));
+title(tl, sprintf('CSD  (n = %d trials, sigma = %.2f S/m; sink = red, source = blue)', ...
+    R.nKept, R.cfg.sigma), 'FontSize', 13);
 end
 
 function cmap = sinksource(n)

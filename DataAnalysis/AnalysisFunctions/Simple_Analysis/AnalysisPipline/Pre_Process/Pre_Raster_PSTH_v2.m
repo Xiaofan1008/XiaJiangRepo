@@ -1,20 +1,20 @@
 clear all
 % close all
-% addpath(genpath('/Volumes/MACData/Data/Data_Xia/Functions/MASSIVE'));
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% Choose Folder
-
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Single5_251014_184742';
-% data_folder = '/Volumes/MACData/Data/Data_Xia/DX009/Xia_Exp1_Sim5_251014_183532';
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_Single1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1';
 
 %% Choice
-raster_chn_start = 48;
-raster_chn_end = 64; %nChn
+raster_chn_start = 1;
+raster_chn_end = 32; %nChn
 Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
+Set_to_plot = [1];   % e.g., [1 3] -- indices into the "Detected stimulation
+                    % sets" list printed below, empty for all sets. Run
+                    % once with this left empty to see what's available,
+                    % then narrow it down to just the set(s) you want.
 
 %% Load folder
 if ~isfolder(data_folder)
@@ -87,6 +87,34 @@ end
 nSets = size(uniqueComb,1);
 combClass_win = combClass;
 
+% Human-readable label for every detected set ("Ch1→Ch2", etc.), built
+% once here so it can be printed AND reused in the plotting loop below.
+setLabels = cell(nSets,1);
+for si = 1:nSets
+    stimVec = uniqueComb(si, :);
+    stimVec = stimVec(stimVec > 0);
+    setLabels{si} = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimVec, 'UniformOutput', false), '→');
+end
+
+fprintf('\nDetected stimulation sets:\n');
+for si = 1:nSets
+    fprintf('  [%d] %s\n', si, setLabels{si});
+end
+
+if isempty(Set_to_plot)
+    Sets_selected = 1:nSets;
+else
+    Sets_selected = intersect(1:nSets, Set_to_plot, 'stable');
+    if isempty(Sets_selected)
+        warning('None of Set_to_plot (%s) matched a detected set index (1..%d) -- nothing will be plotted.', ...
+            mat2str(Set_to_plot), nSets);
+    end
+end
+fprintf('Sets selected for plotting:\n');
+for si = Sets_selected
+    fprintf('  [%d] %s\n', si, setLabels{si});
+end
+
 % Pulse Train Period (inter-pulse interval)
 pulseTrain_all = cell2mat(StimParams(2:end,9));  % Column 9: Pulse Train Period
 pulseTrain = pulseTrain_all(1:simultaneous_stim:end);  % take 1 per trial
@@ -146,10 +174,10 @@ for ich = raster_chn_start:raster_chn_end
     ch = d(ich);
     if isempty(sp_clipped{ch}), continue; end
 
-    for si = 1:nSets
+    for si = Sets_selected
         stimVec = uniqueComb(si, :);
         stimVec = stimVec(stimVec > 0);
-        setLabel = strjoin(arrayfun(@(x) sprintf('Ch%d', x), stimVec, 'UniformOutput', false), '→');
+        setLabel = setLabels{si};
 
         for pi = 1:n_PULSE
             pulse_val = PulsePeriods(pi);

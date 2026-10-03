@@ -7,7 +7,7 @@
 %
 % Usage: edit folderPath below, then press Run.
 
-folderPath = '/Volumes/MACData/Data/Data_Xia/DX036/Xia_Linearity_600_700um_SimSeq1';   % <-- EDIT THIS, then Run
+folderPath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S3_100_400um_SimSeq1_261002_205501';   % <-- EDIT THIS, then Run
 
 %% ===================== Setup =====================
 if isempty(folderPath)

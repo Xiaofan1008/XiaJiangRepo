@@ -58,8 +58,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ============================ USER SETTINGS ===========================
 
-spike_file     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_stitched.mat';
-dataset_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1';
+spike_file     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_stitched.mat';
+dataset_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1';
 
 % Electrode type (must match this dataset - probe differs by animal):
 %   0 = rigid single-shank probe
@@ -74,8 +74,8 @@ FS_fallback = 30000;   % used only if fs/FS is absent from spike_file
 Plot_Channels = [];
 
 % Empty means all available sets/amplitudes/PTDs
-Plot_Sets = [1];
-Plot_Amps = [10];
+Plot_Sets = [6];
+Plot_Amps = [];
 Plot_PTDs = [];
 
 Condition_Tolerance = 1e-4;
@@ -634,7 +634,7 @@ for si = selected_sets
 
                     xline(ax,0,'r--','LineWidth',1);
                     if sim_stim >= 2 && current_ptd_ms > Condition_Tolerance
-                        xline(ax,current_ptd_ms,'k:','LineWidth',1);
+                        xline(ax,current_ptd_ms,'r:','LineWidth',1);
                     end
                     xlim(ax,ras_win);
 

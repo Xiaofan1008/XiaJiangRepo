@@ -41,15 +41,15 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
 % -------- Single-pulse (source) dataset --------
-single_wf_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_Single1/Xia_Linearity_S4_100_400um_Single1.sp_xia_waveforms_filtered.mat';
-single_folder  = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_Single1';
+single_wf_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_Single1/Xia_Linearity_S4_500_700um_Single1.sp_xia_waveforms_filtered.mat';
+single_folder  = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_Single1';
 
 % -------- Sequential (target) dataset --------
-seq_wf_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_waveforms_filtered.mat';
-seq_folder  = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1';
+seq_wf_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_waveforms_filtered.mat';
+seq_folder  = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1';
 
 % -------- First-spike-time file (from FirstSpikeTime_Sequential_v2.m) --------
-fst_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_FirstSpikeTimes.mat';
+fst_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_FirstSpikeTimes.mat';
 
 pulse_offset_ms = 0;     % extra shift applied when injecting into the
                          % sequential timeline (0 = none)

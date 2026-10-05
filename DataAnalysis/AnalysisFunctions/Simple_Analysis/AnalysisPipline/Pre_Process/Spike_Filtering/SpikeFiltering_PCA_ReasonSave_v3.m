@@ -27,7 +27,7 @@
 % now -- point them at the _filtered files later, once you're happy
 % with the result.
 % ============================================================
-clear all;
+clear all;clc;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
@@ -35,8 +35,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 % the folder name, since that broke on folder-name patterns that don't
 % match the assumed convention (e.g. base names ending up truncated to
 % "Xia_Linearity_S4_100" instead of the real file prefix).
-times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia.mat';
-wf_file    = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_waveforms.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia.mat';
+wf_file    = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_waveforms.mat';
 
 % Must match the Electrode_Type used by the detection script for THIS
 % dataset -- needed here only to translate probe_elecs (map positions)

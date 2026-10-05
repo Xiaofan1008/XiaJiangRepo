@@ -28,12 +28,12 @@ clear all; clc;
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1';
                     % folder holding this dataset's trigger
                     % (*.trig.dat) and stim-protocol
                     % (*_exp_datafile_*.mat) files.
 
-times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_filtered.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_filtered.mat';
                     % the FILTERED spike-times file for this SAME
                     % dataset (sp_clipped) -- entered directly.
 

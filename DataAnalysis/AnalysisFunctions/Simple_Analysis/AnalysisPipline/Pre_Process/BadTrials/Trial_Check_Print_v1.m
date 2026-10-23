@@ -27,12 +27,13 @@ clear; clc;
 %% ============================ USER SETTINGS ===========================
 
 % Full path to the saved <base_name>_TrialSpikeCounts.mat file
-matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Linearity_S4_100_400um_SimSeq1_TrialSpikeCounts.mat';
+% matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_Single1/Linearity_S4_500_700um_Single1_TrialSpikeCounts.mat';
+matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_Single1/Linearity_S1_100_400um_Single1_TrialSpikeCounts.mat';
 
 % Flag a trial if its (baseline-corrected, analysis-window) spike count
 % total is < lowThreshold OR > highThreshold
 lowThreshold  = 0;
-highThreshold = 200;
+highThreshold = 150;
 
 % Which channels to sum for the per-trial total - double choice:
 %   Leave empty [] to use the SAME channels the file was originally saved
@@ -42,7 +43,7 @@ highThreshold = 200;
 %   recompute totals over a different channel subset - this works because
 %   Channel_Results (saved per trial) covers every map-position channel,
 %   not just the channels originally used for totals.
-InspectChannels = [];
+InspectChannels = [1:64];
 
 %% =========================== LOAD THE FILE ============================
 

@@ -1,9 +1,11 @@
 %% Spike detection across all electrodes
 %  + separate threshold settings per probe (and per channel if needed)
 %  + rejection of bad trials, judged separately for each probe
-close all; clear all; clc;
-filename = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S3_100_400um_Single1/Xia_Linearity_S3_100_400um_Single1.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S3_100_400um_Single1/Xia_Linearity_S3_100_400um_Single1.sp_xia.mat';
+% close all; 
+clear all; 
+clc;
+filename = '/Volumes/MACData/Data/Data_Xia/DX041/Xia_Linearity_S2_100_400um_Single1/Xia_Linearity_S2_100_400um_Single1.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/DX041/Xia_Linearity_S2_100_400um_Single1/Xia_Linearity_S2_100_400um_Single1.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive

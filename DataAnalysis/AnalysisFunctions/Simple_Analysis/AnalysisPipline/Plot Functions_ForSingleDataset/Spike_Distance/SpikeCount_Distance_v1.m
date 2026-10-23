@@ -79,7 +79,7 @@ FS_fallback = 30000;   % used only if fs/FS is absent from a spike file
 % Upper boundary excluded. analysis_win_ms is fixed at [0,20] per the
 % linearity-metric design; baseline_win_ms can be changed if needed.
 baseline_win_ms = [-50 -5];
-analysis_win_ms = [0 20];
+analysis_win_ms = [2 20];
 
 Amp_Tol_uA = 0.001;
 PTD_Tol_ms = 0.001;

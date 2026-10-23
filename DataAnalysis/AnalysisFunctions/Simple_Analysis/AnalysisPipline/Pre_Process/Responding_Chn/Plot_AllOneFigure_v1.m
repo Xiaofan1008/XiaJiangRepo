@@ -58,8 +58,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions'));
 
 %% ============================ USER SETTINGS ===========================
 
-spike_file     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1/Xia_Linearity_S4_500_700um_SimSeq1.sp_xia_stitched.mat';
-dataset_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_500_700um_SimSeq1';
+spike_file     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1/Xia_Linearity_S1_500_700um_SimSeq1.sp_xia_stitched.mat';
+dataset_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1';
 
 % Electrode type (must match this dataset - probe differs by animal):
 %   0 = rigid single-shank probe
@@ -71,7 +71,7 @@ Electrode_Type = 3;
 FS_fallback = 30000;   % used only if fs/FS is absent from spike_file
 
 % Empty = plot every map-position channel, in channel-number order
-Plot_Channels = [];
+Plot_Channels = [1:64];
 
 % Empty means all available sets/amplitudes/PTDs
 Plot_Sets = [6];

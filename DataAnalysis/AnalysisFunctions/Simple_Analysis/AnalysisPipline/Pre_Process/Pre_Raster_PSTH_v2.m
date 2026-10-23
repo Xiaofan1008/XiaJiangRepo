@@ -3,7 +3,7 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/DX040/Xia_Linearity_S1_100_400um_Single1';
 
 %% Choice
 raster_chn_start = 1;

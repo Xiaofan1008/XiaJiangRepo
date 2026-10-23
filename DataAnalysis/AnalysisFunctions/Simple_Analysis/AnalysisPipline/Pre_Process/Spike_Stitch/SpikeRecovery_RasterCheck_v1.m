@@ -28,25 +28,25 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 
 %% ================= USER SETTINGS =================
 % -------- Single-pulse (source) dataset --------
-single_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_Single1/Xia_Linearity_S4_100_400um_Single1.sp_xia_filtered.mat';
-single_folder     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_Single1';
+single_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_Single1/Xia_Linearity_S1_100_400um_Single1.sp_xia_filtered.mat';
+single_folder     = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_Single1';
 
 % -------- Sequential dataset --------
-seq_filtered_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_filtered.mat';
+seq_filtered_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1/Xia_Linearity_S1_100_400um_SimSeq1.sp_xia_filtered.mat';
                   
-seq_stitched_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_stitched.mat';
+seq_stitched_times_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1/Xia_Linearity_S1_100_400um_SimSeq1 .sp_xia_stitched.mat';
 
-seq_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1';
+seq_folder = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1';
 
-fst_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S4_100_400um_SimSeq1/Xia_Linearity_S4_100_400um_SimSeq1.sp_xia_FirstSpikeTimes.mat';
+fst_file = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1/Xia_Linearity_S1_100_400um_SimSeq1.sp_xia_FirstSpikeTimes.mat';
 
 Electrode_Type = 3;     % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 
 %% -------- Analysis settings --------
-target_channels = [33:40];
+target_channels = [1:5];
 plot_amps       = [10];
 target_PTDs     = [];   % which sequential PTDs to plot; [] = all > 0
-target_sets     = [6]; 
+target_sets     = [2]; 
 
 ras_win    = [-10 50];   % ms
 bin_ms     = 1;

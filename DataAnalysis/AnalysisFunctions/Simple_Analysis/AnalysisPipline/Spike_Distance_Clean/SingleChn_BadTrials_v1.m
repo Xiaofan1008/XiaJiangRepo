@@ -57,7 +57,7 @@ distance_bad_trials(1).bad = {
 distance_bad_trials(2).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_Single1/Linearity_S1_500_700um_Single1_TrialSpikeCounts.mat';
 distance_bad_trials(2).bad = {
   % StimCh   3 uA     5 uA     10 uA
-     11,     [1,10,8,10,12,13,14,16,26], [1,3,8,9,17,19,22,30], [2,5,8,10,18,24,28,29];
+     11,     [1,10,8,10,12,13,14,16,26], [1,3,8,9,17,19,22,30], [2,3,5,8:10,12,14,16,18,24,25,28,29];
      13,     [1,11,27,28], [2,6,13:15,26], [7,10,14,15,20,24,21,2,4];
      15,     [1,10,13,14,16,20,21,25], [1,7,10,13,16,20,26], [3,4,7,13,19,22,23,29];
 };

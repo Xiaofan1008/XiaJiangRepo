@@ -1,20 +1,21 @@
 %% ========================================================================
-% BAD-TRIAL ENTRY FOR THE SIM / SEQ (PAIRED) DATASETS - v1
+% BAD-TRIAL ENTRY FOR THE SIM / SEQ (PAIRED) DATASETS - ONE AMPLITUDE - v2
 %
 % PURPOSE
-%   Record the final bad trials of the paired datasets (all distances of one
-%   dataset in one place) from the template printed by Clean_Paired_v1.m
-%   (section 5). The template is already filled in with the NEW flagged trials
-%   as suggestions: paste it below and edit only what is inside the brackets.
+%   Record the final bad trials of ONE amplitude of the paired datasets, from the
+%   template printed by Clean_Paired_v2.m (section 5). The result goes to its own
+%   file, tagged with the amplitude, e.g.  <base_name>_10uA_BadTrials.mat
+%   Singles are NOT touched (they keep the untagged _BadTrials.mat).
+%   Run it once per amplitude (change Amp only), always with the same rules.
 %
 % HOW A ROW READS
-%   Amps = [3 5 10];                          % the amplitude columns, in this order
+%   Amp = 10;                                  % the amplitude of this run (uA)
 %   distance_bad_trials(1).matFilePath = '.../<base_name>_TrialSpikeCounts.mat';
 %   distance_bad_trials(1).bad = {
-%     % Dist  Order  PTD    3 uA       5 uA     10 uA
-%       100,   1,     0,    [2 9],     [],      [4];      % Ch1 -> Ch3 (circle)  Sim
-%       100,   1,     5,    [],        [7],     [];       % Ch1 -> Ch3 (circle)  Seq
-%       100,   2,     5,    [1 5],     [3],     [];       % Ch3 -> Ch1 (diamond) Seq
+%     % Dist  Order  PTD   trials (10 uA)
+%       100,   1,     0,    [4];        % Ch1 -> Ch3 (circle)  Sim
+%       100,   1,     5,    [];         % Ch1 -> Ch3 (circle)  Seq
+%       100,   2,     5,    [1 5];      % Ch3 -> Ch1 (diamond) Seq
 %   };
 %   Dist  = distance in um (as in the figure title)
 %   Order = 1 circle (the lower channel number is stimulated first, e.g. Ch1 -> ChB)
@@ -27,17 +28,21 @@
 %   a condition you do not list is left UNTOUCHED (not reviewed)
 %   a listed condition REPLACES whatever was saved for it (final list, not a patch)
 %
+% TAG
+%   Tag = 'auto' -> '<Amp>uA' (10 -> '10uA', 2.5 -> '2.5uA'). Use the same tag in
+%   Clean_Paired_v2 (BadTrial_Tag) so the check reads this file. A trial of one
+%   amplitude can never affect another amplitude, so the files stay independent.
+%
 % OUTPUT
-%   <base_name>_BadTrials.mat in each dataset folder, same format as
+%   <base_name>_<tag>_BadTrials.mat in each dataset folder, same format as
 %   BadTrial_ManualConfirm_v1 (BadConfirmed, AllBadAbsoluteTrialIDs,
-%   SourceTrialCountFile), so SpikeTRatio and Clean_Paired_v1 read it as before.
-%   A timestamped backup of the previous file is kept. The bad trials of a
-%   paired file only change the ACTUAL; the prediction is unaffected.
-%   After saving, per dataset it prints
-%     - the bad / total trials of every condition, with the exclusion rate
+%   SourceTrialCountFile). A timestamped backup of the previous file is kept.
+%   The bad trials of a paired file only change the ACTUAL; the prediction is
+%   unaffected. After saving, per dataset it prints
+%     - bad / total trials of every condition at this amplitude, with exclusion rate
 %     - the exclusion rate per distance and PTD (does one distance lose far
 %       more than the others?) and a warning above Warn_Exclusion_Fraction
-%     - a REVIEW CHECKLIST of conditions with no saved entry
+%     - a REVIEW CHECKLIST of conditions at this amplitude with no saved entry
 % ========================================================================
 
 clear; clc;
@@ -46,50 +51,61 @@ clear; clc;
 
 Condition_Tolerance = 1e-4;
 Distance_Tol_um = 1;
-Create_Backup_If_Output_Exists = true;
+Create_Backup_If_Output_Exists = false;
 Warn_Exclusion_Fraction = 0.30;   % warn when a condition loses more than this share of its trials
 
-Amps = [3 5 10];                  % amplitude columns of every bad-trial table below (uA)
+Amp = 5;                         % the ONE amplitude of this run (uA)
+Tag = 'auto';                     % 'auto' -> '<Amp>uA'; or type your own, e.g. '10uA'
 
 distance_bad_trials = struct('matFilePath',{},'bad',{});
 
 distance_bad_trials(1).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1/Linearity_S1_100_400um_SimSeq1_TrialSpikeCounts.mat';
 distance_bad_trials(1).bad = {
-  % Dist  Order  PTD   3 uA    5 uA    10 uA
-    100,   1,   0,   [10,22,23,26,24],   [1 4 7 9 14 19 20 25 29 27],   [3 5 6 7 10 12 17:19 23 27];   % Ch1 -> Ch3 (circle)  Sim
-    100,   1,   5,   [1 2 9 15:17 21:23 26:30],   [1:3 6 10:13 17 22 23 25 30],   [7 10:11 13 16 17 20:26];   % Ch1 -> Ch3 (circle)  Seq 5 ms
-    100,   2,   5,   [2 4 7 9 10 12 14 15:17 25 28 30],   [1:2 5 6 12 18 21 28],   [5 11];   % Ch3 -> Ch1 (diamond)  Seq 5 ms
+  % Dist  Order  PTD   trials (5 uA)
+    100,   1,   0,   [1 4 6:11 19 20 22 23 28 30];   % Ch1 -> Ch3 (circle)  Sim  [0 saved + 7 new]
+    100,   1,   5,   [1:3 5:13 16:18 22 25 26 27 30];   % Ch1 -> Ch3 (circle)  Seq 5 ms  [0 saved + 7 new]
+    100,   2,   5,   [1 3 4:6 8 9 10 13 15 17 18 21 24:26 28];   % Ch3 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
 
-    200,   1,   0,   [11 28 30],   [10 25],   [3 9 20];   % Ch1 -> Ch5 (circle)  Sim
-    200,   1,   5,   [6 17],   [8 17],   [2 5 20];   % Ch1 -> Ch5 (circle)  Seq 5 ms
-    200,   2,   5,   [8 13 27],   [11 16 20],   [3 17];   % Ch5 -> Ch1 (diamond)  Seq 5 ms
+    200,   1,   0,   [1 3 4 7:13 18:21 24:26 28 30];   % Ch1 -> Ch5 (circle)  Sim  [0 saved + 9 new]
+    200,   1,   5,   [6:8 10:13 17 19 21:23 27 29 30];   % Ch1 -> Ch5 (circle)  Seq 5 ms  [0 saved + 4 new]
+    200,   2,   5,   [2:6 10 16 18 21 22 23 24 29 30];   % Ch5 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
 
-    300,   1,   0,   [1 2 4 5 6 7],   [5 16 23 29 30],   [2 11 23];   % Ch1 -> Ch7 (circle)  Sim
-    300,   1,   5,   [5 9 15 17 22 24],   [1],   [6 8 9 12 24 26];   % Ch1 -> Ch7 (circle)  Seq 5 ms
-    300,   2,   5,   [4 18 19 22],   [2 6 11 14 19 27],   [12 16 22];   % Ch7 -> Ch1 (diamond)  Seq 5 ms
+    300,   1,   0,   [5 6 16 23 25 29];   % Ch1 -> Ch7 (circle)  Sim  [0 saved + 6 new]
+    300,   1,   5,   [1 11 24 28];   % Ch1 -> Ch7 (circle)  Seq 5 ms  [0 saved + 4 new]
+    300,   2,   5,   [2 6 11 12 14 21];   % Ch7 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 6 new]
 
-    400,   1,   0,   [8 10 16 19 23 24 28],   [21 24 25],   [5 8 10 17 23 24 25 27 28];   % Ch1 -> Ch9 (circle)  Sim
-    400,   1,   5,   [4 20],   [7 10 21 28],   [10];   % Ch1 -> Ch9 (circle)  Seq 5 ms
-    400,   2,   5,   [8 24],   [5],   [12 13];   % Ch9 -> Ch1 (diamond)  Seq 5 ms
+    400,   1,   0,   [7 9 21 24 25];   % Ch1 -> Ch9 (circle)  Sim  [0 saved + 5 new]
+    400,   1,   5,   [6 7 23 28];   % Ch1 -> Ch9 (circle)  Seq 5 ms  [0 saved + 4 new]
+    400,   2,   5,   [5 19 30];   % Ch9 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 3 new]
 };
 
 distance_bad_trials(2).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1/Linearity_S1_500_700um_SimSeq1_TrialSpikeCounts.mat';
 distance_bad_trials(2).bad = {
-  % Dist  Order  PTD    3 uA     5 uA     10 uA
-    500,   1,     0,    [],      [],      [];
-    500,   1,     5,    [],      [],      [];
-    500,   2,     5,    [],      [],      [];
+  % Dist  Order  PTD   trials (5 uA)
+    500,   1,   0,   [2 6 9 10 11 13 14 17 18];   % Ch1 -> Ch11 (circle)  Sim  [0 saved + 9 new]
+    500,   1,   5,   [6 8 11 16];   % Ch1 -> Ch11 (circle)  Seq 5 ms  [0 saved + 4 new]
+    500,   2,   5,   [2 3 4 9 13 14 19 20];   % Ch11 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 8 new]
+
+    600,   1,   0,   [2 4 9 13 14 15 19];   % Ch1 -> Ch13 (circle)  Sim  [0 saved + 7 new]
+    600,   1,   5,   [2 4 5 7 10 12];   % Ch1 -> Ch13 (circle)  Seq 5 ms  [0 saved + 6 new]
+    600,   2,   5,   [1 3 9 10 12 15 16 20 30];   % Ch13 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 9 new]
+
+    700,   1,   0,   [1 3 5 9 12 13 14];   % Ch1 -> Ch15 (circle)  Sim  [0 saved + 7 new]
+    700,   1,   5,   [3 4 6 12 14 17 20 21];   % Ch1 -> Ch15 (circle)  Seq 5 ms  [0 saved + 8 new]
+    700,   2,   5,   [1 14 15 19];   % Ch15 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 4 new]
 };
 
 %% =========================== APPLY EACH DATASET ========================
 
 if isempty(distance_bad_trials), error('distance_bad_trials is empty.'); end
-Amps = double(Amps(:).');
-if isempty(Amps), error('Amps is empty.'); end
+if ~(isnumeric(Amp) && isscalar(Amp) && Amp > 0), error('Amp must be one positive number (uA).'); end
+Amp = double(Amp);
+if ischar(Tag) && strcmpi(Tag,'auto'), Tag = sprintf('%guA',Amp); end
+if ~(ischar(Tag) && ~isempty(Tag)), error('Tag must be a non-empty text (or ''auto'').'); end
 
 fprintf('\n============================================================\n');
-fprintf('PAIRED BAD TRIALS (v1) - %d dataset(s) | amplitude columns: %s uA\n', ...
-    numel(distance_bad_trials),num2str(Amps));
+fprintf('PAIRED BAD TRIALS (one amplitude, v2) - %d dataset(s) | %g uA | tag ''%s''\n', ...
+    numel(distance_bad_trials),Amp,Tag);
 fprintf('============================================================\n');
 
 for d = 1:numel(distance_bad_trials)
@@ -102,9 +118,9 @@ for d = 1:numel(distance_bad_trials)
     if ~isfile(matFilePath)
         error('Dataset %d: file does not exist:\n%s',d,matFilePath);
     end
-    if isempty(bad_rows) || size(bad_rows,2) ~= 3+numel(Amps)
-        error('Dataset %d: bad needs %d columns (Dist, Order, PTD + one per amplitude in Amps = [%s]) and at least one row.', ...
-            d,3+numel(Amps),num2str(Amps));
+    if isempty(bad_rows) || size(bad_rows,2) ~= 4
+        error('Dataset %d: bad needs 4 columns {Dist, Order, PTD, [trials]} and at least one row (this script handles one amplitude: Amp = %g).', ...
+            d,Amp);
     end
 
     LoadData = load(matFilePath,'SpikeCounts','TrialSummary','sim_stim');
@@ -131,19 +147,19 @@ for d = 1:numel(distance_bad_trials)
     % ---- existing saved file ----
     [dataset_folder,count_file_name] = fileparts(matFilePath);
     base_name = regexprep(count_file_name,'_TrialSpikeCounts$','');
-    output_path = fullfile(dataset_folder,sprintf('%s_BadTrials.mat',base_name));
+    output_path = fullfile(dataset_folder,sprintf('%s_%s_BadTrials.mat',base_name,Tag));
 
     BadConfirmed = empty_confirmed_struct();
     if isfile(output_path)
         ExistingLoad = load(output_path,'BadConfirmed');
         if isfield(ExistingLoad,'BadConfirmed')
             BadConfirmed = ExistingLoad.BadConfirmed;
-            fprintf('Existing saved file found (%d condition(s) already confirmed).\n',numel(BadConfirmed));
+            fprintf('Existing %s file found (%d condition(s) already confirmed).\n',Tag,numel(BadConfirmed));
         else
             warning('Existing output file has no BadConfirmed - starting fresh.');
         end
     else
-        fprintf('No existing saved file - this run creates it.\n');
+        fprintf('No existing %s file - this run creates it.\n',Tag);
     end
 
     % ---- apply each row (distance, order, PTD) and each amplitude column ----
@@ -173,27 +189,27 @@ for d = 1:numel(distance_bad_trials)
         si = cand;
         amp_values = [SpikeCounts.set(si).amp.amp_value];
 
-        for k = 1:numel(Amps)
+        for k = 1   % single amplitude (loop kept so the block below is unchanged)
 
-            trials_in = bad_rows{r,3+k};
+            trials_in = bad_rows{r,4};
             if ~isnumeric(trials_in)
-                error('Dataset %d, row %d, %g uA: the trial list must be numeric, e.g. [2 9] or [].',d,r,Amps(k));
+                error('Dataset %d, row %d, %g uA: the trial list must be numeric, e.g. [2 9] or [].',d,r,Amp);
             end
 
-            ai = find(abs(amp_values-Amps(k)) < Condition_Tolerance,1);
+            ai = find(abs(amp_values-Amp) < Condition_Tolerance,1);
             if isempty(ai)
-                error('Dataset %d, row %d: amp %g uA not found (available: %s).',d,r,Amps(k),num2str(amp_values));
+                error('Dataset %d, row %d: amp %g uA not found (available: %s).',d,r,Amp,num2str(amp_values));
             end
             ptd_values = [SpikeCounts.set(si).amp(ai).ptd.PTD_ms];
             pi = find(abs(ptd_values-ptd_v) < Condition_Tolerance,1);
             if isempty(pi)
                 error('Dataset %d, row %d (%g um, Order %d, %g uA): PTD %g ms does not exist here (available: %s).', ...
-                    d,r,dist_v,ord_v,Amps(k),ptd_v,num2str(ptd_values));
+                    d,r,dist_v,ord_v,Amp,ptd_v,num2str(ptd_values));
             end
             cond = SpikeCounts.set(si).amp(ai).ptd(pi);
             total_trials = cond.total_trials;
 
-            final_trials = validate_trial_list(trials_in,total_trials,d,r,Amps(k));
+            final_trials = validate_trial_list(trials_in,total_trials,d,r,Amp);
 
             condition_mask = TrialSummary.SetIndex == si & ...
                 TrialSummary.AmplitudeIndex == ai & ...
@@ -204,7 +220,7 @@ for d = 1:numel(distance_bad_trials)
                 trial_mask = condition_mask & TrialSummary.ConditionTrialIndex == final_trials(t);
                 if sum(trial_mask) ~= 1
                     error('Dataset %d, row %d, %g uA: condition trial %d could not be uniquely matched.', ...
-                        d,r,Amps(k),final_trials(t));
+                        d,r,Amp,final_trials(t));
                 end
                 absolute_trial_ids(t) = TrialSummary.AbsoluteTrialID(trial_mask);
             end
@@ -253,8 +269,8 @@ for d = 1:numel(distance_bad_trials)
     AllBadAbsoluteTrialIDs = sort(unique(AllBadAbsoluteTrialIDs(:).'));
 
     if isfile(output_path) && Create_Backup_If_Output_Exists
-        backup_path = fullfile(dataset_folder,sprintf('%s_BadTrials_BACKUP_%s.mat', ...
-            base_name,datestr(now,'yyyymmdd_HHMMSS')));
+        backup_path = fullfile(dataset_folder,sprintf('%s_%s_BadTrials_BACKUP_%s.mat', ...
+            base_name,Tag,datestr(now,'yyyymmdd_HHMMSS')));
         copyfile(output_path,backup_path);
         fprintf('Backup of previous file: %s\n',backup_path);
     end
@@ -264,10 +280,8 @@ for d = 1:numel(distance_bad_trials)
     fprintf('Saved: %s\n',output_path);
 
     % ---- summary per condition ----
-    fprintf('\nSummary - bad/total trials per condition ("-" = no saved entry):\n');
-    fprintf('%-9s %-6s %-14s %-9s %-4s', 'Dist(um)','Order','Stim order','PTD(ms)','Set');
-    for k = 1:numel(Amps), fprintf(' %14s',sprintf('%g uA',Amps(k))); end
-    fprintf(' | %8s\n','excl %');
+    fprintf('\nSummary at %g uA - bad/total trials per condition ("-" = no saved entry):\n',Amp);
+    fprintf('%-9s %-6s %-14s %-9s %-4s %14s\n','Dist(um)','Order','Stim order','PTD(ms)','Set',sprintf('%g uA',Amp));
 
     [~,set_order_print] = sortrows([set_dist,set_ord]);
     missing = {};
@@ -281,16 +295,16 @@ for d = 1:numel(distance_bad_trials)
         for pt = ptd_all(:).'
             fprintf('%-9g %-6d %-14s %-9g %-4d',set_dist(ss),set_ord(ss),SpikeCounts.set(ss).set_name,pt,ss);
             row_bad = 0; row_tot = 0;
-            for k = 1:numel(Amps)
-                hit = find([BadConfirmed.set] == ss & abs([BadConfirmed.amp]-Amps(k)) < Condition_Tolerance & ...
+            for k = 1
+                hit = find([BadConfirmed.set] == ss & abs([BadConfirmed.amp]-Amp) < Condition_Tolerance & ...
                     abs([BadConfirmed.ptd_ms]-pt) < Condition_Tolerance,1);
                 if isempty(hit)
                     fprintf(' %14s','-');
-                    ai_chk = find(abs([SpikeCounts.set(ss).amp.amp_value]-Amps(k)) < Condition_Tolerance,1);
+                    ai_chk = find(abs([SpikeCounts.set(ss).amp.amp_value]-Amp) < Condition_Tolerance,1);
                     if ~isempty(ai_chk)
                         pv = [SpikeCounts.set(ss).amp(ai_chk).ptd.PTD_ms];
                         if any(abs(pv-pt) < Condition_Tolerance)
-                            missing{end+1} = sprintf('%g um, Order %d, PTD %g, %g uA',set_dist(ss),set_ord(ss),pt,Amps(k)); %#ok<SAGROW>
+                            missing{end+1} = sprintf('%g um, Order %d, PTD %g, %g uA',set_dist(ss),set_ord(ss),pt,Amp); %#ok<SAGROW>
                         end
                     end
                 else
@@ -299,11 +313,11 @@ for d = 1:numel(distance_bad_trials)
                     row_bad = row_bad+nb; row_tot = row_tot+nt;
                     if nt > 0 && nb/nt > Warn_Exclusion_Fraction
                         warn_list{end+1} = sprintf('%g um, Order %d, PTD %g, %g uA: %d/%d (%.0f%%)', ...
-                            set_dist(ss),set_ord(ss),pt,Amps(k),nb,nt,100*nb/nt); %#ok<SAGROW>
+                            set_dist(ss),set_ord(ss),pt,Amp,nb,nt,100*nb/nt); %#ok<SAGROW>
                     end
                 end
             end
-            if row_tot > 0, fprintf(' | %7.0f%%\n',100*row_bad/row_tot); else, fprintf(' | %8s\n','-'); end
+            fprintf('\n');
             key = sprintf('%g|%g',set_dist(ss),pt);
             if isKey(dist_tot,key), v = dist_tot(key); else, v = [0 0]; end
             dist_tot(key) = v+[row_bad row_tot];
@@ -311,7 +325,7 @@ for d = 1:numel(distance_bad_trials)
     end
 
     % ---- exclusion rate per distance and PTD ----
-    fprintf('\nExclusion rate per distance and PTD (all stim orders and amplitudes with a saved entry):\n');
+    fprintf('\nExclusion rate per distance and PTD (all stim orders, %g uA, conditions with a saved entry):\n',Amp);
     keys_all = keys(dist_tot);
     parsed = nan(numel(keys_all),2);
     for q = 1:numel(keys_all)
@@ -332,7 +346,7 @@ for d = 1:numel(distance_bad_trials)
         fprintf('  %s\n',strjoin(warn_list,'\n  '));
     end
 
-    fprintf('\nREVIEW CHECKLIST (paired conditions with NO saved entry):\n');
+    fprintf('\nREVIEW CHECKLIST (paired conditions at %g uA with NO saved entry):\n',Amp);
     if isempty(missing)
         fprintf('  none - every condition has been confirmed.\n');
     else
@@ -342,7 +356,7 @@ for d = 1:numel(distance_bad_trials)
     fprintf('Total bad trials in this file: %d\n',numel(AllBadAbsoluteTrialIDs));
 end
 
-fprintf('\nDone. Re-run Clean_Paired_v1 to check what is left.\n');
+fprintf('\nDone. Re-run Clean_Paired_v2 (Amp_To_Clean = %g) to check what is left.\n',Amp);
 
 %% =========================== LOCAL FUNCTIONS ==========================
 

@@ -107,16 +107,21 @@ Boot_N    = 300;                 % bootstrap repeats for the error bars (0 = off
 Boot_Seed = 1;
 
 % ---- figure appearance ----
-Trial_Measure    = [1 3];            % trial columns: 1 RESPONSE | 2 MAX single chn | 3 BASELINE, or several e.g. [1 3]
+Trial_Measure    = [1 3];        % trial figures: 1 RESPONSE | 2 MAX single chn | 3 BASELINE, one or several (one big figure each)
 Label_All_Trials = true;         % black number next to every point (order 1 above, order 2 below)
 Show_Median_Lines = true;
-Fig_Width_Per_Col  = 470;
-Fig_Height_Per_Amp = 330;
 Marker_Size_Kept    = 6;
 Marker_Size_Flagged = 8;
 Label_FontSize      = 8;
 Plot_DistanceFigures = true;
 Plot_CurveFigures    = true;
+Plot_AmpCurve        = true;         % extra figure: linearity vs AMPLITUDE (one line per distance, one panel per PTD)
+Amp_Curve_Measure    = 'ratio';      % 'ratio' (Actual/Predicted, 1 = linear) | 'LI' (linearity index, 0 = linear) | 'both'
+Amp_Curve_ShowNow    = false;        % true: also draw the 'now' curves (dashed) next to the clean ones
+Distance_Figure_Layout = 'by_ptd';       % 'by_ptd': one figure per PTD (Sim / Seq), the measures in Trial_Measure side by side
+                                         %   (e.g. response + baseline of each stim order next to each other)
+                                         % 'by_measure': one figure per measure, all PTDs
+                                         % 'combined': everything in one figure
 Plot_TrialRatioFigures    = true;    % per dataset x distance: every trial as ratio_i = Metric/Predicted (prediction = 1)
 Plot_TrialRatioVsDistance = true;    % every trial's ratio_i against distance, with mean / median / pooled ratio
 Ratio_YLim = [];                     % [] = automatic; otherwise e.g. [0 3] for the two ratio figures
@@ -538,7 +543,6 @@ panel_name = {'RESPONSE','MAX single chn','BASELINE'};
 if Plot_DistanceFigures
 
     nM = numel(Trial_Measure);
-    nP = numel(ptds_all);
 
     for dp = dp_all
         for dk = dists_all
@@ -547,86 +551,119 @@ if Plot_DistanceFigures
             if isempty(rows_here), continue; end
             amps_here = unique(C_amp(rows_here)).';
             nA = numel(amps_here);
+            ptds_here = unique(C_ptd(rows_here)).';
 
-            % one column per condition that exists (PTD x stim order): each order has its own panel
-            cond_cols = unique([C_ptd(rows_here),C_ord(rows_here)],'rows');
-            nCC = size(cond_cols,1);
-            nCols = nM*nCC+1;
+            % ---- figure specs: which PTDs and which measures go into each figure ----
+            %   'by_ptd'     : one figure per PTD (Sim / Seq), response AND baseline side by side  [default]
+            %   'by_measure' : one figure per measure, all PTDs
+            %   'combined'   : everything in one figure
+            fig_ptds = {}; fig_meas = {};
+            switch lower(Distance_Figure_Layout)
+                case 'by_ptd'
+                    for q = 1:numel(ptds_here)
+                        fig_ptds{end+1} = ptds_here(q); fig_meas{end+1} = 1:nM; %#ok<AGROW>
+                    end
+                case 'by_measure'
+                    for q = 1:nM
+                        fig_ptds{end+1} = ptds_here; fig_meas{end+1} = q; %#ok<AGROW>
+                    end
+                otherwise
+                    fig_ptds{end+1} = ptds_here; fig_meas{end+1} = 1:nM; %#ok<AGROW>
+            end
 
-            figure('Color','w','Name',sprintf('DP %d | %s',dp,dist_label(dk)), ...
-                'Position',[20 40 min(2000,Fig_Width_Per_Col*nCols+80) min(1000,Fig_Height_Per_Amp*nA+90)]);
+            for fg = 1:numel(fig_ptds)
 
-            for ia = 1:nA
-                a = amps_here(ia);
+                ptd_list  = fig_ptds{fg};
+                meas_idx  = fig_meas{fg};
+                nPb       = numel(ptd_list);
+                has_avp   = strcmpi(Distance_Figure_Layout,'by_ptd') || fg == 1;
 
-                for im = 1:nM
-                    mm = Trial_Measure(im);
-                    for ic = 1:nCC
-                        pt = cond_cols(ic,1); oo = cond_cols(ic,2);
-                        ax = subplot(nA,nCols,(ia-1)*nCols+(im-1)*nCC+ic);
+                % columns: for every PTD, for every stim order that exists, for every measure
+                col_spec = zeros(0,3);        % [ptd, order, measure index]
+                for ip = 1:nPb
+                    ords = unique(C_ord(rows_here(abs(C_ptd(rows_here)-ptd_list(ip)) < PTD_Tol_ms))).';
+                    for oo = ords
+                        for iq = meas_idx
+                            col_spec(end+1,:) = [ptd_list(ip) oo iq]; %#ok<AGROW>
+                        end
+                    end
+                end
+                nColsFig = size(col_spec,1)+has_avp;
+
+                ptd_txt = strjoin(arrayfun(@(p_) short_ptd(p_),ptd_list,'UniformOutput',false),' + ');
+                meas_txt = strjoin(arrayfun(@(q) panel_name{Trial_Measure(q)},meas_idx,'UniformOutput',false),' + ');
+                fig = figure('Color','w','Units','normalized','Position',[0.01 0.04 0.98 0.86], ...
+                    'Name',sprintf('DP %d | %s | %s | %s',dp,dist_label(dk),ptd_txt,meas_txt));
+                tl = tiledlayout(fig,nA,nColsFig,'TileSpacing','compact','Padding','compact');
+
+                for ia = 1:nA
+                    a = amps_here(ia);
+
+                    for ic = 1:size(col_spec,1)
+                        pt = col_spec(ic,1); oo = col_spec(ic,2); mm = Trial_Measure(col_spec(ic,3));
+                        ax = nexttile(tl,(ia-1)*nColsFig+ic);
                         hold(ax,'on');
                         rr = rows_here(abs(C_amp(rows_here)-a) < Amp_Tol_uA & abs(C_ptd(rows_here)-pt) < PTD_Tol_ms & C_ord(rows_here) == oo);
                         draw_trial_panel(ax,Cond,Flag,rr,mm,col_good,col_new,col_old,col_pred, ...
                             Marker_Size_Kept,Marker_Size_Flagged,Label_FontSize,Label_All_Trials,Show_Median_Lines, ...
                             Use_HighRule,highThreshold,Use_LowRule,lowThreshold,Use_MaxChRule,maxChThreshold, ...
                             Use_BaseAbsRule,baseAbsThreshold,Use_LinearityLimit,Lin_Ratio_Low,Lin_Ratio_High);
-                        title(ax,sprintf('%s | %s | %s | %g uA',panel_name{mm},short_ptd(pt),cond_text(Cond,rr),a), ...
-                            'FontSize',9,'Interpreter','none');
-                        if ic == 1, ylabel(ax,row_title{mm},'FontSize',8); end
+                        title(ax,{sprintf('%s | %s',panel_name{mm},short_ptd(pt)), ...
+                            sprintf('%s | %g uA',cond_text(Cond,rr),a)},'FontSize',9,'Interpreter','none');
+                        ylabel(ax,row_title{mm},'FontSize',7);
                         if ia == nA, xlabel(ax,'Condition trial # (relative)'); end
                     end
-                end
 
-                % ---- actual vs predicted panel ----
-                ax = subplot(nA,nCols,(ia-1)*nCols+nCols);
-                hold(ax,'on');
-                gs = find([G.dp] == dp & [G.dkey] == dk & abs([G.amp]-a) < Amp_Tol_uA);
-                if ~isempty(gs)
-                    gp = G(gs(1));
-                    pred_v = gp.cln.pred;
-                    pred_sd = gp.cln.pred_sd;
-                    vals = nan(1+nP,2); sds = nan(1+nP,2); rtxt = cell(1+nP,1);
-                    vals(1,:) = pred_v; sds(1,:) = pred_sd;
-                    for ip = 1:nP
-                        gi = gs([G(gs).ptd] == ptds_all(ip));
-                        if isempty(gi), continue; end
-                        vals(1+ip,:) = [G(gi(1)).now.actual, G(gi(1)).cln.actual];
-                        sds(1+ip,:)  = [G(gi(1)).now.actual_sd, G(gi(1)).cln.actual_sd];
-                        rtxt{1+ip} = sprintf('r %.2f -> %.2f',G(gi(1)).now.ratio,G(gi(1)).cln.ratio);
-                    end
-                    hb = bar(ax,1:(1+nP),vals,'grouped','BarWidth',0.8);
-                    hb(1).FaceColor = [0.35 0.35 0.35]; hb(2).FaceColor = [0.75 0.75 0.75];
-                    xo = [-0.14 0.14];
-                    for k = 1:2
-                        errorbar(ax,(1:(1+nP))+xo(k),vals(:,k),sds(:,k),'k.','CapSize',6);
-                    end
-                    ytop = max(vals(:)+sds(:),[],'omitnan');
-                    if isempty(ytop) || isnan(ytop), ytop = 1; end
-                    for ip = 1:nP
-                        if ~isempty(rtxt{1+ip})
-                            text(ax,1+ip,max(vals(1+ip,:)+sds(1+ip,:),[],'omitnan'),rtxt{1+ip},'HorizontalAlignment','center', ...
-                                'VerticalAlignment','bottom','FontSize',8,'FontWeight','bold');
+                    % ---- actual vs predicted panel ----
+                    if has_avp
+                        ax = nexttile(tl,(ia-1)*nColsFig+nColsFig);
+                        hold(ax,'on');
+                        gs = find([G.dp] == dp & [G.dkey] == dk & abs([G.amp]-a) < Amp_Tol_uA);
+                        if ~isempty(gs)
+                            gp = G(gs(1));
+                            vals = nan(1+nPb,2); sds = nan(1+nPb,2); rtxt = cell(1+nPb,1);
+                            vals(1,:) = gp.cln.pred; sds(1,:) = gp.cln.pred_sd;
+                            for ip = 1:nPb
+                                gi = gs(abs([G(gs).ptd]-ptd_list(ip)) < PTD_Tol_ms);
+                                if isempty(gi), continue; end
+                                vals(1+ip,:) = [G(gi(1)).now.actual, G(gi(1)).cln.actual];
+                                sds(1+ip,:)  = [G(gi(1)).now.actual_sd, G(gi(1)).cln.actual_sd];
+                                rtxt{1+ip} = sprintf('r %.2f -> %.2f',G(gi(1)).now.ratio,G(gi(1)).cln.ratio);
+                            end
+                            hb = bar(ax,1:(1+nPb),vals,'grouped','BarWidth',0.8);
+                            hb(1).FaceColor = [0.35 0.35 0.35]; hb(2).FaceColor = [0.75 0.75 0.75];
+                            xo = [-0.14 0.14];
+                            for k = 1:2
+                                errorbar(ax,(1:(1+nPb))+xo(k),vals(:,k),sds(:,k),'k.','CapSize',6);
+                            end
+                            ytop = max(vals(:)+sds(:),[],'omitnan');
+                            if isempty(ytop) || isnan(ytop), ytop = 1; end
+                            for ip = 1:nPb
+                                if ~isempty(rtxt{1+ip})
+                                    text(ax,1+ip,max(vals(1+ip,:)+sds(1+ip,:),[],'omitnan'),rtxt{1+ip},'HorizontalAlignment','center', ...
+                                        'VerticalAlignment','bottom','FontSize',8,'FontWeight','bold');
+                                end
+                            end
+                            set(ax,'XTick',1:(1+nPb),'XTickLabel',[{'Predicted'},arrayfun(@(p_) short_ptd(p_),ptd_list,'UniformOutput',false)], ...
+                                'FontSize',8,'XTickLabelRotation',0);
+                            ylim(ax,[min(0,min(vals(:)-sds(:),[],'omitnan'))*1.1, ytop*1.25+eps]);
+                            if ia == 1
+                                legend(ax,hb,{'now','without NEW flagged'},'Location','best','Box','off','FontSize',7);
+                            end
                         end
-                    end
-                    set(ax,'XTick',1:(1+nP),'XTickLabel',[{'Predicted'},arrayfun(@(p) ptd_label(p),ptds_all,'UniformOutput',false)], ...
-                        'FontSize',8);
-                    ylim(ax,[min(0,min(vals(:)-sds(:),[],'omitnan'))*1.1, ytop*1.25+eps]);
-                    if ia == 1
-                        legend(ax,hb,{'now','without NEW flagged'},'Location','best','Box','off','FontSize',7);
+                        title(ax,{'ACTUAL vs PREDICTED',sprintf('%s | %g uA',dist_label(dk),a)},'FontSize',9,'Interpreter','none');
+                        if ia == 1, ylabel(ax,'spikes / chn / trial','FontSize',8); end
+                        box(ax,'off');
                     end
                 end
-                title(ax,sprintf('ACTUAL vs PREDICTED | %s | %g uA',dist_label(dk),a),'FontSize',9,'Interpreter','none');
-                if ia == 1, ylabel(ax,'spikes / chn / trial','FontSize',8); end
-                box(ax,'off');
-            end
 
-            sgtitle(sprintf(['DP %d (%s) | %s   (blue = kept, red = NEW flagged, grey x = already saved bad, black ring = outside linearity limits;  ' ...
-                'grey line = median, solid black line = predicted; each stim order has its own panel)'], ...
-                dp,DPinfo(dp).label,dist_label(dk)),'FontSize',9,'Interpreter','none');
+                title(tl,sprintf(['DP %d (%s) | %s | %s   (blue = kept, red = NEW flagged, grey x = already saved bad, black ring = outside linearity limits;  ' ...
+                    'grey line = median, solid black line = predicted; each stim order has its own panel)'], ...
+                    dp,DPinfo(dp).label,dist_label(dk),ptd_txt),'FontSize',9,'Interpreter','none');
+            end
         end
     end
 end
-
 
 %% ===================== 6b. PER-TRIAL RATIO FIGURES =====================
 % One figure per dataset x distance: every trial as ratio_i = Metric / Predicted,
@@ -645,14 +682,15 @@ if Plot_TrialRatioFigures
             cond_cols = unique([C_ptd(rows_here),C_ord(rows_here)],'rows');
             nCC = size(cond_cols,1);
 
-            figure('Color','w','Name',sprintf('DP %d | %s | per-trial RATIO',dp,dist_label(dk)), ...
-                'Position',[30 50 min(1900,Fig_Width_Per_Col*nCC+110) min(1000,Fig_Height_Per_Amp*nA+90)]);
+            fig = figure('Color','w','Units','normalized','Position',[0.02 0.04 0.96 0.86], ...
+                'Name',sprintf('DP %d | %s | per-trial RATIO',dp,dist_label(dk)));
+            tl = tiledlayout(fig,nA,nCC,'TileSpacing','compact','Padding','compact');
 
             for ia = 1:nA
                 a = amps_here(ia);
                 for ic = 1:nCC
                     pt = cond_cols(ic,1); oo = cond_cols(ic,2);
-                    ax = subplot(nA,nCC,(ia-1)*nCC+ic);
+                    ax = nexttile(tl,(ia-1)*nCC+ic);
                     hold(ax,'on');
                     rr = rows_here(abs(C_amp(rows_here)-a) < Amp_Tol_uA & abs(C_ptd(rows_here)-pt) < PTD_Tol_ms & C_ord(rows_here) == oo);
                     draw_trial_panel(ax,Cond,Flag,rr,4,col_good,col_new,col_old,col_pred, ...
@@ -660,14 +698,14 @@ if Plot_TrialRatioFigures
                         Use_HighRule,highThreshold,Use_LowRule,lowThreshold,Use_MaxChRule,maxChThreshold, ...
                         Use_BaseAbsRule,baseAbsThreshold,Use_LinearityLimit,Lin_Ratio_Low,Lin_Ratio_High);
                     if ~isempty(Ratio_YLim), ylim(ax,Ratio_YLim); end
-                    title(ax,sprintf('TRIAL RATIO | %s | %s | %g uA',short_ptd(pt),cond_text(Cond,rr),a), ...
+                    title(ax,{sprintf('TRIAL RATIO | %s',short_ptd(pt)),sprintf('%s | %g uA',cond_text(Cond,rr),a)}, ...
                         'FontSize',9,'Interpreter','none');
                     if ic == 1, ylabel(ax,'ratio_i = Metric / Predicted  (1 = prediction)','FontSize',8); end
                     if ia == nA, xlabel(ax,'Condition trial # (relative)'); end
                 end
             end
 
-            sgtitle(sprintf(['DP %d (%s) | %s   per-trial ratio = response / predicted  (solid line = 1 = linear, dotted = linearity limits, grey = median;  ' ...
+            title(tl,sprintf(['DP %d (%s) | %s   per-trial ratio = response / predicted  (solid line = 1 = linear, dotted = linearity limits, grey = median;  ' ...
                 'blue = kept, red = NEW flagged, grey x = already saved bad, ring = outside limits;  each stim order has its own panel)'], ...
                 dp,DPinfo(dp).label,dist_label(dk)),'FontSize',9,'Interpreter','none');
         end
@@ -796,6 +834,68 @@ if Plot_CurveFigures
             end
         end
         sgtitle('Every trial ratio_i vs distance: blue = kept trial, red ring = NEW flagged (not in clean), circle / diamond = stim order; black = mean and median of the clean trials; orange = pooled ratio','FontSize',9);
+    end
+
+    % ---- (d) linearity vs amplitude: one line per distance, one panel per PTD ----
+    if Plot_AmpCurve
+        switch lower(Amp_Curve_Measure)
+            case 'ratio', ac_list = {'ratio'};
+            case 'li',    ac_list = {'LI'};
+            otherwise,    ac_list = {'ratio','LI'};
+        end
+        dvals_all = unique([GA.dkey]);
+        dvals_all = dvals_all(dvals_all > 0);
+        cm_d = parula(numel(dvals_all)+1);
+
+        for im = 1:numel(ac_list)
+            meas_name = ac_list{im};
+            fig_a = figure('Color','w','Units','normalized','Position',[0.05 0.12 0.9 0.62], ...
+                'Name',sprintf('Curve: %s vs amplitude',meas_name));
+            tla = tiledlayout(fig_a,1,numel(ptds_all),'TileSpacing','compact','Padding','compact');
+            for ip = 1:numel(ptds_all)
+                ax = nexttile(tla,ip); hold(ax,'on');
+                hl = gobjects(0); ll = {};
+                for id = 1:numel(dvals_all)
+                    sel = find([GA.dkey] == dvals_all(id) & abs([GA.ptd]-ptds_all(ip)) < PTD_Tol_ms);
+                    if isempty(sel), continue; end
+                    [~,o] = sort([GA(sel).amp]); sel = sel(o);
+                    xa = [GA(sel).amp];
+                    rc = arrayfun(@(g) g.cln.ratio,GA(sel));    sc_ = arrayfun(@(g) g.cln.ratio_sd,GA(sel));
+                    rn = arrayfun(@(g) g.now.ratio,GA(sel));    sn_ = arrayfun(@(g) g.now.ratio_sd,GA(sel));
+                    if strcmp(meas_name,'LI')
+                        yc = (rc-1)./(rc+1);  ec = 2*sc_./(rc+1).^2;
+                        yn = (rn-1)./(rn+1);  en = 2*sn_./(rn+1).^2;
+                    else
+                        yc = rc; ec = sc_; yn = rn; en = sn_;
+                    end
+                    if Amp_Curve_ShowNow
+                        errorbar(ax,xa,yn,en,'--o','Color',cm_d(id,:),'MarkerFaceColor','w','LineWidth',1,'MarkerSize',6,'CapSize',5, ...
+                            'HandleVisibility','off');
+                    end
+                    h1 = errorbar(ax,xa,yc,ec,'-o','Color',cm_d(id,:),'MarkerFaceColor',cm_d(id,:),'LineWidth',1.6,'MarkerSize',7,'CapSize',6);
+                    hl(end+1) = h1; ll{end+1} = sprintf('%g um',dvals_all(id)); %#ok<SAGROW>
+                end
+                if strcmp(meas_name,'LI')
+                    yline(ax,0,':k','LineWidth',1.3); ylim(ax,[-1 1]);
+                    ylab = 'Linearity index (Actual - Predicted)/(Actual + Predicted)   (0 = linear)';
+                else
+                    yline(ax,1,':k','LineWidth',1.3);
+                    ylab = 'Ratio = Actual / Predicted   (1 = linear)';
+                end
+                set(ax,'XTick',amps_all);
+                xlim(ax,[min(amps_all)-0.05*range(amps_all)-0.5, max(amps_all)+0.05*range(amps_all)+0.5]);
+                title(ax,ptd_label(ptds_all(ip)),'FontSize',10);
+                xlabel(ax,'Amplitude (uA)');
+                if ip == 1, ylabel(ax,ylab,'FontSize',8); end
+                if ~isempty(hl)
+                    lg = legend(ax,hl,ll,'Location','best','Box','off','FontSize',8);
+                    title(lg,'Distance');
+                end
+                grid(ax,'on'); ax.GridAlpha = 0.15; box(ax,'off');
+            end
+            title(tla,sprintf('%s vs amplitude - one line per distance (clean trials; error bar = bootstrap SD%s)', ...
+                meas_name,ternary(Amp_Curve_ShowNow,'; dashed/open = now','')),'FontSize',9);
+        end
     end
 end
 

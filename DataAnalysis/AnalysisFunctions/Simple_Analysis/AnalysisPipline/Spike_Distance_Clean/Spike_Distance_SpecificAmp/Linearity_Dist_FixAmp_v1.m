@@ -386,11 +386,11 @@ if Plot_SpikeVsDistance
             if isempty(sel), continue; end
             [~,o] = sort([Results(sel).dist_um]); sel = sel(o);
             xd = [Results(sel).dist_um];
-            h1 = errorbar(ax,xd,[Results(sel).actual],[Results(sel).actual_sd]*1.5,'-o','Color',col_ptd(ip,:), ...
+            h1 = errorbar(ax,xd,[Results(sel).actual],[Results(sel).actual_sd],'-o','Color',col_ptd(ip,:), ...
                 'MarkerFaceColor',col_ptd(ip,:),'LineWidth',1.6,'MarkerSize',7,'CapSize',6);
             hl(end+1) = h1; ll{end+1} = ['Actual ' ptd_label(ptds_all(ip))]; %#ok<SAGROW>
             if ip == 1
-                h2 = errorbar(ax,xd,[Results(sel).predicted],[Results(sel).predicted_sd]*1.5,'-s','Color',col_pred, ...
+                h2 = errorbar(ax,xd,[Results(sel).predicted],[Results(sel).predicted_sd],'-s','Color',col_pred, ...
                     'MarkerFaceColor',col_pred,'LineWidth',1.6,'MarkerSize',6,'CapSize',6);
                 hl(end+1) = h2; ll{end+1} = 'Predicted'; %#ok<SAGROW>
             end
@@ -424,7 +424,7 @@ if Plot_LinearityVsDistance
                 [~,o] = sort([Results(sel).dist_um]); sel = sel(o);
                 if strcmp(mname,'LI'), yv = [Results(sel).LI]; ev = [Results(sel).LI_sd];
                 else,                  yv = [Results(sel).ratio]; ev = [Results(sel).ratio_sd]; end
-                h1 = errorbar(ax,[Results(sel).dist_um],yv,ev*1.5,'-o','Color',col_ptd(ip,:), ...
+                h1 = errorbar(ax,[Results(sel).dist_um],yv,ev,'-o','Color',col_ptd(ip,:), ...
                     'MarkerFaceColor',col_ptd(ip,:),'LineWidth',1.6,'MarkerSize',7,'CapSize',6);
                 hl(end+1) = h1; ll{end+1} = ptd_label(ptds_all(ip)); %#ok<SAGROW>
             end
@@ -464,7 +464,7 @@ if Plot_AmpOverlay && nAc > 1
                 [~,o] = sort([Results(sel).dist_um]); sel = sel(o);
                 if strcmp(mname,'LI'), yv = [Results(sel).LI]; ev = [Results(sel).LI_sd];
                 else,                  yv = [Results(sel).ratio]; ev = [Results(sel).ratio_sd]; end
-                h1 = errorbar(ax,[Results(sel).dist_um],yv,ev*1.5,'-o','Color',cm_a(ia,:), ...
+                h1 = errorbar(ax,[Results(sel).dist_um],yv,ev,'-o','Color',cm_a(ia,:), ...
                     'MarkerFaceColor',cm_a(ia,:),'LineWidth',1.6,'MarkerSize',7,'CapSize',6);
                 hl(end+1) = h1; ll{end+1} = sprintf('%g uA',a); %#ok<SAGROW>
             end

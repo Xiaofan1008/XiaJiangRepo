@@ -37,7 +37,7 @@ clear; clc;
 
 Target_Channel = 1;              % this script is meant for Ch1 only
 Condition_Tolerance = 1e-4;
-Create_Backup_If_Output_Exists = true;
+Create_Backup_If_Output_Exists = false;
 
 distance_bad_trials = struct('matFilePath',{},'bad',{});
 
@@ -53,7 +53,7 @@ distance_bad_trials(2).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_L
 distance_bad_trials(2).bad = {
   % Amp(uA)  relative bad trials
      3,      [4,18,26:28,16:18];
-     5,      [1,3,9,10,16,17];
+     5,      [1,2,3,5,6,9,10,13,16,17,20,30];
     10,      [1:4,23,26,30,11,15];
 };
 

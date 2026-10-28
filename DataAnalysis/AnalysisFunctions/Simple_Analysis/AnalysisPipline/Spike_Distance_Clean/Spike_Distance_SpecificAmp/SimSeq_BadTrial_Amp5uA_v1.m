@@ -62,37 +62,37 @@ distance_bad_trials = struct('matFilePath',{},'bad',{});
 distance_bad_trials(1).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_100_400um_SimSeq1/Linearity_S1_100_400um_SimSeq1_TrialSpikeCounts.mat';
 distance_bad_trials(1).bad = {
   % Dist  Order  PTD   trials (5 uA)
-    100,   1,   0,   [1 4 6:11 19 20 22 23 28 30];   % Ch1 -> Ch3 (circle)  Sim  [0 saved + 7 new]
-    100,   1,   5,   [1:3 5:13 16:18 22 25 26 27 30];   % Ch1 -> Ch3 (circle)  Seq 5 ms  [0 saved + 7 new]
-    100,   2,   5,   [1 3 4:6 8 9 10 13 15 17 18 21 24:26 28];   % Ch3 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
+    100,   1,   0,   [1 3 4 7 9 11 16:19 20 25 27];   % Ch1 -> Ch3 (circle)  Sim  [0 saved + 7 new]
+    100,   1,   5,   [2:4 11 13 16:18 22 25 26 27 29 30];   % Ch1 -> Ch3 (circle)  Seq 5 ms  [0 saved + 7 new]
+    100,   2,   5,   [1 3 4 5 6 8 9 10 11 13 15 17 18 20 21 24 25 26 28 30];   % Ch3 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
 
-    200,   1,   0,   [1 3 4 7:13 18:21 24:26 28 30];   % Ch1 -> Ch5 (circle)  Sim  [0 saved + 9 new]
-    200,   1,   5,   [6:8 10:13 17 19 21:23 27 29 30];   % Ch1 -> Ch5 (circle)  Seq 5 ms  [0 saved + 4 new]
-    200,   2,   5,   [2:6 10 16 18 21 22 23 24 29 30];   % Ch5 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
+    200,   1,   0,   [1 3 4 7:9 11:13 24:26 28 30];   % Ch1 -> Ch5 (circle)  Sim  [0 saved + 9 new]
+    200,   1,   5,   [6 7 8 10 11 12 13 17 19 21 22 23 27 29];   % Ch1 -> Ch5 (circle)  Seq 5 ms  [0 saved + 4 new]
+    200,   2,   5,   [6 8 10 11 13 14 16 18 20 21 23 24 29 30];   % Ch5 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 5 new]
 
-    300,   1,   0,   [5 6 16 23 25 29];   % Ch1 -> Ch7 (circle)  Sim  [0 saved + 6 new]
-    300,   1,   5,   [1 11 24 28];   % Ch1 -> Ch7 (circle)  Seq 5 ms  [0 saved + 4 new]
-    300,   2,   5,   [2 6 11 12 14 21];   % Ch7 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 6 new]
+    300,   1,   0,   [1 4 5 6 10 11 14 15 16 18 20 23 25 28 29 30];   % Ch1 -> Ch7 (circle)  Sim  [0 saved + 6 new]
+    300,   1,   5,   [1 11 14 16 24 28];   % Ch1 -> Ch7 (circle)  Seq 5 ms  [0 saved + 4 new]
+    300,   2,   5,   [2 6 11 12 14 15 17 19 21 27];   % Ch7 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 6 new]
 
-    400,   1,   0,   [7 9 21 24 25];   % Ch1 -> Ch9 (circle)  Sim  [0 saved + 5 new]
-    400,   1,   5,   [6 7 23 28];   % Ch1 -> Ch9 (circle)  Seq 5 ms  [0 saved + 4 new]
-    400,   2,   5,   [5 19 30];   % Ch9 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 3 new]
+    400,   1,   0,   [4 7 9 14:16 23:26 30];   % Ch1 -> Ch9 (circle)  Sim  [0 saved + 5 new]
+    400,   1,   5,   [2 5 6 7 8 10 14 15 17 19 21 23 24 25 26 27 28 30];   % Ch1 -> Ch9 (circle)  Seq 5 ms  [0 saved + 4 new]
+    400,   2,   5,   [5 7 8 11 13 14 19 30];   % Ch9 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 3 new]
 };
 
 distance_bad_trials(2).matFilePath = '/Volumes/MACData/Data/Data_Xia/DX037/Xia_Linearity_S1_500_700um_SimSeq1/Linearity_S1_500_700um_SimSeq1_TrialSpikeCounts.mat';
 distance_bad_trials(2).bad = {
   % Dist  Order  PTD   trials (5 uA)
-    500,   1,   0,   [2 6 9 10 11 13 14 17 18];   % Ch1 -> Ch11 (circle)  Sim  [0 saved + 9 new]
-    500,   1,   5,   [6 8 11 16];   % Ch1 -> Ch11 (circle)  Seq 5 ms  [0 saved + 4 new]
-    500,   2,   5,   [2 3 4 9 13 14 19 20];   % Ch11 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 8 new]
+    500,   1,   0,   [2 6 9 11 12 13 14 17 18 19 21 22 24 26 27 30];   % Ch1 -> Ch11 (circle)  Sim  [0 saved + 9 new]
+    500,   1,   5,   [2 5 6 8 10 11 16];   % Ch1 -> Ch11 (circle)  Seq 5 ms  [0 saved + 4 new]
+    500,   2,   5,   [1 2 3 4 9 13 14 18 20 22 30];   % Ch11 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 8 new]
 
-    600,   1,   0,   [2 4 9 13 14 15 19];   % Ch1 -> Ch13 (circle)  Sim  [0 saved + 7 new]
-    600,   1,   5,   [2 4 5 7 10 12];   % Ch1 -> Ch13 (circle)  Seq 5 ms  [0 saved + 6 new]
-    600,   2,   5,   [1 3 9 10 12 15 16 20 30];   % Ch13 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 9 new]
+    600,   1,   0,   [2 4 5 6 7 13 14 15 16 18 19 20 22 23:25 26 27 28];   % Ch1 -> Ch13 (circle)  Sim  [0 saved + 7 new]
+    600,   1,   5,   [1 2 4 5 7 9 10 12 17 30];   % Ch1 -> Ch13 (circle)  Seq 5 ms  [0 saved + 6 new]
+    600,   2,   5,   [1 2 3 4 6 8 9 10 12 13 15 16 17 19 21 25 26 30];   % Ch13 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 9 new]
 
-    700,   1,   0,   [1 3 5 9 12 13 14];   % Ch1 -> Ch15 (circle)  Sim  [0 saved + 7 new]
-    700,   1,   5,   [3 4 6 12 14 17 20 21];   % Ch1 -> Ch15 (circle)  Seq 5 ms  [0 saved + 8 new]
-    700,   2,   5,   [1 14 15 19];   % Ch15 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 4 new]
+    700,   1,   0,   [1 2 3 10 12 14 15 17 19 20 21 22 24 26:29 30];   % Ch1 -> Ch15 (circle)  Sim  [0 saved + 7 new]
+    700,   1,   5,   [1 2 3 4 5 6 12 14 15 17 19 20 23 30];   % Ch1 -> Ch15 (circle)  Seq 5 ms  [0 saved + 8 new]
+    700,   2,   5,   [1 2 4 6 13 14 15 16 17 18 19 20 23 24 26 29];   % Ch15 -> Ch1 (diamond)  Seq 5 ms  [0 saved + 4 new]
 };
 
 %% =========================== APPLY EACH DATASET ========================

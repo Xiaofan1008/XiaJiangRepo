@@ -77,7 +77,7 @@ Distance_Tol_um = 1;
 Distances_To_Show = [];          % [] = all; otherwise e.g. [100 300 500]
 
 % ---- amplitudes and their bad-trial files ----
-Amps_To_Plot = [10];             % e.g. 10  or  [5 10]  or  [3 5 10]
+Amps_To_Plot = [5];             % e.g. 10  or  [5 10]  or  [3 5 10]
 BadTrial_Tags = 'auto';          % 'auto' -> '<amp>uA' for every amplitude; or a cell, one tag per amplitude,
                                  % e.g. {'3uA','5uA','10uA'} (same order as Amps_To_Plot)
 Missing_BadFile = 'warn';        % 'warn' = continue uncleaned (flagged in output) | 'error' = stop
@@ -97,8 +97,8 @@ Save_CSV_Path          = '';     % e.g. '/Users/me/linearity_10uA.csv' ('' = do 
 % ---- save the result of this run (one .mat per animal dataset) ----
 Save_Results     = true;
 Animal_ID        = 'DX037';                                   % stored in the file
-Save_Folder      = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_Distance';   % one folder for all animals' files
-Save_File_Name   = 'DX037_Linearity_Dist_S1_10uA.mat';                % you edit this for each run
+Save_Folder      = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Linearity_Distance/5uA';   % one folder for all animals' files
+Save_File_Name   = 'DX037_Linearity_Dist_S1_5uA.mat';                % you edit this for each run
 Save_If_Exists   = 'backup';     % 'backup' (keep the old file with a timestamp) | 'overwrite' | 'error'
 
 %% =========================== INITIAL CHECKS ===========================

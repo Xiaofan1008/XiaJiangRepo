@@ -88,14 +88,15 @@ FS_fallback    = 30000;
 baseline_win_ms = [-50 -5];
 analysis_win_ms = [0 20];
 
-Amp_Tol_uA = 0.001;
-PTD_Tol_ms = 0.001;
+% AMP change
 Amp_To_Clean      = 5;          % the ONE amplitude (uA) cleaned in this run
 BadTrial_Tag      = 'auto';      % tag of the PAIRED bad-trial file: 'auto' -> '<amp>uA' (e.g. '10uA',
                                  % file <base_name>_10uA_BadTrials.mat); '' = the old untagged file;
                                  % or any text, e.g. '5uA'. Singles always use the untagged file.
 Distances_To_Show = [];          % [] = all; otherwise e.g. [100 300 500]
 Distance_Tol_um   = 1;
+Amp_Tol_uA = 0.001;
+PTD_Tol_ms = 0.001;
 
 % ---- spike-count rules (spikes per channel per trial, PLACEHOLDERS) ----
 Use_LowRule      = false;  lowThreshold     = 0;

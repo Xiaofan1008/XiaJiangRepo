@@ -4,8 +4,8 @@
 % close all; 
 clear all; 
 clc;
-filename = '/Volumes/MACData/Data/Data_Xia/DX041/Xia_Linearity_S2_100_400um_Single1/Xia_Linearity_S2_100_400um_Single1.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/DX041/Xia_Linearity_S2_100_400um_Single1/Xia_Linearity_S2_100_400um_Single1.sp_xia.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/DX042/Xia_Linearity_S2_100_400um_SimSeq1/Xia_Linearity_S2_100_400um_SimSeq1.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/DX042/Xia_Linearity_S2_100_400um_SimSeq1/Xia_Linearity_S2_100_400um_SimSeq1.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive

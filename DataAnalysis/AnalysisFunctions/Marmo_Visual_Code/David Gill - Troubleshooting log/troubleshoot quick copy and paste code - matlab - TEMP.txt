@@ -1,0 +1,69 @@
+addpath(genpath('/home/stimadmin/Documents/neurostim'));
+addpath(genpath('/home/stimadmin/Documents/MATLAB/marmolab/marmolab-common'));
+addpath(genpath('/home/stimadmin/Documents/MATLAB/marmolab/marmolab-stimuli'));
+addpath(genpath('/home/stimadmin/Documents/MATLAB/marmolab/marmodata'));
+addpath('/home/stimadmin/Documents/MATLAB-git');
+addpath(genpath('/home/stimadmin/Documents/Psychtoolbox-3/Psychtoolbox'));
+addpath(genpath('/home/stimadmin/Documents/open-ephys-matlab-tools'));
+addpath(genpath('/home/stimadmin/Documents/V1_1_urlread2'));
+---------------------------------------------------------------
+
+--- for dummy path runs only - run this before rerunning -->
+
+clc
+sca
+clear classes
+clear mex
+Screen('Preference', 'SkipSyncTests', 1);
+
+webwrite('http://130.194.192.3:37497/api/status', ...
+    struct('mode','IDLE'), ...
+    weboptions('RequestMethod','put','MediaType','application/json'));
+
+r = webread('http://130.194.192.3:37497/api/recording');
+r.record_nodes.node_id
+r.record_nodes.parent_directory
+
+---------------------------------------------------------------------------------
+
+testFiles = {
+    '/home/stimadmin/Documents/images/vaeTextures/originals/wrinkled_0144.png'
+    '/home/stimadmin/Documents/images/vaeTextures/originals/Wood.0021.png'
+};
+
+freeviewing.runTranslatingImages(testFiles, ...
+    'subject', 'PATH_TESTING', ...
+    'nReps', 1, ...
+    'duration', 200, ...
+    'moveSpeeds', 0, ...
+    'contrasts', {1}, ...
+    'debug', false);
+    
+    
+----------------------------------------------------------------------------------
+dryRunDir = '/home/stimadmin/Documents/images/vaeTextures/originals';
+
+d = dir(fullfile(dryRunDir, '*.png'));
+filenames = fullfile({d.folder}, {d.name})';
+
+filenames = filenames(1:min(10,numel(filenames)));
+
+freeviewing.runTranslatingImages(filenames, ...
+    'subject', 'PATH_TEST_realimages', ...
+    'paradigm', 'translatingImages_dryRunDisplay', ...
+    'nReps', 1, ...
+    'duration', 200, ...
+    'moveSpeeds', 3, ...
+    'contrasts', {1}, ...
+    'debug', false);
+
+
+
+------------------
+Update oephys record node directory handling mk12
+------------------
+
+
+
+
+

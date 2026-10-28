@@ -66,7 +66,7 @@ baseline_win_ms = [-50 -5];
 analysis_win_ms = [0 20];
 
 Amp_Tol_uA     = 0.001;
-Amps_To_Show   = [];             % [] = all amplitudes; otherwise e.g. [5 10]
+Amps_To_Show   = [5];             % [] = all amplitudes; otherwise e.g. [5 10]
 Electrodes_To_Show = [];         % [] = every ChB; otherwise e.g. [3 5 7] (stim channel numbers)
 
 % ---- rules (spikes per channel per trial, PLACEHOLDERS) ----

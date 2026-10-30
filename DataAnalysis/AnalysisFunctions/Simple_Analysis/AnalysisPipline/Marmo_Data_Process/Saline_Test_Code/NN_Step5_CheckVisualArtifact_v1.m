@@ -9,7 +9,7 @@
 clear; clc; close all;
 
 %% ===== SETTINGS: EDIT HERE =====
-intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2_261027_192530';
+intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947';
 fs      = 30000;
 nCh     = 32;
 trigBit = 0;

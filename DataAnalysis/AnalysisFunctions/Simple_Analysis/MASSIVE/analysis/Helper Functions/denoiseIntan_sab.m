@@ -14,7 +14,7 @@ nChn=size(amplifier_channels,2);
 FS=frequency_parameters.amplifier_sample_rate;
 if nChn>32
     E_Mapnumber=1;
-elseƒ
+else
     E_Mapnumber=0;
 end
 shortbytes=2;

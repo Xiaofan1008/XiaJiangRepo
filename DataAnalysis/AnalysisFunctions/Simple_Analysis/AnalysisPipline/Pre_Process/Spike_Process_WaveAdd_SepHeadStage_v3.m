@@ -4,8 +4,8 @@
 % close all; 
 clear all; 
 clc;
-filename = '/Volumes/MACData/Data/Data_Xia/DX042/Xia_Linearity_S2_100_400um_SimSeq1/Xia_Linearity_S2_100_400um_SimSeq1.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/DX042/Xia_Linearity_S2_100_400um_SimSeq1/Xia_Linearity_S2_100_400um_SimSeq1.sp_xia.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2/T.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2/Train_Amp_Test2.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive
@@ -20,14 +20,19 @@ post_ms = 300;              % post-trigger window (ms)
 stim_dur_ms = 0.5;          % stimulation duration (ms)
 artefact_cut_ms = 10;       % (used if strobe=1)
 half_snip = round((snippet_ms/2) * fs / 1000);
-Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex; 3:64chn+32chn hybrid
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex; 3:64chn+32chn hybrid
 
 % -------- PROBES (map positions) --------
 % Identity/grouping used for bad-trial rejection, labeling, and the
 % probe_names/probe_elecs saved into sp_xia.mat -- unrelated to the
 % headstage split below.
-probe_names = {'4-shank (Ports A+B)', 'Single shank (Port C)'};
-probe_elecs = {1:64, 65:96};
+% Hybrid
+% probe_names = {'4-shank (Ports A+B)', 'Single shank (Port C)'};
+% probe_elecs = {1:64, 65:96};
+
+% Single Flex probe
+probe_names = {'Single shank (Port A)'};
+probe_elecs = {1:32};
 
 % -------- HEADSTAGES (map positions) --------
 % Electrode_Type==3 (64chn+32chn hybrid) is wired through THREE physical
@@ -47,8 +52,14 @@ probe_elecs = {1:64, 65:96};
 % mechanism as probe_elecs, just a finer 3-way split of the same 96
 % channels. Update this by hand (like probe_elecs) if Electrode_Type
 % changes to something other than 3.
-hs_names = {'HS-A (shank 1+4)', 'HS-B (shank 2+3)', 'HS-C (single shank, port C)'};
-hs_elecs = {1:32, 33:64, 65:96};
+
+% Hybrid
+% hs_names = {'HS-A (shank 1+4)', 'HS-B (shank 2+3)', 'HS-C (single shank, port C)'};
+% hs_elecs = {1:32, 33:64, 65:96};
+
+% Single Flex probe
+hs_names = {'HS-A (single shank, port A)'};
+hs_elecs = {1:32};
 
 % -------- THRESHOLD SETTINGS PER HEADSTAGE --------
 % threshold_method: 'mad' = coeff x robust noise (median|x|/0.6745), not

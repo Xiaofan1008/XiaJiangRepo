@@ -7,7 +7,7 @@
 clear; clc;
 
 %% ===== SETTINGS: EDIT HERE =====
-intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2_261027_192530';
+intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947';
 fs      = 30000;
 nTrials = 275;     % trials that ran (Train_Amp_test2 = 275)
 trigBit = [];      % [] = pick automatically; or a number 0-15 (digital input index)

@@ -6,7 +6,7 @@
 clear; clc;
 
 %% ===== SETTINGS: EDIT HERE =====
-intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2_261027_192530';   % folder with the Intan files
+intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_Amp_Test1_261029_133651';   % folder with the Intan files
 fs          = 30000;     % Intan sample rate (Hz); info.rhs says if unsure
 %% ================================
 

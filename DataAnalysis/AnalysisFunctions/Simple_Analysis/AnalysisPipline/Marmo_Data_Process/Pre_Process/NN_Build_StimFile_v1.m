@@ -19,9 +19,9 @@ clear; clc;
 addpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Marmo_Exp');   % folder that holds estimIntanMulti.m
 
 %% ======================== SETTINGS: EDIT HERE ==========================
-stimFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/VisualPC_Stim_Files/26_10_27/Train_Amp_test2.expTrainAmps.192514.mat';        % Neurostim file
-condFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/VisualPC_Stim_Files/26_10_27/Train_Amp_test2.expTrainAmps.192514.conds.mat';  % conds file
-outFolder  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2_261027_192530';      % Intan folder; the file is written here
+stimFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947/Train_ISI_test2.expTrainISI.145939.mat';        % Neurostim file
+condFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947/Train_ISI_test2.expTrainISI.145939.conds.mat';  % conds file
+outFolder  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947';      % Intan folder; the file is written here
 
 probe      = 'flex1';   % 'flex1' 1-shank flexible (32 ch) | 'flex4' 4-shank flexible (128 ch)
                         % | 'hybrid' 64 ch 4-shank + 32 ch single shank | 'file' (see probeFile)

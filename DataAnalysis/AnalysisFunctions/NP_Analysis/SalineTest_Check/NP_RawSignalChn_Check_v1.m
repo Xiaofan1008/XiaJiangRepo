@@ -18,15 +18,15 @@
 clear; clc; close all;
 
 %% ===== SETTINGS: EDIT HERE =====
-npSession = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/2026_10_29/NP/Train_Amp_test1_expTrainAmps_133554_2026-10-29_13-36-51/Record Node 101/experiment1/recording1';
-condFile  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_Amp_Test1_261029_133651/Train_Amp_test1.expTrainAmps.133554.conds.mat';   % '' = no labels / expected pulses
+npSession = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/2026_10_29/NP/Train_Freq_test1_expTrainFreq_200Hz_141342_2026-10-29_14-13-49';
+condFile  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_Freq_Test1_261029_141350/Train_Freq_test1.expTrainFreq_200Hz.141342.conds.mat';
 niStream  = 'NI-DAQmx-104.PXI-6133';
 apStream  = 'Neuropix-PXI-106.ProbeA-AP';
 trigAI    = 3;               % NI analog input with the trigger
-nCh       = 384;
-trials    = [160 166 167 266 267];   % trial numbers to look at
+nCh       = 384; 
+trials    = [1:10];   % trial numbers to look at 8 85 135 172 144 93
 centerSec = [];              % [] = use the triggers; or NP-clock times (s) to centre the windows on instead
-chans     = [];              % AP channels for the traces; [] = the nAuto channels with the largest step in these trials
+chans     = [321 325 323];              % AP channels for the traces; [] = the nAuto channels with the largest step in these trials
 nAuto     = 3;
 winMs     = [-20 120];       % window around the trigger (the pre part is used as the baseline: needs at least ~10 ms)
 offsetMs  = 0.3;             % trigger -> first pulse delay, only for the red expected-pulse marks

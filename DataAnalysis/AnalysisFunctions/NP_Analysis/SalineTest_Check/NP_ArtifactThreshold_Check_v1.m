@@ -18,8 +18,8 @@
 clear; clc; close all;
 
 %% ===== SETTINGS: EDIT HERE =====
-npSession = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/2026_10_29/NP/Train_Amp_test1_expTrainAmps_133554_2026-10-29_13-36-51';
-condFile  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_Amp_Test1_261029_133651/Train_Amp_test1.expTrainAmps.133554.conds.mat';
+npSession = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/2026_10_29/NP/Train_Freq_test1_expTrainFreq_200Hz_141342_2026-10-29_14-13-49';
+condFile  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_Freq_Test1_261029_141350/Train_Freq_test1.expTrainFreq_200Hz.141342.conds.mat';
 niStream  = 'NI-DAQmx-104.PXI-6133';
 apStream  = 'Neuropix-PXI-106.ProbeA-AP';
 trigAI    = 3;

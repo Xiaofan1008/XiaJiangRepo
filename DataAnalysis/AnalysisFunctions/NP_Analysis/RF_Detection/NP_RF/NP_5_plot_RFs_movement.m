@@ -8,7 +8,7 @@
 %
 %  Requires noisegrid_rf.mat, i.e. s3 run over CHANNELS = 1:384 and s4 run
 %  with SAVE_MAPS = true.
-%
+%i 
 %  How each RF is reduced to an outline
 %  ------------------------------------
 %  The z map at the channel's own peak lag is thresholded at
@@ -28,7 +28,7 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-REC_ROOT = 'D:\Data\CJ283\CJ283_noisegrid_110713_2026-09-16_11-07-18';
+REC_ROOT = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18';
 
 CHANNELS  = [1:384];        % [] = all channels in the file
 SNR_MIN   = 1;         % peak/null spread ratio required to include a channel

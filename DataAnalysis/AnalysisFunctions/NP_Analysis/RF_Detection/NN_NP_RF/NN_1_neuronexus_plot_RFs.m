@@ -35,9 +35,8 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-NNX_DIR   = 'D:\Data\CJ283\noisegrid_260916_110717';
-STIM_FILE = ['D:\Data\CJ283\CJ283_noisegrid_110713_2026-09-16_11-07-18\' ...
-             'Record Node 101\experiment1\recording1\noisegrid_stimulus.mat'];
+NNX_DIR   = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/noisegrid_260916_110717';
+STIM_FILE = ['/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18/Record Node 101/experiment1/recording1/noisegrid_stimulus.mat'];
 
 FS        = 30000;
 N_CHAN    = 32;

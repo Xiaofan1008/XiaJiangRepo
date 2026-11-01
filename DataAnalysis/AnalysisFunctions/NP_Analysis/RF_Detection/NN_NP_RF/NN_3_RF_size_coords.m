@@ -36,7 +36,7 @@
 clear; clc; close all;
 
 %% ---- CONFIG -------------------------------------------------------
-NNX_FILE  = 'E:\Data\CJ282\Penetration 3\noisegrid_260908_000959\nnx_rf.mat';
+NNX_FILE  = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/noisegrid_260916_110717/nnx_rf.mat';
 
 % ---- COORDINATE CONVENTION -----------------------------------------
 % n1 writes x_deg/y_deg under its own conventions, and on 301026 those put

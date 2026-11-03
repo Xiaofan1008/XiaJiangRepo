@@ -17,9 +17,9 @@
 clear; clc;
 
 %% ======================== SETTINGS: EDIT HERE ==========================
-stimFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/VisualPC_Stim_Files/26_10_27/Train_Amp_test2.expTrainAmps.192514.mat';        % Neurostim file
-condFile   = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/VisualPC_Stim_Files/26_10_27/Train_Amp_test2.expTrainAmps.192514.conds.mat';  % conds file
-outFolder  = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2';      % Intan folder; the file is written here
+stimFile   = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses_261103_142004/CJ286_10Pulses_100Hz.expTrainFreq_100Hz.141955.mat';        % Neurostim file
+condFile   = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses_261103_142004/CJ286_10Pulses_100Hz.expTrainFreq_100Hz.141955.conds.mat';  % conds file
+outFolder  = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses_261103_142004';      % Intan folder; the file is written here
 
 probe      = 'flex1';   % 'flex1' 1-shank flexible (32 ch) | 'flex4' 4-shank flexible (128 ch)
                         % | 'hybrid' 64 ch 4-shank + 32 ch single shank | 'file' (see probeFile)

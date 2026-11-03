@@ -4,8 +4,8 @@
 % close all; 
 clear all; 
 clc;
-filename = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2/T.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2/Train_Amp_Test2.sp_xia.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive

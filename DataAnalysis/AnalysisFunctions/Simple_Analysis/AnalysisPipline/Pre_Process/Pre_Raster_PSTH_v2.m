@@ -3,12 +3,12 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/DX040/Xia_Linearity_S1_100_400um_Single1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_SinglePulse_Amp1';
 
 %% Choice
-raster_chn_start = 1;
+raster_chn_start = 20;
 raster_chn_end = 32; %nChn
-Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;
 Set_to_plot = [1];   % e.g., [1 3] -- indices into the "Detected stimulation

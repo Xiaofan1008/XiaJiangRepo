@@ -1,0 +1,200 @@
+%% ============================================================
+% NN_RecoveryCheck_v1.m
+% QC for NN_SpikeRecovery_v1 (chained pulse-train recovery).
+% READ-ONLY: nothing is saved or modified.
+%
+% PART 1  Automatic check (always runs, all channels):
+%   Inside the recovery windows [trigger, trigger + blank_end) the data are allowed to
+%   differ. EVERYWHERE ELSE the recovered spikes must be identical to the original
+%   filtered spikes. Reports PASS / number of mismatches per channel, plus how many
+%   spikes were removed / added inside the windows.
+% PART 2  Plots (condList, chList): for each condition and channel
+%   top    raster BEFORE recovery (original filtered data)
+%   middle raster AFTER recovery: red = substituted, black = original,
+%          green dot = end of the substituted window (blank_end)
+%   bottom PSTH: before (grey), after (black), recovered source level L-1 (blue)
+%   dashed lines = pulses of the condition (electrode 1 red, electrode 2 magenta)
+%   Check by eye: the AFTER PSTH should follow the source (blue) inside the window
+%   and join the original smoothly at the green boundary.
+% condList = [] only prints the condition table and runs Part 1.
+% ============================================================
+clear all; clc;
+
+%% ================= USER SETTINGS =================
+analysisPath = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/';
+data_folder  = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses';
+times_file   = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia.mat';
+                    % the ORIGINAL filtered times file; the recovered file is found next to it
+condList = [21:25];      % condition numbers to plot ([] = print the table only)
+chList   = [9];   % channel indices (rows of sp_clipped) to plot
+xPre     = 10;      % ms shown before the trigger
+xPostMs  = 30;      % ms shown after the LAST pulse
+binMs    = 1;       % PSTH bin (ms)
+FS = 30000;
+
+%% ================= LOAD =================
+if ~isempty(analysisPath), addpath(genpath(analysisPath)); end
+assert(isfolder(data_folder), 'Folder not found: %s', data_folder);
+cd(data_folder);
+rec_file = strrep(times_file, '.sp_xia_filtered.mat', '.sp_xia_TrainRecovery.mat');
+assert(isfile(times_file), 'Cannot find %s.', times_file);
+assert(isfile(rec_file),   'Cannot find %s -- run NN_SpikeRecovery_v1 first.', rec_file);
+
+O = load(times_file);   sp_org = O.sp_clipped;   if isfield(O,'fs'), FS = O.fs; end
+R = load(rec_file);     sp_rec = R.sp_clipped;   be = R.blank_end_ms;
+srcTrial = R.srcTrial(:);  recLog = R.recLog;
+trialCond = R.Recovery_params.trialCond(:);
+condTable = R.Recovery_params.condTable;
+nChn = numel(sp_org);   n_Trials = numel(trialCond);   nCond = numel(condTable);
+assert(numel(sp_rec) == nChn, 'Original (%d ch) and recovered (%d ch) differ.', nChn, numel(sp_rec));
+clear O R
+
+f = dir('*.trig.dat'); f = f(~startsWith({f.name}, '.'));
+assert(~isempty(f), 'No *.trig.dat in %s.', data_folder);
+fid = fopen(f(1).name, 'r'); trig = fread(fid, [1 inf], 'double'); fclose(fid);
+t0_ms = nan(n_Trials,1);  nUse = min(numel(trig), n_Trials);
+t0_ms(1:nUse) = trig(1:nUse)/FS*1000;
+
+% pulse times per condition (from the exp file, like step 1); optional
+pulseT = cell(nCond,1);   % each: struct array (electrode, t_ms)
+try
+    fe = dir('*_exp_datafile_*.mat'); fe = fe(~startsWith({fe.name}, '.'));
+    E = load(fe(1).name, 'StimParams', 'simultaneous_stim');
+    nEl = E.simultaneous_stim;
+    for k = 1:nCond
+        t1 = find(trialCond == k, 1);
+        if isempty(t1), continue; end
+        for e = 1:nEl
+            row = 1 + (t1-1)*nEl + e;
+            if double(E.StimParams{row,16}) > 0
+                n = double(E.StimParams{row,8});  per = double(E.StimParams{row,9});  p0 = double(E.StimParams{row,6});
+                pulseT{k}(end+1).e = e; pulseT{k}(end).t = (p0 + (0:n-1)*per)/1000; %#ok<SAGROW>
+            end
+        end
+    end
+catch ME
+    warning('RC:pulses', 'Pulse markers unavailable (%s).', ME.message);
+end
+
+%% ================= CONDITION TABLE =================
+fprintf('\n cond  kind     level   source  trials  deleted  added   label\n');
+for k = 1:nCond
+    fprintf(' %3d   %-7s %2d/%-3d  %5s   %4d   %6d  %6d   %s\n', k, condTable(k).kind, condTable(k).level, ...
+        condTable(k).nLevels, numstr_(condTable(k).sourceCond), sum(trialCond == k), ...
+        recLog(k).nDeleted, recLog(k).nAdded, condTable(k).label);
+end
+
+%% ================= PART 1: AUTOMATIC CHECK =================
+fprintf('\nPART 1: outside the recovery windows the recovered data must equal the original.\n');
+nBad = 0;
+for ch = 1:nChn
+    tr = find(isfinite(be{ch}) & isfinite(t0_ms));
+    [~, o] = sort(t0_ms(tr));  tr = tr(o);
+    a = t0_ms(tr);  b = a + be{ch}(tr);
+    edges = reshape([a(:)'; b(:)'], 1, []);
+    if any(diff(edges) <= 0)
+        fprintf('Ch %2d: windows overlap or are out of order -- check skipped.\n', ch); nBad = nBad + 1; continue;
+    end
+    so = sp_org{ch}(:,1);  sr = sp_rec{ch}(:,1);
+    inO = inWin_(so, edges);  inR = inWin_(sr, edges);
+    ro = so(~inO);  rr = sr(~inR);
+    same = numel(ro) == numel(rr) && (isempty(ro) || max(abs(ro - rr)) < 1e-6);
+    if same
+        fprintf('Ch %2d: PASS   (inside windows: %d original spikes removed, %d added)\n', ch, sum(inO), sum(inR));
+    else
+        nBad = nBad + 1;
+        fprintf('Ch %2d: MISMATCH outside windows: original %d vs recovered %d spikes\n', ch, numel(ro), numel(rr));
+    end
+end
+if nBad == 0, fprintf('ALL CHANNELS PASS.\n'); else, fprintf('%d channel(s) FAILED -- do not trust the recovery until this is understood.\n', nBad); end
+
+if isempty(condList)
+    fprintf('\ncondList is empty: set condList (and chList) at the top to plot.\n');
+    return;
+end
+
+%% ================= PART 2: PLOTS =================
+for k = condList(:)'
+    trK = find(trialCond == k & isfinite(t0_ms));
+    if isempty(trK), fprintf('cond %d has no trials.\n', k); continue; end
+    lp = condTable(k).lastPulse_ms;
+    if ~isfinite(lp), lp = 0; end
+    xl = [-xPre, lp + xPostMs];
+    bins = xl(1):binMs:xl(2);
+    srcK = condTable(k).sourceCond;
+    trS = [];
+    if isfinite(srcK), trS = find(trialCond == srcK & isfinite(t0_ms)); end
+
+    for ch = chList(:)'
+        fh = figure('Color','w','Position',[100 100 900 800], 'Name', sprintf('cond %d ch %d', k, ch));
+        ax1 = subplot(3,1,1);  raster_(ax1, sp_org{ch}, t0_ms(trK), nan(numel(trK),1), xl);
+        title(ax1, sprintf('cond %d  %s  | ch %d | BEFORE recovery (original)', k, condTable(k).label, ch), 'Interpreter','none');
+        ax2 = subplot(3,1,2);  raster_(ax2, sp_rec{ch}, t0_ms(trK), be{ch}(trK), xl);
+        title(ax2, 'AFTER recovery (red = substituted, black = original, green = window end)');
+        ax3 = subplot(3,1,3);  hold(ax3, 'on');
+        h1 = plot(ax3, bins(1:end-1)+binMs/2, psth_(sp_org{ch}, t0_ms(trK), bins), 'Color',[0.6 0.6 0.6], 'LineWidth',1.5);
+        h2 = plot(ax3, bins(1:end-1)+binMs/2, psth_(sp_rec{ch}, t0_ms(trK), bins), 'k', 'LineWidth',1.5);
+        leg = {'before','after'};  hh = [h1 h2];
+        if ~isempty(trS)
+            h3 = plot(ax3, bins(1:end-1)+binMs/2, psth_(sp_rec{ch}, t0_ms(trS), bins), 'b', 'LineWidth',1);
+            hh(end+1) = h3; leg{end+1} = sprintf('source (cond %d, recovered)', srcK); %#ok<AGROW>
+        end
+        xlabel(ax3, 'time from trigger (ms)'); ylabel(ax3, 'spikes/s'); xlim(ax3, xl);
+        legend(ax3, hh, leg, 'Location','northeast', 'Box','off');
+        for ax = [ax1 ax2 ax3]
+            for p = 1:numel(pulseT{k})
+                col = [0.85 0.2 0.2]; if pulseT{k}(p).e == 2, col = [0.8 0.2 0.8]; end
+                for tp = pulseT{k}(p).t
+                    xline_(ax, tp, col);
+                end
+            end
+            xlim(ax, xl);
+        end
+        linkaxes([ax1 ax2 ax3], 'x');
+    end
+end
+
+%% ================= HELPERS =================
+function in = inWin_(t, edges)
+% true for times inside [edges(1),edges(2)), [edges(3),edges(4)), ... (edges strictly increasing)
+bin = discretize(t, edges);
+in = ~isnan(bin) & mod(bin,2) == 1;
+end
+
+function raster_(ax, sp, t0s, bes, xl)
+hold(ax, 'on');
+sp = sp(:,1);
+for i = 1:numel(t0s)
+    rel = sp(sp >= t0s(i)+xl(1) & sp <= t0s(i)+xl(2)) - t0s(i);
+    if isempty(rel), continue; end
+    isRec = isfinite(bes(i)) & rel < bes(i);
+    for grp = 1:2
+        if grp == 1, m = ~isRec; c = 'k'; else, m = isRec; c = 'r'; end
+        x = rel(m);
+        if isempty(x), continue; end
+        X = [x(:)'; x(:)'; nan(1,numel(x))];  Y = [i-0.4+zeros(1,numel(x)); i+0.4+zeros(1,numel(x)); nan(1,numel(x))];
+        plot(ax, X(:), Y(:), c, 'LineWidth', 0.8);
+    end
+    if isfinite(bes(i)), plot(ax, bes(i), i, '.', 'Color',[0 0.7 0], 'MarkerSize', 10); end
+end
+ylim(ax, [0 numel(t0s)+1]);  xlim(ax, xl);  ylabel(ax, 'trial');
+end
+
+function r = psth_(sp, t0s, bins)
+sp = sp(:,1);  cnt = zeros(1, numel(bins)-1);
+for i = 1:numel(t0s)
+    rel = sp(sp >= t0s(i)+bins(1) & sp < t0s(i)+bins(end)) - t0s(i);
+    cnt = cnt + histcounts(rel, bins);
+end
+r = cnt / numel(t0s) / (bins(2)-bins(1)) * 1000;
+end
+
+function xline_(ax, x, col)
+yl = ylim(ax);
+plot(ax, [x x], yl, '--', 'Color', col, 'LineWidth', 0.5);
+ylim(ax, yl);
+end
+
+function s = numstr_(x)
+if isnan(x), s = '-'; else, s = num2str(x, '%g'); end
+end

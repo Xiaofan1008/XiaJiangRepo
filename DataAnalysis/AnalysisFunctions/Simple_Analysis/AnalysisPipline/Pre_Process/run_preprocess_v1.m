@@ -7,7 +7,7 @@
 %
 % Usage: edit folderPath below, then press Run.
 
-folderPath = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_27/Train_Amp_Test2';   % <-- EDIT THIS, then Run
+folderPath = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_SinglePulse_Amp1_261103_064947';   % <-- EDIT THIS, then Run
 
 %% ===================== Setup =====================
 if isempty(folderPath)

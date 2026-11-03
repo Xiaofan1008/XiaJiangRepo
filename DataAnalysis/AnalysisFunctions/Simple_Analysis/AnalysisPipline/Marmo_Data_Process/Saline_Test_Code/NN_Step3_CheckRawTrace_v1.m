@@ -12,7 +12,7 @@
 clear; clc; close all;
 
 %% ===== SETTINGS: EDIT HERE =====
-intanFolder = '/Volumes/MACData/Data/Data_Xia/Marmo_Saline_Test/26_10_29/Train_ISI_Test2_261029_145947';
+intanFolder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_SinglePulse_Amp1_261103_064947';
 fs      = 30000;
 nCh     = 32;
 trigBit = 0;
@@ -23,7 +23,7 @@ plotMode    = 'by_channel';  % 'by_channel': figure per (amp, type, channel), su
 chans       = [25];        % amplifier rows, or 'all'  (row r = A-(r-1) if A-000..A-031 order)
 types       = {'sim','seq'}; % any of 'sim', 'seq', 'ctrl' (ctrl = visual / blank, no pulse)
 ampOnly     = [];            % amplitude levels, e.g. [50]. [] = all
-conds       = [6 7 26:33];            % condition IDs from the printed table. [] = all
+conds       = [];            % condition IDs from the printed table. [] = all
 labelHas    = '';            % regexp on the label. '' = no filter
 mergeOrders = true;          % true: overlay A->B k/n and B->A k/n in one subplot
 nTrialsPlot = 8;             % trials per condition

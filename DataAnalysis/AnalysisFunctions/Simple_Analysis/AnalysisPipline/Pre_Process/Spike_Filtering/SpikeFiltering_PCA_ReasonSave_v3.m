@@ -35,19 +35,24 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 % the folder name, since that broke on folder-name patterns that don't
 % match the assumed convention (e.g. base names ending up truncated to
 % "Xia_Linearity_S4_100" instead of the real file prefix).
-times_file = '/Volumes/MACData/Data/Data_Xia/DX038/Xia_Linearity_S1_500_700um_SimSeq1/Xia_Linearity_S1_500_700um_SimSeq1.sp_xia.mat';
-wf_file    = '/Volumes/MACData/Data/Data_Xia/DX038/Xia_Linearity_S1_500_700um_SimSeq1/Xia_Linearity_S1_500_700um_SimSeq1.sp_xia_waveforms.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia.mat';
+wf_file    = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia_waveforms.mat';
 
 % Must match the Electrode_Type used by the detection script for THIS
 % dataset -- needed here only to translate probe_elecs (map positions)
 % into physical-channel indices, since sp_clipped/sp_waveforms are both
 % indexed by physical recording channel.
-Electrode_Type = 3; % 0:single shank rigid; 1:single shank flex; 2:four shank flex; 3:64chn+32chn hybrid
+Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex; 3:64chn+32chn hybrid
 
 % -------- PROBES (map positions) -- same convention as the detection
 % script. Update to match whatever probe layout this dataset used.
-probe_names = {'4-shank (Ports A+B)', 'Single shank (Port C)'};
-probe_elecs = {1:64, 65:96};
+% Hybird Probe
+% probe_names = {'4-shank (Ports A+B)', 'Single shank (Port C)'};
+% probe_elecs = {1:64, 65:96};
+
+% Single Shank flex
+probe_names = {'Single shank (Port A)'};
+probe_elecs = {1:32};
 
 do_amp_filter  = 1;
 do_zc_filter   = 1;

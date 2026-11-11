@@ -3,11 +3,11 @@ clear all
 addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'));
 
 %% Choose Folder
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_SinglePulse_Amp1';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
 
 %% Choice
-raster_chn_start = 20;
-raster_chn_end = 32; %nChn
+raster_chn_start = 1;
+raster_chn_end = 19; %nChn
 Electrode_Type = 1; % 0:single shank rigid; 1:single shank flex; 2:four shank flex
 PTD_to_plot = [];   % e.g., [500 1000], empty for all PTD
 PTD_to_plot = PTD_to_plot.*1000;

@@ -16,12 +16,12 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses';
-spike_file  = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia.mat';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+spike_file  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery.mat';
 
-condList = [21:22];          % condition numbers to plot ([] = print the table and stop)
-chList   = [5:9];       % channels to plot (index in sp_clipped)
-mode     = 'separate';  % 'separate' or 'overlay'
+condList = [15 45 49];          % condition numbers to plot ([] = print the table and stop)
+chList   = [1:10];       % channels to plot (index in sp_clipped)
+mode     = 'overlay';  % 'separate' or 'overlay'
 
 xRange     = [];        % [from to] ms after the trigger; [] = automatic (see next two)
 xPre       = 10;        % automatic range: ms before the trigger

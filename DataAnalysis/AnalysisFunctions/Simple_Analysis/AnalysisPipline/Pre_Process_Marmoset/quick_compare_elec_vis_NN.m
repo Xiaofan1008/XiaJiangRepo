@@ -27,14 +27,14 @@
 %    PSTH is left empty (gap) where more than 80% of a bin is blanked.
 
 %% ============================ SETTINGS ============================
-folderPath   = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq1_50Hz';   % <-- EDIT
+folderPath   = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq8_20Pulses_200Hz';   % <-- EDIT
 analysisPath = '';          % optional: folder added with addpath(genpath(..)) so Depth_s and
                             % cleanTrig_sabquick are found, e.g. '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Simple_Analysis/MASSIVE'
 condFile     = '';          % '' = look for *.conds.mat inside folderPath
 Electrode_Type = 1;         % same as your raster code: 0 single shank rigid, 1 single shank flex, 2 four shank flex
 
-condList     = [7 29];          % condition IDs to plot together, e.g. [3 52 53]. [] = print the list and stop
-chanList     = 20:32;       % channel indices into d = Depth_s(Electrode_Type) (same idea as raster_chn_start:raster_chn_end)
+condList     = [60 64];          % condition IDs to plot together, e.g. [3 52 53]. [] = print the list and stop
+chanList     = 1:32;       % channel indices into d = Depth_s(Electrode_Type) (same idea as raster_chn_start:raster_chn_end)
 
 ras_win      = [-40 200];   % ms around the trigger
 binMs        = 5;           % PSTH bin, ms

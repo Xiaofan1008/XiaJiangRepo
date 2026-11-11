@@ -43,11 +43,11 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses';
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia_TrainRecovery.mat';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery.mat';
 
-finalConds = [20 60];       % FINAL condition number(s) of the pattern(s) to analyse ([] = print the list and stop)
-chRange    = 1:11; %[1 4 5 6 11 27 28 31];     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
+finalConds = [15 45];       % FINAL condition number(s) of the pattern(s) to analyse ([] = print the list and stop)
+chRange    = [2,5,14,15,22,31,32];     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
 plotModes  = {'average'};  % any of:
                        %   'perChannel' : one figure for each channel in chRange
                        %   'grid'       : all channels of chRange in ONE figure (one small panel each)
@@ -61,7 +61,7 @@ winLen_ms       = 10;  % scalar | vector (per pulse number) | 'nextPulse'
 winLastPulse_ms = 10;  % window length for the last pulse when winLen_ms = 'nextPulse'
 includePulse1   = true;% also count the response to the first pulse (level 1 minus baseline)
 
-normalize   = 'toPulse1';  % 'none' or 'toPulse1': also show added / (channel's response to the pattern's first step)
+normalize   = 'none';  % 'none' or 'toPulse1': also show added / (channel's response to the pattern's first step)
 normLen_ms  = 10;          % window after the first pulse used for that response
 baseWin_ms  = [-50 -5];    % pre-trigger window for the baseline rate
 responsiveOnly = false;     % average only over channels responding to the first pulse
@@ -330,7 +330,7 @@ if any(strcmp(plotModes,'average'))
             A = S.Y(u,:);
             mu = mean(A,1,'omitnan');  se = std(A,0,1,'omitnan')./sqrt(max(sum(~isnan(A),1),1));
             h = errorbar(ax1, S.x, mu, se, S.style, 'Color', cols(p,:), 'LineWidth', 1.3);
-            hl(end+1) = h; lg{end+1} = sprintf('cond %d: %s (%d ch)', finalConds(p), S.name, numel(u)); %#ok<SAGROW>
+            hl(end+1) = h; lg{end+1} = sprintf('cond %d: %s', finalConds(p), S.name); %#ok<SAGROW>
             if doNorm
                 ok = r.R1(u) > 0;
                 An = A(ok,:) ./ r.R1(u(ok));

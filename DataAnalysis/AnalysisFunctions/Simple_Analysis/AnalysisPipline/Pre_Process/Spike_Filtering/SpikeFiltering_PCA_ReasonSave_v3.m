@@ -35,8 +35,8 @@ addpath(genpath('/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/'));
 % the folder name, since that broke on folder-name patterns that don't
 % match the assumed convention (e.g. base names ending up truncated to
 % "Xia_Linearity_S4_100" instead of the real file prefix).
-times_file = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia.mat';
-wf_file    = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia_waveforms.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia.mat';
+wf_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_waveforms.mat';
 
 % Must match the Electrode_Type used by the detection script for THIS
 % dataset -- needed here only to translate probe_elecs (map positions)

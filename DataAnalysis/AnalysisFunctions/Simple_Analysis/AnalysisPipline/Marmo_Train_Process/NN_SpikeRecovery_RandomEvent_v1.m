@@ -66,35 +66,24 @@ FS = 30000;
 
 % ---- settings per level: [fallback_ms  cap_ms  percent  event_ms]  (levels start at 2) ----
 sim_default  = [10 10 100 10];  % simultaneous pattern, every level not listed in sim_override
-sim_override = [5,10,10,80,10;
-                6,10,10,70,10;
-                7,10,10,65,10;
-                8,10,10,60,10;
-                9,10,10,50,10;
-                10,10,10,40,10;
-                11,10,10,30,10;
-                12,10,10,20,10;
-                13,10,10,10,10;
-                14,10,10,5,10;
-                15,10,10,5,20;
+sim_override = [
+                2,10,10,60,10;
+                9,10,10,60,10;
+                10,10,10,50,10;
+                11,10,10,40,10;
+                12,10,10,30,10;
+                13,10,10,30,10;
+                14,10,10,30,10;
+                15,10,10,30,20;
                 ];              % rows [level fallback_ms cap_ms percent event_ms]
 seq_default  = [10 10 100 5];   % sequential pattern (AB and BA), every level not listed in seq_override
-seq_override = [15,10,10,80,5;
-                16,10,10,80,5;
-                17,10,10,70,5;
-                18,10,10,70,5;
-                19,10,10,60,5;
-                20,10,10,60,5;
-                21,10,10,50,5;
-                22,10,10,50,5;
-                23,10,10,40,5;
-                24,10,10,40,5;
-                25,10,10,30,5;
-                26,10,10,30,5;
-                27,10,10,20,5;
-                28,10,10,20,5;
-                29,10,10,10,5;
-                30,10,10,10,20;
+seq_override = [
+                25,10,10,40,5;
+                26,10,10,40,5;
+                27,10,10,15,5;
+                28,10,10,15,5;
+                29,10,10,5,5;
+                30,10,10,5,20;
                 ];              % rows [level fallback_ms cap_ms percent event_ms]
 
 rand_seed = 1;                  % seed of the random choice of spikes (percent < 100)

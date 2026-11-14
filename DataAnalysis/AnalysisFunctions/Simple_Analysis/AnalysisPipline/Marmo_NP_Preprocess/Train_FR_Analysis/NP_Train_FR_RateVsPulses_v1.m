@@ -41,21 +41,22 @@ sessionDir = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTr
 spikeFile  = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29/Record Node 101/experiment1/recording1/CJ287_15Pulses3_100Hz.NP_Spikes_TrainRecovery_randomEvent.mat';            % '' = <short>.NP_Spikes_TrainRecovery.mat; or another recovered file (e.g. a _RandomEvent one)
 
 % ---- channel groups (depth from the probe TIP, um). Session-specific: read them off NP_SP_DepthTimeMap. ----
-chGroups = { ...
-    'deep (0-2200)',     [ 0 2200]; ...
-    'middle (3000-4500)',  [3000 4500]; ...
+% chGroups = { ...
+    % 'deep (0-3000)',     [ 0 3000]; ...
+    % 'middle (3020-4500)',  [3020 4500]; ...
     % 'upper (4500-5800)',   [4500 5800]; ...
-    };                      % or chGroups = 'all';
+    % };                      % or chGroups = 'all';
+chGroups = 'all';
 autoRateMin = 20;           % spikes/s over the whole window: a channel counts as active above this
 respFilter  = true;         % true = keep only channels responsive in the final level of sim or seq (see header)
 respZ       = 2;            % responsive if (train-window rate - baseline) / SE over trials > respZ
-useRespChn   = false;        % use <short>.NP_RespChn.mat when it exists 
-useBadTrials = false;        % use <short>.NP_BadTrials.mat when it exists
+useRespChn   = true;        % use <short>.NP_RespChn.mat when it exists 
+useBadTrials = true;        % use <short>.NP_BadTrials.mat when it exists
 
 % ---- counting window and baseline ----
 tail_ms       = 15;         % window = first pulse + trainStart_ms ... last pulse + tail_ms
 trainStart_ms = 0;
-baseWinMs     = [-300 -5];  % baseline window relative to the trigger (ms)
+baseWinMs     = [-100 -5];  % baseline window relative to the trigger (ms)
 
 % ---- levels and axes ----
 seqLevels = 'pair';         % 'pair' ([n n] only, comparable with sim n) | 'all' (also the half-steps)
@@ -229,7 +230,7 @@ for fi = 1:size(figs, 1)
                 hl(end+1) = h; lab{end+1} = sprintf('%s | %s (%d ch)', G(g).name, Lv(p).name, numel(G(g).ch)); %#ok<SAGROW>
             end
         end
-        yline(ax, 0, ':');  grid(ax, 'on');  xlabel(ax, xlab);  ylabel(ax, figs{fi, 3 + sp});
+        yline(ax, 0, ':');   xlabel(ax, xlab);  ylabel(ax, figs{fi, 3 + sp});
         if strcmp(xAxis, 'n'), xticks(ax, 0:1:ceil(max([Lv.x]))); end
         if sp == 1 && ~isempty(hl), legend(ax, hl, lab, 'Location', 'best', 'FontSize', 8, 'Interpreter', 'none'); end
     end
@@ -250,7 +251,7 @@ if Plot_ChannelFigure
         inc = find(incl);
         plot(ax, v(inc), y(inc), mkP{min(p, 3)}, 'Color', 'k', 'MarkerFaceColor', 'k', 'MarkerSize', 3, 'HandleVisibility', 'off');
     end
-    xline(ax, 0, ':');  grid(ax, 'on');  ylim(ax, [min(y) max(y)]);
+    xline(ax, 0, ':'); ylim(ax, [min(y) max(y)]);
     if strcmp(xAxis, 'n'), xticks(ax, 0:1:ceil(max([Lv.x]))); end
     vv = cell2mat(arrayfun(@(s) s.rate(:, end), S(:), 'UniformOutput', false));  vv = vv(isfinite(vv));
     if ~isempty(vv), xlim(ax, [min(0, min(vv)) max(vv)]*1.05 + [-1 1]); end

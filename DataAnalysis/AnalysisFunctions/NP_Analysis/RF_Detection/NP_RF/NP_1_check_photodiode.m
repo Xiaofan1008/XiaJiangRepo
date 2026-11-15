@@ -23,7 +23,7 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-REC_ROOT = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18';
+REC_ROOT = '/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_noisegrid_050605_2026-11-10_05-06-09';
 OUT_NAME = 'noisegrid_events.mat';   % written into the recording folder
 
 AP_DIR   = '';          % empty = auto-detect from structure.oebin

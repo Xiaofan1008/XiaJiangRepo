@@ -18,6 +18,12 @@
 % CHANNEL GROUPS (chGroups)
 %   'all'                              : one group, every included channel
 %   {'name', [ymin ymax]; ...}         : depth ranges from the probe TIP (um), one curve per group
+%   'area'                             : one curve per AREA (V1, V2; border as set by borderAs), same axes, area colours.
+%                                        Needs areaSource = 'file' or 'manual' (labels from NP_GetAreas, RF folder).
+%                                        'outside' and 'unassigned' channels are never in an area group.
+%   excludeBad = true (and an area source): channels labelled 'bad' are left out of EVERY grouping.
+%   borderAs ('area' only): 'exclude' (default) | 'V1' / 'V2' (border channels pooled into that area: sensitivity
+%                           check) | 'own' (border as its own curve)
 %   Included channels inside a group:
 %     - processed in step 2 (goodCh) and active: rate over the whole window >= autoRateMin (spikes/s);
 %     - respFilter = true: and RESPONSIVE: in the final level of at least one pattern the train-window rate is above
@@ -28,7 +34,8 @@
 %   within the condition) are left out; otherwise every trial is kept.
 %
 % FIGURES
-%   1. FIRING RATE : rate vs x  and  added rate vs x      (colour = depth group; sim solid / seq dashed)
+%   1. FIRING RATE : rate vs x  and  added rate vs x      (colour = group; sim solid / seq dashed)
+%      groupLayout = 'separate': one row per group (V1 / V2 ... each in its own panels, same limits if sameYLim)
 %   2. SPIKE COUNT : count vs x and  added spikes vs x     (Plot_CountFigure)
 %   3. CHANNELS    : final-level rate of every channel vs depth, the groups and the included channels marked (Plot_ChannelFigure)
 %   Printed: the groups and their channels, and a table of every level.
@@ -46,7 +53,21 @@ spikeFile  = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTr
     % 'middle (3020-4500)',  [3020 4500]; ...
     % 'upper (4500-5800)',   [4500 5800]; ...
     % };                      % or chGroups = 'all';
-chGroups = 'all';
+chGroups = 'area';           % 'all' | 'area' | depth-range table (above)
+
+% ---- areas (labels from NP_GetAreas.m) ----
+areaFuncDir = '/Volumes/LaCie/Marmoset_Data/AnalysisFunctions/NP_Analysis/RF_Detection/NP_RF';   % where NP_GetAreas.m is
+areaSource  = 'file';       % 'file' (area file of NP_AreaEntry_v1) | 'manual' (ranges below) | 'none'
+areaFile    = '/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_NP_Areas_20261110_0506.mat';
+areasManual = { ...         % used when areaSource = 'manual': rows {from_um to_um label}
+    0     2800  'V1';
+    2800  3400  'border';
+    3400  5900  'V2';
+    5900  7660  'outside';
+    };
+badManual   = [83];         % used when areaSource = 'manual'
+excludeBad  = true;         % true = channels labelled 'bad' are never included (any chGroups)
+borderAs    = 'exclude';    % chGroups = 'area': 'exclude' | 'V1' | 'V2' | 'own'
 autoRateMin = 20;           % spikes/s over the whole window: a channel counts as active above this
 respFilter  = true;         % true = keep only channels responsive in the final level of sim or seq (see header)
 respZ       = 2;            % responsive if (train-window rate - baseline) / SE over trials > respZ
@@ -66,11 +87,15 @@ xAxis     = 'n';            % 'n' = pulses per electrode | 'time' = time of the 
 Plot_CountFigure   = true;  % spike count and added spikes
 Plot_ChannelFigure = true;  % final-level rate of every channel vs depth
 Show_Channels      = false; % thin line per channel behind the group means (figure 1)
+groupLayout        = 'separate';  % 'separate' = one row of panels per group (e.g. V1 above, V2 below) | 'together' = one axes
+sameYLim           = true;  % 'separate': the same axis limits in every group, so they can be compared
 Marker_Size = 6;  Line_Width = 1.5;
 %% =================================================
 
 assert(any(strcmp(seqLevels, {'pair', 'all'})), 'seqLevels: ''pair'' or ''all''.');
 assert(any(strcmp(xAxis, {'n', 'time'})), 'xAxis: ''n'' or ''time''.');
+assert(any(strcmp(borderAs, {'exclude', 'V1', 'V2', 'own'})), 'borderAs: ''exclude'', ''V1'', ''V2'' or ''own''.');
+byArea = ischar(chGroups) && strcmp(chGroups, 'area');
 
 %% ---- files -------------------------------------------------------------------------------------------
 tf = dir(fullfile(sessionDir, '**', '*.NP_TrialTable.mat'));
@@ -85,6 +110,10 @@ SP = load(spikeFile, 'sp_clipped', 'sp_trial', 'nSpk', 'goodCh', 'FS', 'preMs', 
 fs = SP.FS;  nCh = numel(SP.sp_clipped);  nTr = SP.nTrialsProcessed;
 tr = TT.trial;  trialCond = tr.cond(1:nTr);  trigMs = (double(tr.trigAP(1:nTr)) - 1)/fs*1e3;
 y = TT.chan.y_um(:);
+useArea = ~strcmpi(areaSource, 'none');
+assert(~byArea || useArea, 'chGroups = ''area'' needs areaSource = ''file'' or ''manual''.');
+if useArea, addpath(areaFuncDir); end
+[aLab, aInfo] = NP_GetAreas(areaSource, areaFile, areasManual, badManual, y);
 assert(baseWinMs(1) >= -SP.preMs, 'baseWinMs starts before the detection window (-%g ms).', SP.preMs);
 
 % optional files
@@ -164,16 +193,35 @@ elseif respFilter
     for p = 1:nP, resp = resp | zC{p}(:, end) > respZ; end
     incl = incl & resp;
 end
+isBad = false(nCh, 1);
+if useArea && excludeBad, isBad = strcmp(aLab, 'bad');  incl = incl & ~isBad; end
+areaCol = struct('V1', [0.2 0.4 0.9], 'V2', [0.9 0.45 0.1], 'border', [0.45 0.45 0.45]);
+G = struct('name', {}, 'ch', {}, 'range', {}, 'bands', {}, 'col', {});
 if ischar(chGroups) && strcmp(chGroups, 'all')
-    G = struct('name', 'all channels', 'ch', find(incl)', 'range', [min(y) max(y)]);
+    G(1).name = 'all channels';  G(1).ch = find(incl)';  G(1).range = [min(y) max(y)];  G(1).bands = G(1).range;  G(1).col = [0 0 0];
+elseif byArea
+    labG = aLab;  if ~excludeBad, labG = aInfo.rangeLabel; end
+    rg = aInfo.ranges;  isBorderR = strcmp(rg(:, 3), 'border');
+    names = {'V1', 'V2'};  if strcmp(borderAs, 'own'), names{end+1} = 'border'; end
+    for a = 1:numel(names)
+        lb = names{a};  inA = strcmp(labG, lb);  rIdx = strcmp(rg(:, 3), lb);  gName = lb;
+        if strcmp(borderAs, lb)                                    % border pooled into this area
+            inA = inA | strcmp(labG, 'border');  rIdx = rIdx | isBorderR;  gName = [lb ' (+border)'];
+        end
+        ch = find(incl & inA)';
+        g = numel(G) + 1;
+        G(g).name = gName;  G(g).ch = ch;  G(g).bands = cell2mat(rg(rIdx, 1:2));  G(g).col = areaCol.(lb);
+        if isempty(ch), G(g).range = [NaN NaN]; else, G(g).range = [min(y(ch)) max(y(ch))]; end
+    end
 else
-    G = struct('name', {}, 'ch', {}, 'range', {});
     for g = 1:size(chGroups, 1)
         r = chGroups{g, 2};
-        G(end+1) = struct('name', chGroups{g, 1}, 'ch', find(incl & y >= r(1) & y <= r(2))', 'range', r); %#ok<SAGROW>
+        G(g).name = chGroups{g, 1};  G(g).ch = find(incl & y >= r(1) & y <= r(2))';  G(g).range = r;  G(g).bands = r;  G(g).col = [];
     end
 end
 nG = numel(G);
+cl = lines(max(nG, 1));
+for g = 1:nG, if isempty(G(g).col), G(g).col = cl(g, :); end, end
 
 %% ---- group statistics -------------------------------------------------------------------------------------------------
 S = struct();
@@ -192,8 +240,11 @@ fprintf('\n============================================================\nNP TRAI
 fprintf('============================================================\n');
 fprintf('spike file : %s\nwindow     : first pulse + %g ms ... last pulse + %g ms; baseline %s ms\n', spikeFile, trainStart_ms, tail_ms, mat2str(baseWinMs));
 fprintf('channels   : goodCh, rate >= %g /s%s\n', autoRateMin, ternary_(~isempty(RespC), ', NP_RespChn file', ternary_(respFilter, sprintf(', responsive (z > %g in a final level)', respZ), '')));
+fprintf('%s\n', aInfo.text);
+if any(isBad), fprintf('bad        : channels %s excluded\n', mat2str(find(isBad)')); end
+if byArea, fprintf('grouping   : by area, border %s\n', ternary_(strcmp(borderAs, 'exclude'), 'excluded', ternary_(strcmp(borderAs, 'own'), 'as its own group', ['pooled into ' borderAs]))); end
 for g = 1:nG
-    fprintf('  group %-22s y %4d-%4d um: %3d channels\n', G(g).name, G(g).range(1), G(g).range(2), numel(G(g).ch));
+    fprintf('  group %-22s y %4g-%4g um: %3d channels\n', G(g).name, G(g).range(1), G(g).range(2), numel(G(g).ch));
 end
 for g = 1:nG
     fprintf('\n--- %s (%d channels) ---\n  pattern    cond      x   trials   rate(Hz)  +/-SEM   addedRate +/-SEM  |   count  +/-SEM   added  +/-SEM\n', G(g).name, numel(G(g).ch));
@@ -208,16 +259,21 @@ for g = 1:nG
 end
 
 %% ---- figures -----------------------------------------------------------------------------------------------------------
-colG = lines(max(nG, 1));
+colG = cat(1, G.col);  if isempty(colG), colG = lines(1); end
 styP = {'-o', '--s', ':^'};  mkP = {'o', 's', '^'};   % line style / marker per pattern
 xlab = ternary_(strcmp(xAxis, 'n'), 'pulses per electrode', 'time of the last pulse (ms)');
 figs = {'Firing rate', 'rate', 'addRate', 'rate above baseline (spikes/s)', 'added rate (spikes/s of the new stretch)'};
 if Plot_CountFigure, figs(end+1, :) = {'Spike count', 'cnt', 'add', 'count above baseline (spikes/trial)', 'added spikes (count n - count n-1)'}; end
 for fi = 1:size(figs, 1)
-    fh = figure('Name', sprintf('%s: %s', short, figs{fi, 1}), 'Color', 'w', 'Position', [60 60 1100 480]);
+    sepG  = strcmp(groupLayout, 'separate') && nG > 1;          % one row of panels per group
+    nRowG = ternary_(sepG, nG, 1);
+    fh = figure('Name', sprintf('%s: %s', short, figs{fi, 1}), 'Color', 'w', 'Position', [60 60 1100 min(980, 150 + 330*nRowG)]);
+    axAll = gobjects(nRowG, 2);
     for sp = 1:2
-        ax = subplot(1, 2, sp);  hold(ax, 'on');  hl = [];  lab = {};
-        for g = 1:nG
+      for gr = 1:nRowG
+        ax = subplot(nRowG, 2, (gr - 1)*2 + sp);  hold(ax, 'on');  hl = [];  lab = {};  axAll(gr, sp) = ax;
+        gList = ternary_(sepG, gr, 1:nG);
+        for g = gList
             if isempty(G(g).ch), continue; end
             for p = 1:nP
                 M = S(p).(figs{fi, 1 + sp})(G(g).ch, :);
@@ -233,15 +289,20 @@ for fi = 1:size(figs, 1)
         yline(ax, 0, ':');   xlabel(ax, xlab);  ylabel(ax, figs{fi, 3 + sp});
         if strcmp(xAxis, 'n'), xticks(ax, 0:1:ceil(max([Lv.x]))); end
         if sp == 1 && ~isempty(hl), legend(ax, hl, lab, 'Location', 'best', 'FontSize', 8, 'Interpreter', 'none'); end
+        if sepG, title(ax, sprintf('%s (%d ch)', G(gr).name, numel(G(gr).ch)), 'Color', G(gr).col, 'FontSize', 10, 'Interpreter', 'none'); end
+      end
+      if sepG && sameYLim, linkaxes(axAll(:, sp), 'xy'); end         % same scale in every group (per column)
     end
-    sgtitle(fh, sprintf('%s: %s vs number of pulses (mean +/- SEM over channels); window first pulse ... last + %g ms', ...
-            strrep(short, '_', '\_'), lower(figs{fi, 1}), tail_ms), 'FontSize', 10);
+    % sgtitle(fh, sprintf('%s: %s vs number of pulses (mean +/- SEM over channels); window first pulse ... last + %g ms', ...
+            % strrep(short, '_', '\_'), lower(figs{fi, 1}), tail_ms), 'FontSize', 10);
 end
 if Plot_ChannelFigure
     fh = figure('Name', sprintf('%s: channels', short), 'Color', 'w', 'Position', [100 100 600 750]);
     ax = axes(fh);  hold(ax, 'on');
     for g = 1:nG
-        r = G(g).range;  patch(ax, [-1e4 1e4 1e4 -1e4], [r(1) r(1) r(2) r(2)], colG(g,:), 'FaceAlpha', 0.08, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+        for bb = 1:size(G(g).bands, 1)
+            r = G(g).bands(bb, :);  patch(ax, [-1e4 1e4 1e4 -1e4], [r(1) r(1) r(2) r(2)], colG(g,:), 'FaceAlpha', 0.08, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+        end
     end
     hl = [];  lab = {};
     for p = 1:nP

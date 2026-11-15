@@ -41,13 +41,13 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-NEUROSTIM_DIR = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/Marmo_Visual_Code/neurostim';
-REC_ROOT      = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18';
+NEUROSTIM_DIR = '/Volumes/LaCie/Marmoset_Data/AnalysisFunctions/Marmo_Visual_Code/neurostim';
+REC_ROOT      = '/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_noisegrid_050605_2026-11-10_05-06-09';
 
 % The Neurostim datafile sits in the recording folder alongside the raw
 % data, e.g. ...\recording1\CJ280.noisegrid.162113.mat. Leave empty to
 % find it there; set a full path to override.
-PARAM_FILE    = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18/Record Node 101/experiment1/recording1/CJ283.noisegrid.110713.mat';
+PARAM_FILE    = '/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_noisegrid_050605_2026-11-10_05-06-09/Record Node 101/experiment1/recording1/CJ287.noisegrid.050605.mat';
 
 STIM_NAME = 'noise';                    % c.noise
 OUT_NAME  = 'noisegrid_stimulus.mat';

@@ -56,10 +56,10 @@ visStart     = 'final';     % 'final' = 'auto' is the highest contrast of each p
 
 % pattern | start | keep depth ranges (um, rows of [from to]) | add | remove
 resp = { ...
-    'sim',           'auto',  [],   [314,282,303],   [233,251];
-    'seq B->A',      'auto',  [],   [264,262,260,190,182,94,90,78],   [];
-    'visual bright', 'auto',  [],   [],   [];
-    'visual dark',   'auto',  [],   [],   [];
+    'sim',           'auto',  [0 6000],   [314,282,303],   [233,251];
+    'seq B->A',      'auto',  [0 6000],   [264,262,260,190,182,94,90,78],   [];
+    'visual bright', 'auto',  [0 6000],   [],   [];
+    'visual dark',   'auto',  [0 6000],   [],   [];
     };
 
 doSave     = true;         % false = DRY RUN (printout + figure only) | true = save <short>.NP_RespChn.mat

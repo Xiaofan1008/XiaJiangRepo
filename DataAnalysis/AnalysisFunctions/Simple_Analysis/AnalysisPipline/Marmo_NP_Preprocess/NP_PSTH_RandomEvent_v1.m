@@ -34,9 +34,9 @@ sessionDir  = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expT
 spikeFiles  = {'/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29/Record Node 101/experiment1/recording1/CJ287_15Pulses3_100Hz.NP_Spikes_TrainRecovery.mat',...
     '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29/Record Node 101/experiment1/recording1/CJ287_15Pulses3_100Hz.NP_Spikes_TrainRecovery_randomEvent.mat'};         % {} = automatic (see header); or names in recording1 / full paths, REFERENCE FIRST
 fileLabels  = {'v1 full recovery', 'RandomEvent'};         % legend names, one per file; {} = 'reference' + the file suffixes
-conds       = [15,45];         % conditions for Part 2 and 3 (e.g. the final levels: [15 45]); [] = list + Part 1 only
+conds       = [1 15 16 45];         % conditions for Part 2 and 3 (e.g. the final levels: [15 45]); [] = list + Part 1 only
 
-channels    = [];         % channels averaged in Part 2 and 3; [] = all ACTIVE channels (rate >= autoRateMin)
+channels    = [132 134 142 96 180 202 150   369 2   372];         % channels averaged in Part 2 and 3; [] = all ACTIVE channels (rate >= autoRateMin)
 autoRateMin = 20;         % spikes/s (reference file, whole window): a channel counts as active above this
 
 pulseWin_ms = 'event';    % Part 2 window after each pulse: 'event' = [0, event_ms of that level]; or [a b] in ms
@@ -44,7 +44,7 @@ pulseWin_ms = 'event';    % Part 2 window after each pulse: 'event' = [0, event_
 psthMode     = 'perChannel'; % Part 3: 'average' | 'perChannel'
 plotChannels = [];        % 'perChannel' only: channels to draw; [] = 4 active channels spread along the probe
 showDiff     = true;      % extra panel = file minus reference ('average': below the PSTH; 'perChannel': below raster + PSTH)
-winMs        = [-20 200]; % ms around the trigger
+winMs        = [-20 250]; % ms around the trigger
 binMs        = 1;         % PSTH bin (ms) 
 smoothSigmaMs = 3;        % PSTH Gaussian smoothing SD (ms); 0 = none
 minDataFrac  = 0.5;       % a PSTH bin is drawn only if at least this fraction of the trials had data in it

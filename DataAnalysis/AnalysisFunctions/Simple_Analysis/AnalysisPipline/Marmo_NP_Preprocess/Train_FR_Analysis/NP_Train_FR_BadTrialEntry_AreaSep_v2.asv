@@ -1,0 +1,250 @@
+%% ============================================================
+% NP_Train_FR_BadTrialEntry_v2.m
+% NP probe | pulse TRAIN sessions | FIRING-RATE analysis | BAD-TRIAL ENTRY PER AREA (V1 / V2) | v2
+% (v1 = NP_Train_FR_BadTrialEntry_v1: one list for all channels, file <short>.NP_BadTrials.mat; v1 and its file are
+%  NOT changed by this script)
+%
+% PURPOSE
+%   You type the FINAL bad trials of every condition, separately for each area, after reviewing
+%   NP_Train_FR_BadTrialCheck_v2. The script checks the rows, prints a summary and saves ONE file:
+%       <recording1>/<short>.NP_BadTrialsArea.mat
+%   The recording, the spike files and NP_BadTrials.mat (v1) are never changed.
+%
+% ENTRY FORMAT  (the per-area PASTE-READY list (b) of the check v2 has exactly these rows)
+%   entries = { ...
+%     'all', 'sim',        3,  3,  [4 9];      % area, pattern, n, condition number, bad trials
+%     'V1',  'seq B->A',   2, 17,  [6];        % V1 only
+%     'V2',  'seq B->A',   2, 17,  [];         % [] = reviewed, NO bad trials in V2
+%   };
+%   - AREA: 'all' (the trials are bad for EVERY area) or one of areaList (default 'V1', 'V2')
+%   - the CONDITION NUMBER is the key; pattern and n are checked against it (error if they do not agree)
+%   - trial numbers = number WITHIN the condition (1 ... repetitions), as on the check figures
+%   - one row per (area, condition); an 'all' row and an area row of the same condition add up
+%   - a condition is REVIEWED for an area if it has an 'all' row or a row of that area; otherwise all its trials are kept
+%
+% EFFECTIVE LIST of an area = the 'all' trials + that area's own trials.
+%
+% MODE
+%   'replace' (default): written from the rows typed here; an existing file is first copied to a dated backup.
+%   'new'   : refuses to run when the file already exists.
+%
+% OUTPUT  <short>.NP_BadTrialsArea.mat with the struct BadTrialsArea:
+%   .areas                        the areas (areaList)
+%   .badRel.(area){cond}          EFFECTIVE bad trials of the area (within the condition)   <- for analyses per area
+%   .badAbs.(area){cond}          the same as rows of TT.trial (recording order)
+%   .isReviewed.(area)(cond)      true if the condition has an 'all' row or a row of the area
+%   .badRelAll{cond}              the 'all' rows only;   .badRelOnly.(area){cond}  the area's own rows only
+%   .badRelUnion{cond}            union over all areas (for analyses that do not split by area)
+%   .nTrials(cond), .entries, .note, .ttFile, .date, .version
+%   The lists are valid for every spike file of the session (original, recovered, RandomEvent): the trials are the same.
+% Written without access to MATLAB: please report any error.
+% ============================================================
+clear; clc;
+
+%% ================= USER SETTINGS =================
+sessionDir = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29';
+areaList   = {'V1', 'V2'};   % areas that can be typed (besides 'all'); the same as areaList in the check v2
+
+% PLACEHOLDER rows: paste list (b) printed by NP_Train_FR_BadTrialCheck_v2 here and edit it
+% (a trial flagged in both areas can be written once as an 'all' row).
+entries = { ...
+    'V1',   'sim',           1,   1, [12 14]; ...
+    'V1',   'sim',           2,   2, [8 12]; ...
+    'V1',   'sim',           3,   3, [4 10]; ...
+    'V1',   'sim',           4,   4, 6; ...
+    'V1',   'sim',           5,   5, [3 9]; ...
+    'V1',   'sim',           6,   6, 11; ...
+    'V1',   'sim',           7,   7, 15; ...
+    'V1',   'sim',           8,   8, 2; ...
+    'V1',   'sim',           9,   9, []; ...
+    'V1',   'sim',          10,  10, 11; ...
+    'V1',   'sim',          11,  11, 9; ...
+    'V1',   'sim',          12,  12, [2 8 13 15]; ...
+    'V1',   'sim',          13,  13, 15; ...
+    'V1',   'sim',          14,  14, []; ...
+    'V1',   'sim',          15,  15, 4; ...
+    'V1',   'seq B->A',      1,  17, [4 11 13]; ...
+    'V1',   'seq B->A',      2,  19, [4 10 14 15]; ...
+    'V1',   'seq B->A',      3,  21, [5 8]; ...
+    'V1',   'seq B->A',      4,  23, 15; ...
+    'V1',   'seq B->A',      5,  25, 7; ...
+    'V1',   'seq B->A',      6,  27, 14; ...
+    'V1',   'seq B->A',      7,  29, 4; ...
+    'V1',   'seq B->A',      8,  31, 11; ...
+    'V1',   'seq B->A',      9,  33, [2 7]; ...
+    'V1',   'seq B->A',     10,  35, [6 11]; ...
+    'V1',   'seq B->A',     11,  37, [2 5]; ...
+    'V1',   'seq B->A',     12,  39, 13; ...
+    'V1',   'seq B->A',     13,  41, []; ...
+    'V1',   'seq B->A',     14,  43, [4]; ...
+    'V1',   'seq B->A',     15,  45, []; ...
+    'V2',   'sim',           1,   1, 1; ...
+    'V2',   'sim',           2,   2, []; ...
+    'V2',   'sim',           3,   3, [4 10]; ...
+    'V2',   'sim',           4,   4, 9; ...
+    'V2',   'sim',           5,   5, [3 15]; ...
+    'V2',   'sim',           6,   6, [2 11]; ...
+    'V2',   'sim',           7,   7, []; ...
+    'V2',   'sim',           8,   8, [5 10]; ...
+    'V2',   'sim',           9,   9, []; ...
+    'V2',   'sim',          10,  10, []; ...
+    'V2',   'sim',          11,  11, [4 9 15]; ...
+    'V2',   'sim',          12,  12, [2 8 13 15]; ...
+    'V2',   'sim',          13,  13, []; ...
+    'V2',   'sim',          14,  14, [1 12]; ...
+    'V2',   'sim',          15,  15, [4 15]; ...
+    'V2',   'seq B->A',      1,  17, 11; ...
+    'V2',   'seq B->A',      2,  19, [4 11 14 15]; ...
+    'V2',   'seq B->A',      3,  21, [5 8 13]; ...
+    'V2',   'seq B->A',      4,  23, [7 15]; ...
+    'V2',   'seq B->A',      5,  25, [1 7]; ...
+    'V2',   'seq B->A',      6,  27, 14; ...
+    'V2',   'seq B->A',      7,  29, 4; ...
+    'V2',   'seq B->A',      8,  31, [8 11]; ...
+    'V2',   'seq B->A',      9,  33, 2; ...
+    'V2',   'seq B->A',     10,  35, [6 9]; ...
+    'V2',   'seq B->A',     11,  37, [1 2 6]; ...
+    'V2',   'seq B->A',     12,  39, [3 7 9]; ...
+    'V2',   'seq B->A',     13,  41, [7 10]; ...
+    'V2',   'seq B->A',     14,  43, [4 8]; ...
+    'V2',   'seq B->A',     15,  45, [];
+    };
+
+note    = '';         % free text saved in the file, e.g. 'BadTrialCheck v2, k = 5 for R/M/B, area file v1'
+mode    = 'replace';  % 'replace' (default) | 'new'
+do_save = true;      % false = only check and print
+%% =================================================
+
+codeVersion = 'NP_Train_FR_BadTrialEntry_v2 (2026-11-15)';
+assert(any(strcmp(mode, {'replace', 'new'})), 'mode must be ''replace'' or ''new''.');
+assert(iscellstr(areaList) && ~any(strcmp(areaList, 'all')), 'areaList must be area names (not ''all'').');
+for a = 1:numel(areaList), assert(isvarname(areaList{a}), 'Area name "%s" cannot be a field name.', areaList{a}); end
+nA = numel(areaList);
+
+%% ---- trial table ----------------------------------------------------------------------------------------
+tf = dir(fullfile(sessionDir, '**', '*.NP_TrialTable.mat'));
+tf = tf(~startsWith({tf.name}, '._') & ~contains({tf.name}, '_backup_'));
+assert(numel(tf) == 1, 'Found %d trial tables below %s (need exactly 1).', numel(tf), sessionDir);
+recDir = tf(1).folder;  short = erase(tf(1).name, '.NP_TrialTable.mat');
+ttFile = fullfile(recDir, tf(1).name);
+L = load(ttFile, 'TT');  TT = L.TT;  clear L
+nCond = numel(TT.cond);  trialCond = TT.trial.cond(:);
+
+% pattern name and n of every condition (as the bad-trial check prints them)
+patOf = cell(nCond, 1);  nOf = nan(nCond, 1);
+for c = 1:nCond
+    C = TT.cond(c);
+    switch C.kind
+        case 'sim',    patOf{c} = 'sim';
+        case 'AB',     patOf{c} = 'seq A->B';
+        case 'BA',     patOf{c} = 'seq B->A';
+        case 'visual', patOf{c} = 'visual';  nOf(c) = 0;
+        otherwise,     patOf{c} = C.kind;
+    end
+    if any(strcmp(C.kind, {'sim', 'AB', 'BA'}))
+        nsp = C.nsp;  nsp(C.amp <= 0) = 0;
+        if strcmp(C.kind, 'sim') || nsp(1) == nsp(2), nOf(c) = max(nsp); else, nOf(c) = max(nsp) - 0.5; end
+    end
+end
+nTrials = zeros(nCond, 1);  for c = 1:nCond, nTrials(c) = sum(trialCond == c); end
+
+%% ---- check the entries ------------------------------------------------------------------------------------
+assert(iscell(entries) && size(entries, 2) == 5, 'entries must be a cell array with 5 columns: area, pattern, n, cond, trials.');
+nE = size(entries, 1);
+emptyC = @() repmat({zeros(1, 0)}, nCond, 1);
+badRelAll = emptyC();  revAll = false(nCond, 1);  rowAll = zeros(nCond, 1);
+badRelOnly = struct();  revOnly = struct();  rowOnly = struct();
+for a = 1:nA, badRelOnly.(areaList{a}) = emptyC(); revOnly.(areaList{a}) = false(nCond, 1); rowOnly.(areaList{a}) = zeros(nCond, 1); end
+for r = 1:nE
+    ar = entries{r, 1};  pn = entries{r, 2};  n = entries{r, 3};  c = entries{r, 4};  bt = entries{r, 5};
+    assert(ischar(ar) || isstring(ar), 'entries row %d: the area must be text.', r);  ar = char(ar);
+    assert(strcmp(ar, 'all') || any(strcmp(ar, areaList)), 'entries row %d: area ''%s'' must be ''all'' or one of %s.', r, ar, strjoin(areaList, ', '));
+    assert(ischar(pn) || isstring(pn), 'entries row %d: the pattern must be text.', r);  pn = char(pn);
+    assert(isnumeric(c) && isscalar(c) && c == round(c) && c >= 1 && c <= nCond, 'entries row %d: condition must be 1..%d.', r, nCond);
+    assert(strcmp(pn, patOf{c}), 'entries row %d: condition %d is ''%s'' (%s), not ''%s''.', r, c, patOf{c}, TT.cond(c).label, pn);
+    assert(isnumeric(n) && isscalar(n) && abs(n - nOf(c)) < 1e-9, 'entries row %d: condition %d has n = %g, not %g.', r, c, nOf(c), n);
+    assert(isnumeric(bt), 'entries row %d: the bad trials must be a numeric list ([] = none).', r);
+    bt = unique(double(bt(:)'));
+    assert(all(bt == round(bt) & bt >= 1 & bt <= nTrials(c)), 'entries row %d (cond %d): trials must be 1..%d, got %s.', ...
+           r, c, nTrials(c), mat2str(bt));
+    if strcmp(ar, 'all')
+        assert(rowAll(c) == 0, 'entries row %d: area ''all'', condition %d is already entered in row %d.', r, c, rowAll(c));
+        rowAll(c) = r;  revAll(c) = true;  badRelAll{c} = bt;
+    else
+        assert(rowOnly.(ar)(c) == 0, 'entries row %d: area ''%s'', condition %d is already entered in row %d.', r, ar, c, rowOnly.(ar)(c));
+        rowOnly.(ar)(c) = r;  revOnly.(ar)(c) = true;  badRelOnly.(ar){c} = bt;
+    end
+end
+
+% effective lists per area, absolute trial numbers, union
+badRel = struct();  badAbs = struct();  isReviewed = struct();  badRelUnion = emptyC();
+for a = 1:nA
+    an = areaList{a};  badRel.(an) = emptyC();  badAbs.(an) = emptyC();
+    isReviewed.(an) = revAll | revOnly.(an);
+    for c = 1:nCond
+        bt = union(badRelAll{c}, badRelOnly.(an){c});  bt = reshape(bt, 1, []);
+        ks = find(trialCond == c);
+        badRel.(an){c} = bt;  badAbs.(an){c} = reshape(ks(bt), 1, []);
+        badRelUnion{c} = reshape(union(badRelUnion{c}, bt), 1, []);
+    end
+end
+
+%% ---- summary --------------------------------------------------------------------------------------------------
+fprintf('\n============================================================\nNP TRAIN FR BAD-TRIAL ENTRY PER AREA (v2): %s\n', short);
+fprintf('============================================================\n');
+fprintf('areas: %s (+ ''all'')\n\n', strjoin(areaList, ', '));
+hdr = sprintf('  cond  pattern      n   trials  %-12s', 'all');
+for a = 1:nA, hdr = [hdr sprintf('  %-14s', [areaList{a} ' only'])]; end %#ok<AGROW>
+for a = 1:nA, hdr = [hdr sprintf('  %-6s', [areaList{a} ' n'])]; end %#ok<AGROW>
+fprintf('%s  label\n', hdr);
+anyRev = revAll;  for a = 1:nA, anyRev = anyRev | revOnly.(areaList{a}); end
+for c = find(anyRev)'
+    ln = sprintf('  %4d  %-10s %4s  %6d  %-12s', c, patOf{c}, num2s_(nOf(c)), nTrials(c), lst_(badRelAll{c}, revAll(c)));
+    for a = 1:nA, ln = [ln sprintf('  %-14s', lst_(badRelOnly.(areaList{a}){c}, revOnly.(areaList{a})(c)))]; end %#ok<AGROW>
+    for a = 1:nA, ln = [ln sprintf('  %-6s', ternary_(isReviewed.(areaList{a})(c), sprintf('%d', numel(badRel.(areaList{a}){c})), '-'))]; end %#ok<AGROW>
+    fprintf('%s  %s\n', ln, TT.cond(c).label);
+end
+fprintf('  (columns: ''all'' rows | each area''s own rows | n = EFFECTIVE bad trials of the area; ''-'' = not typed / not reviewed)\n');
+pats = unique(patOf(anyRev), 'stable');
+for a = 1:nA
+    an = areaList{a};
+    fprintf('\nper pattern, %s (effective):\n', an);
+    for p = 1:numel(pats)
+        cs = find(isReviewed.(an) & strcmp(patOf, pats{p}));
+        nb = sum(cellfun(@numel, badRel.(an)(cs)));  nt = sum(nTrials(cs));
+        fprintf('  %-10s %3d conditions reviewed, %4d of %4d trials bad (%.1f %%)\n', pats{p}, numel(cs), nb, nt, 100*nb/max(nt, 1));
+    end
+    notRev = find(~isReviewed.(an) & ismember(patOf, {'sim', 'seq A->B', 'seq B->A', 'visual'}) & nTrials > 0);
+    if ~isempty(notRev), fprintf('  NOT reviewed for %s (all trials kept): conds %s\n', an, mat2str(notRev')); end
+end
+
+%% ---- save ----------------------------------------------------------------------------------------------------------
+outFile = fullfile(recDir, [short '.NP_BadTrialsArea.mat']);
+fprintf('\nOutput: %s\n', outFile);
+if ~do_save, fprintf('do_save = false: nothing saved.\n'); return; end
+if isfile(outFile)
+    if strcmp(mode, 'new'), error('%s already exists and mode = ''new''. Nothing was changed.', outFile); end
+    bak = strrep(outFile, '.mat', ['_backup_' datestr(now, 'yyyymmdd_HHMMSS') '.mat']);
+    copyfile(outFile, bak);  fprintf('Old file copied to %s\n', bak);
+end
+BadTrialsArea = struct();
+BadTrialsArea.areas = areaList;  BadTrialsArea.badRel = badRel;  BadTrialsArea.badAbs = badAbs;
+BadTrialsArea.isReviewed = isReviewed;  BadTrialsArea.badRelAll = badRelAll;  BadTrialsArea.badRelOnly = badRelOnly;
+BadTrialsArea.badRelUnion = badRelUnion;  BadTrialsArea.nTrials = nTrials;  BadTrialsArea.entries = entries;
+BadTrialsArea.note = note;  BadTrialsArea.ttFile = ttFile;  BadTrialsArea.date = datestr(now, 'yyyy-mm-dd HH:MM:SS');
+BadTrialsArea.version = codeVersion;
+save(outFile, 'BadTrialsArea');
+fprintf('Saved.\n');
+
+%% ---- helpers --------------------------------------------------------------------------------------------------------
+function s = lst_(v, typed)
+if ~typed, s = '-'; elseif isempty(v), s = '(none)'; else, s = mat2str(v); end
+end
+
+function s = num2s_(v)
+if isnan(v), s = '-'; elseif v == round(v), s = sprintf('%d', v); else, s = sprintf('%.1f', v); end
+end
+
+function o = ternary_(c, a, b)
+if c, o = a; else, o = b; end
+end

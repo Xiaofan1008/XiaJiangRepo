@@ -29,8 +29,8 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-NNX_FILE = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/noisegrid_260916_110717/nnx_rf.mat';
-NPX_FILE = ['/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18/Record Node 101/experiment1/recording1/noisegrid_rf.mat'];
+NNX_FILE = '/Volumes/LaCie/Marmoset_Data/CJ287/noisegrid_261110_050601/nnx_rf.mat';
+NPX_FILE = ['/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_noisegrid_050605_2026-11-10_05-06-09/Record Node 101/experiment1/recording1/noisegrid_rf.mat'];
 
 % Restrict either probe to a span of the shank, by DEPTH RANK: 1 = the site
 % nearest the tip, ascending toward the shallowest. Rank rather than

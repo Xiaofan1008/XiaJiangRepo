@@ -35,8 +35,8 @@
 clear; clc; close all;
 
 %% ==================== CONFIG =======================================
-NNX_DIR   = '/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/noisegrid_260916_110717';
-STIM_FILE = ['/Volumes/Shared/Xia/MarmosetData/Saline_Test/CJ283/CJ283_noisegrid_110713_2026-09-16_11-07-18/Record Node 101/experiment1/recording1/noisegrid_stimulus.mat'];
+NNX_DIR   = '/Volumes/LaCie/Marmoset_Data/CJ287/noisegrid_261110_050601';
+STIM_FILE = ['/Volumes/LaCie/Marmoset_Data/CJ287/CJ287_noisegrid_050605_2026-11-10_05-06-09/Record Node 101/experiment1/recording1/noisegrid_stimulus.mat'];
 
 FS        = 30000;
 N_CHAN    = 32;
@@ -59,6 +59,10 @@ FRAME_HZ_EXPECT = 120;
 THR_HI_FRAC  = 0.70;        % Schmitt trigger, fractions of the p1..p99 range
 THR_LO_FRAC  = 0.30;
 MIN_STATE_US = 100;
+DROP_EDGE_SEGMENTS = true;  % if the photodiode finds MORE frame segments than the stimulus file has trials: drop
+                            % SHORT segments at the START or END of the recording (screen activity recorded by the
+                            % Intan before / after the noise grid, e.g. because it was started earlier or stopped later)
+SHORT_SEG_FRAC = 0.8;       % a segment is 'short' if it has fewer than this fraction of the median frames per segment
 
 % ---- what to plot -----------------------------------------------------
 PLOT_CHANNELS = 2:2:32;        % electrode numbers for the detailed figures
@@ -219,6 +223,26 @@ S = load(STIM_FILE,'act_idx','act_pol','updates_per_trial','frames_per_update', 
 fprintf('\nstimulus file: %d updates over %d trials, %dx%d randels, validated %d\n', ...
         S.n_updates, S.n_trials, S.size_h, S.size_w, S.validated);
 assert(S.validated,'The stimulus reconstruction did not validate; do not use it.');
+if nTrialD > S.n_trials
+    fprintf('\nphotodiode segments (more than the %d trials of the stimulus file):\n', S.n_trials);
+    for i = 1:nTrialD
+        fprintf('  segment %2d: %5d frames, %8.2f .. %8.2f s\n', i, nFr(i), frame_t(trS(i)), frame_t(trE(i)));
+    end
+end
+if DROP_EDGE_SEGMENTS && nTrialD > S.n_trials
+    isShort = nFr < SHORT_SEG_FRAC*median(nFr);
+    drop = false(nTrialD, 1);
+    i = 1;        while i <= nTrialD && isShort(i), drop(i) = true; i = i + 1; end   % short segments at the start
+    i = nTrialD;  while i >= 1 && isShort(i) && ~drop(i), drop(i) = true; i = i - 1; end   % ... and at the end
+    if any(drop) && sum(~drop) == S.n_trials
+        fprintf('dropped edge segment(s) %s (%s frames): not part of the noise grid\n', ...
+                mat2str(find(drop)'), mat2str(nFr(drop)'));
+        trS = trS(~drop);  trE = trE(~drop);  nFr = nFr(~drop);  nTrialD = numel(trS);
+    elseif any(drop)
+        warning('Dropping the short edge segment(s) %s would leave %d trials, not %d: nothing dropped.', ...
+                mat2str(find(drop)'), sum(~drop), S.n_trials);
+    end
+end
 assert(nTrialD == S.n_trials, ...
     ['The photodiode found %d trials but the stimulus file has %d. These ' ...
      'must be the same presentation.'], nTrialD, S.n_trials);

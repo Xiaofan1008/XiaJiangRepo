@@ -27,16 +27,16 @@ clear; clc;
 
 %% ================= USER SETTINGS =================
 sessionDir = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29';
-spikeFile  = '';          % '' = <short>.NP_Spikes.mat; or a file name in recording1 / a full path (e.g. the recovered file later)
-conds      = [10:15 40:45 49 52];          % conditions to plot (TT.cond numbers); [] = print the condition list and stop
-channels   = [];          % AP channels (1-based); [] = automatic choice (see below)
+spikeFile  = '/Volumes/LaCie/Marmoset_Data/CJ287/Xia/CJ287_15Pulses3_100Hz_expTrainFreq_100Hz_080922_2026-11-10_08-09-29/Record Node 101/experiment1/recording1/CJ287_15Pulses3_100Hz.NP_Spikes_TrainRecovery_randomEvent.mat';          % '' = <short>.NP_Spikes.mat; or a file name in recording1 / a full path (e.g. the recovered file later)
+conds      = [1 15 16 45];          % conditions to plot (TT.cond numbers); [] = print the condition list and stop
+channels   = [132 134 142 96 180 202 150 369 2 372];          % AP channels (1-based); [] = automatic choice (see below)
 
 % automatic channel choice (only used when channels = [])
 autoN       = 8;          % channels spread evenly along the ACTIVE part of the probe
 autoRateMin = 20;         % spikes/s: a channel counts as active above this rate
 
 % time axis and alignment
-winMs       = [-20 200];      % ms around the alignment point
+winMs       = [-20 250];      % ms around the alignment point
 alignElec   = 'trigger';      % 'trigger' | 'firstPulse'   (electrical and blank trials)
 alignVisual = 'photodiode';   % 'photodiode' | 'trigger'   (visual trials)
 

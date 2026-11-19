@@ -28,16 +28,16 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
 spike_files = { ...
-    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery.mat', ...
-    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat'};
+    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_TrainRecovery.mat', ...
+    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat'};
 file_labels = {'v1 full recovery', 'RandomEvent'};
 paramFile   = 2;           % which file holds percent_k / event_ms_k (the RandomEvent file)
 
 condList = [15 45];        % FINAL condition numbers to plot ([] = print the table and stop)
 chList   = 1:32;           % channels used for everything
-mode     = 'perChannel';      % PSTH figures: 'average' or 'perChannel'
+mode     = 'average';      % PSTH figures: 'average' or 'perChannel'
 Plot_PSTH     = true;      % figure group 1
 Plot_PerPulse = true;      % figure group 2
 showDiff = true;           % PSTH figures: extra panel, each file minus the first file

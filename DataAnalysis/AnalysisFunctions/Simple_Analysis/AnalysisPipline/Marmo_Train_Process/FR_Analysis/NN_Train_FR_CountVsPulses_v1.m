@@ -35,16 +35,16 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA';
 rec_tag     = '';          % '' = *.sp_xia_TrainRecovery.mat (unthinned); 'RandomEvent' etc. = the tagged file
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % full path (overrides rec_tag)
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA/Xia_15Pulses1_100Hz_30uA.sp_xia_TrainRecovery_RandSpikes.mat';          % full path (overrides rec_tag)
 FS          = 30000;       % used only if the recovery file has no FS
 
 patternConds = [];         % FINAL condition number(s) of the patterns; [] = all sim / AB / BA patterns found
 chRange      = 1:32;       % manual channel list: used when no responsive-channel file / pattern entry exists
-useRespChn   = true;       % true = use <folder>.FR_RespChn.mat when it exists
+useRespChn   = false;       % true = use <folder>.FR_RespChn.mat when it exists
 chSetMode    = 'pattern';  % 'pattern' | 'intersect'
-useBadTrials = true;       % true = use <folder>.FR_BadTrials.mat when it exists
+useBadTrials = false;       % true = use <folder>.FR_BadTrials.mat when it exists
 resp_file    = '';         % '' = <data_folder>/<folder name>.FR_RespChn.mat
 bad_file     = '';         % '' = <data_folder>/<folder name>.FR_BadTrials.mat
 

@@ -51,9 +51,9 @@ clear all; clc;
 %% ================= USER SETTINGS =================
 analysisPath = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/';
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
 
-times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_filtered.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_filtered.mat';
                    % the FILTERED spike-times file of this dataset (same one used in step 1).
                    % The other files are found next to it by name:
                    %   *.sp_xia_waveforms_filtered.mat  (if do_waveforms)
@@ -86,9 +86,9 @@ seq_override = [
                 30,10,10,5,20;
                 ];              % rows [level fallback_ms cap_ms percent event_ms]
 
-rand_seed = 1;                  % seed of the random choice of spikes (percent < 100)
+rand_seed = 2;                  % seed of the random choice of spikes (percent < 100)
 
-compare_v1_file = '';           % '' = no comparison; or the v1 *.sp_xia_TrainRecovery.mat (see header)
+compare_v1_file = '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA/Xia_15Pulses1_100Hz_30uA.sp_xia_TrainRecovery.mat';           % '' = no comparison; or the v1 *.sp_xia_TrainRecovery.mat (see header)
 
 %% ================= LOAD =================
 if ~isempty(analysisPath), addpath(genpath(analysisPath)); end

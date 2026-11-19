@@ -24,10 +24,10 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA';
 spike_files = { ...
-    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery.mat', ...
-    '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery_RandSpikes.mat'};
+    '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA/Xia_15Pulses1_100Hz_30uA.sp_xia_TrainRecovery.mat', ...
+    '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA/Xia_15Pulses1_100Hz_30uA.sp_xia_TrainRecovery_RandSpikes.mat'};
 file_labels = {'v1 full recovery', 'RandomSpikes'};
 
 condList = [15 45];        % condition numbers to plot ([] = print the table and stop)

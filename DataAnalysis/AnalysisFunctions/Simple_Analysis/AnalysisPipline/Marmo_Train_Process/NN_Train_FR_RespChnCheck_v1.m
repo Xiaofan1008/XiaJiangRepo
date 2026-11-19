@@ -38,7 +38,7 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
 rec_tag     = '';          % '' = unthinned v1 file; 'RandomEvent' etc. = *.sp_xia_TrainRecovery_<rec_tag>.mat
 rec_file    = '';          % full path (overrides rec_tag)
 FS          = 30000;       % used only if the recovery file has no FS
@@ -62,7 +62,7 @@ excludeRel = [];           % rows [cond  relTrialNumber], e.g. [15 3; 15 7]; [] 
 Plot_Figures = true;
 plotConds    = [];         % [] = the decision condition of every pattern; or a list of condition numbers
 extraConds   = [];         % conditions added to the figures (e.g. a higher level of a pattern)
-xRange       = [-20 80];   % ms around the trigger
+xRange       = [-50 100];   % ms around the trigger
 nTileCols    = 8;          % tiles per row (32 channels -> 8 x 4)
 yMaxPSTH     = [];         % fixed top of the PSTH axes (spikes/s); [] = automatic per tile (the y scale differs per channel)
 curveSmooth_ms = 3;        % display only: Gaussian smoothing of the drawn PSTH curve (ms, SD = the smoothing factor); 0 = raw bins joined by a line. The rule always uses the raw bins.

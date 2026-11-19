@@ -12,12 +12,12 @@
 % Usage: edit folderPath below, then press Run.
 clear;clc;
 
-folderPath = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA_261110_080929';   % <-- EDIT THIS, then Run
+folderPath = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA_261110_073229';   % <-- EDIT THIS, then Run
 
 %% ===================== Setup =====================
 if isempty(folderPath)
     error('run_sab_preprocess:noPath', ...
-        'Set folderPath above to your data folder before running.');
+        'Set folderPath above to your data folder before running.'); 
 end
 if ~isfolder(folderPath)
     error('run_sab_preprocess:badPath', 'Folder does not exist: %s', folderPath);

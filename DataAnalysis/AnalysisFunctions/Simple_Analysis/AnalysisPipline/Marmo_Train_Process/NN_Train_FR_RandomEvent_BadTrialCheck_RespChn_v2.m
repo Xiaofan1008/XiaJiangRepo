@@ -77,9 +77,9 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_4_100Hz_30uA';
 rec_tag     = 'RandomEvent';   % file = *.sp_xia_TrainRecovery_<rec_tag>.mat in data_folder  ('' = the untagged v1 file)
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % '' = find by rec_tag; otherwise the full path (overrides rec_tag)
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_4_100Hz_30uA/Xia_Train_15Pulses_4_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % '' = find by rec_tag; otherwise the full path (overrides rec_tag)
 FS          = 30000;       % used only if the recovery file has no FS
 
 patternConds = [];         % FINAL condition number(s) of the patterns to check; [] = all sim / AB / BA patterns found
@@ -87,7 +87,7 @@ chRange      = 1:32;       % channels used for the per-trial values, e.g. 1:32, 
 
 % ---- responsive channels (RESPONSE and MAX-CHANNEL measures) ----
 respMode   = 'union';      % 'union' | 'intersect' | 'pattern' | 'all' (= no restriction, as the original check)
-resp_file  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.FR_RespChn.mat';           % '' = <data_folder>/<folder name>.FR_RespChn.mat
+resp_file  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_4_100Hz_30uA/Xia_Train_15Pulses_4_100Hz_30uA.FR_RespChn.mat';           % '' = <data_folder>/<folder name>.FR_RespChn.mat
 minRespCh  = 5;            % fewer responsive channels than this -> all channels of chRange are used for that level
 compareAll = true;         % also run the rules on all channels and tag every flagged trial ([resp only] / [all only])
 

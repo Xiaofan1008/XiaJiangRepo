@@ -58,8 +58,8 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % '' = the *.sp_xia_TrainRecovery.mat in data_folder; otherwise the full path
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_4_100Hz_30uA';
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_4_100Hz_30uA/Xia_Train_15Pulses_4_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % '' = the *.sp_xia_TrainRecovery.mat in data_folder; otherwise the full path
 FS          = 30000;       % used only if the recovery file has no FS
 
 patternConds = [];         % FINAL condition number(s) of the patterns to check; [] = all sim / AB / BA patterns found

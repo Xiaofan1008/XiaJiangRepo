@@ -4,8 +4,8 @@
 % close all; 
 clear all; 
 clc;
-filename = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.mu_sab.dat';
-saveFile = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia.mat';
+filename = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.mu_sab.dat';
+saveFile = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia.mat';
 
 % -------- PARAMETERS --------
 useAdaptiveThresh = false;  % false = global, true = adaptive

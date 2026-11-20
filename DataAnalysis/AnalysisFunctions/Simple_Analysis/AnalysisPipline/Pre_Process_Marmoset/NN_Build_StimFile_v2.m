@@ -17,9 +17,9 @@
 clear; clc;
 
 %% ======================== SETTINGS: EDIT HERE ==========================
-stimFile   = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA_261110_073229/CJ287_15Pulses2_100Hz.expTrainFreq_100Hz.073218.mat';        % Neurostim file
-condFile   = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA_261110_073229/CJ287_15Pulses2_100Hz.expTrainFreq_100Hz.073218.conds.mat';  % conds file
-outFolder  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA_261110_073229';      % Intan folder; the file is written here
+stimFile   = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA_261110_095851/CJ287_15Pulses6_1200Hz.expTrainFreq_200Hz.095843.mat';        % Neurostim file
+condFile   = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA_261110_095851/CJ287_15Pulses6_1200Hz.expTrainFreq_200Hz.095843.conds.mat';  % conds file
+outFolder  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA_261110_095851';      % Intan folder; the file is written here
 
 probe      = 'flex1';   % 'flex1' 1-shank flexible (32 ch) | 'flex4' 4-shank flexible (128 ch)
                         % | 'hybrid' 64 ch 4-shank + 32 ch single shank | 'file' (see probeFile)

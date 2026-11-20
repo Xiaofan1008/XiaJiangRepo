@@ -33,15 +33,15 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
 rec_tag     = '';          % '' = *.sp_xia_TrainRecovery.mat (only used to read the condition table and trial list)
 rec_file    = '';          % full path (overrides rec_tag)
 chRange     = 1:32;        % valid channels
 
 % PLACEHOLDER = what NN_Train_FR_RespChnCheck_v1 recommended for the CJ287 100 Hz 30 uA data. EDIT before saving.
 entries = { ...
-    'sim',      'all',  [1:23, 27:32]; ...
-    'seq B->A', 'all',  [1:23,25:32]; ...
+    'sim',      'all',  [1:16,19:23,25:30]; ...
+    'seq B->A', 'all',  [1:24,26:32]; ...
     };
 
 out_file  = '';            % '' = <data_folder>/<folder name>.FR_RespChn.mat

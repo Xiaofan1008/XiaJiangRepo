@@ -38,14 +38,14 @@ clear all; clc;
 analysisPath = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/';
                     % added to the MATLAB path (needed for cleanTrig_sabquick only)
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
                     % folder holding this dataset's trigger (*.trig.dat) and
                     % stim-protocol (*_exp_datafile_*.mat) files.
 
-times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_filtered.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia_filtered.mat';
                     % the FILTERED spike-times file (sp_clipped) of this same dataset.
 
-conds_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/CJ287_15Pulses2_100Hz.expTrainFreq_100Hz.073218.conds.mat';    % the *.conds.mat saved by the stimulus PC. '' = look for one inside data_folder.
+conds_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/CJ287_15Pulses6_1200Hz.expTrainFreq_200Hz.095843.conds.mat';    % the *.conds.mat saved by the stimulus PC. '' = look for one inside data_folder.
                     % If it is not there, copy it into data_folder or enter its full path here.
 
 win_ms = 10;        % how far after the start of the last pulse to look for the first spike (ms)

@@ -25,11 +25,11 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses';
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ286/Xia_Train_Freq4_100Hz_20Pulses/Xia_Train_Freq4_100Hz_20Pulses.sp_xia_TrainRecovery.mat';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia_TrainRecovery.mat';
 
-finalConds = [20];       % FINAL condition number(s) of the pattern(s) to analyse ([] = print the list and stop)
-chRange    = 1:10;     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
+finalConds = [15 35];       % FINAL condition number(s) of the pattern(s) to analyse ([] = print the list and stop)
+chRange    = 1:32;     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
 plotModes  = {'perChannel'};  % any of:
                        %   'perChannel' : one figure for each channel in chRange
                        %   'grid'       : all channels of chRange in ONE figure (one small panel each)
@@ -37,7 +37,7 @@ plotModes  = {'perChannel'};  % any of:
 xAxis      = 'perElectrode';  % 'perElectrode' (pulses per electrode), 'time' (time of the last pulse, ms) or 'level'
 seqLevels  = 'matched';       % sequential patterns: 'matched' ([n n] levels only) or 'all' (every level)
 
-trailLen_ms = 10;      % trailing window W after the last pulse (ms); a vector, e.g. [20 50 100], draws one curve each
+trailLen_ms = 15;      % trailing window W after the last pulse (ms); a vector, e.g. [20 50 100], draws one curve each
 divideBy    = 'perElectrode';  % 'perElectrode' or 'totalPulses'
 subtractBaseline = true;       % subtract the pre-trigger rate (times the window duration)
 baseWin_ms  = [-50 -5];        % pre-trigger window for the baseline rate

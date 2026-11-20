@@ -12,7 +12,7 @@
 % Usage: edit folderPath below, then press Run.
 clear;clc;
 
-folderPath = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA_261110_073229';   % <-- EDIT THIS, then Run
+folderPath = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA_261110_095851';   % <-- EDIT THIS, then Run
 
 %% ===================== Setup =====================
 if isempty(folderPath)

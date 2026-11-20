@@ -38,7 +38,7 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
 rec_tag     = '';          % '' = unthinned v1 file; 'RandomEvent' etc. = *.sp_xia_TrainRecovery_<rec_tag>.mat
 rec_file    = '';          % full path (overrides rec_tag)
 FS          = 30000;       % used only if the recovery file has no FS

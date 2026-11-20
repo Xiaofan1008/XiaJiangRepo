@@ -51,9 +51,9 @@ clear all; clc;
 %% ================= USER SETTINGS =================
 analysisPath = '/Volumes/MACData/Data/Data_Xia/AnalysisFunctions/';
 
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
 
-times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_filtered.mat';
+times_file = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia_filtered.mat';
                    % the FILTERED spike-times file of this dataset (same one used in step 1).
                    % The other files are found next to it by name:
                    %   *.sp_xia_waveforms_filtered.mat  (if do_waveforms)
@@ -67,28 +67,60 @@ FS = 30000;
 % ---- settings per level: [fallback_ms  cap_ms  percent  event_ms]  (levels start at 2) ----
 sim_default  = [10 10 100 10];  % simultaneous pattern, every level not listed in sim_override
 sim_override = [
-                2,10,10,60,10;
-                9,10,10,60,10;
-                10,10,10,50,10;
-                11,10,10,40,10;
-                12,10,10,30,10;
-                13,10,10,30,10;
-                14,10,10,30,10;
-                15,10,10,30,20;
+                % 100Hz
+                % 9,10,10,40,10;
+                % 10,10,10,20,10;
+                % 11,10,10,10,10;
+                % 12,10,10,10,10;
+                % 13,10,10,10,10;
+                % 14,10,10,10,10;
+                % 15,10,10,5,20;
+
+                % 200Hz
+                6,10,10,40,10;
+                7,10,10,30,10;
+                8,10,10,20,10;
+                9,10,10,10,10;
+                10,10,10,10,10;
+                11,10,10,10,10;
+                12,10,10,5,10;
+                13,10,10,3,10;
+                14,10,10,2,10;
+                15,10,10,1,20;
                 ];              % rows [level fallback_ms cap_ms percent event_ms]
 seq_default  = [10 10 100 5];   % sequential pattern (AB and BA), every level not listed in seq_override
 seq_override = [
-                25,10,10,40,5;
-                26,10,10,40,5;
-                27,10,10,15,5;
-                28,10,10,15,5;
-                29,10,10,5,5;
-                30,10,10,5,20;
+                
+                % 100 Hz
+                % 25,10,10,40,5;
+                % 26,10,10,40,5;
+                % 27,10,10,15,5;
+                % 28,10,10,15,5;
+                % 29,10,10,10,5;
+                % 30,10,10,10,20;
+
+                % 200Hz
+                15,10,10,40,5;
+                16,10,10,40,5;
+                17,10,10,30,5;
+                18,10,10,30,5;
+                19,10,10,20,5;
+                20,10,10,20,5;
+                21,10,10,10,5;
+                22,10,10,10,5;
+                23,10,10,5,5;
+                24,10,10,5,5;   
+                25,10,10,4,5;
+                26,10,10,4,5;
+                27,10,10,3,5;
+                28,10,10,3,5;
+                29,10,10,2,5;
+                30,10,10,2,20;
                 ];              % rows [level fallback_ms cap_ms percent event_ms]
 
 rand_seed = 2;                  % seed of the random choice of spikes (percent < 100)
 
-compare_v1_file = '/Volumes/MACData/Data/Data_Xia/CJ288/Xia_15Pulses1_100Hz_30uA/Xia_15Pulses1_100Hz_30uA.sp_xia_TrainRecovery.mat';           % '' = no comparison; or the v1 *.sp_xia_TrainRecovery.mat (see header)
+compare_v1_file = '';           % '' = no comparison; or the v1 *.sp_xia_TrainRecovery.mat (see header)
 
 %% ================= LOAD =================
 if ~isempty(analysisPath), addpath(genpath(analysisPath)); end

@@ -16,8 +16,8 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
-spike_file  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_filtered.mat';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
+spike_file  = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia_filtered.mat';
 
 condList = [1 16];          % condition numbers to plot ([] = print the table and stop)
 chList   = [1:32];       % channels to plot (index in sp_clipped)

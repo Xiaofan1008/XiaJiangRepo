@@ -37,42 +37,42 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
 rec_tag     = '';          % '' = *.sp_xia_TrainRecovery.mat (only used to read the condition table and trial list)
 rec_file    = '';          % full path (overrides rec_tag)
 
 % paste the rows printed by the bad-trial check here, then edit them
 entries = {  
-    'sim',          1,    1,   [11 12];
+    'sim',          1,    1,   [2 10];
     'sim',          2,    2,   [3];
-    'sim',          3,    3,   [2 7 13];
-    'sim',          4,    4,   [2 5 7 9 13];
-    'sim',          5,    5,   [1 7];
-    'sim',          6,    6,   [2 3 5 7 9];
-    'sim',          7,    7,   [4 7 9 12];
-    'sim',          8,    8,   [2 10 13 14 15];
-    'sim',          9,    9,   [3 4 5 7 8 11 14];
-    'sim',         10,   10,   [2];
-    'sim',         11,   11,   [1 3 5];
-    'sim',         12,   12,   [7 9];
-    'sim',         13,   13,   [3 6 12 13];
-    'sim',         14,   14,   [5 ];
-    'sim',         15,   15,   [2 3 7 9 10 11];
-    'seq B->A',     1,   17,   [1 4 15];
-    'seq B->A',     2,   19,   [];
-    'seq B->A',     3,   21,   [1 6];
-    'seq B->A',     4,   23,   [3 8 12 15];
-    'seq B->A',     5,   25,   [1];
-    'seq B->A',     6,   27,   [3 11];
-    'seq B->A',     7,   29,   [10 15];
-    'seq B->A',     8,   31,   [6 8];
-    'seq B->A',     9,   33,   [12 15];
-    'seq B->A',    10,   35,   [3 5 8 10 15];
-    'seq B->A',    11,   37,   [1 11 12];
-    'seq B->A',    12,   39,   [2];
-    'seq B->A',    13,   41,   [];
-    'seq B->A',    14,   43,   [];
-    'seq B->A',    15,   45,   [10];
+    'sim',          3,    3,   [10];
+    'sim',          4,    4,   [1];
+    'sim',          5,    5,   [2 7];
+    'sim',          6,    6,   [];
+    'sim',          7,    7,   [];
+    'sim',          8,    8,   [4 10];
+    'sim',          9,    9,   [];
+    'sim',         10,   10,   [3];
+    'sim',         11,   11,   [3];
+    'sim',         12,   12,   [9];
+    'sim',         13,   13,   [8];
+    'sim',         14,   14,   [11];
+    'sim',         15,   15,   [4];
+    'seq B->A',     1,   17,   [5 10];
+    'seq B->A',     2,   19,   [1 11];
+    'seq B->A',     3,   21,   [];
+    'seq B->A',     4,   23,   [6];
+    'seq B->A',     5,   25,   [1 7 14];
+    'seq B->A',     6,   27,   [6];
+    'seq B->A',     7,   29,   [1 6];
+    'seq B->A',     8,   31,   [1 2 10];
+    'seq B->A',     9,   33,   [1 7 10 12 14];
+    'seq B->A',    10,   35,   [1 2 14];
+    'seq B->A',    11,   37,   [1];
+    'seq B->A',    12,   39,   [1 2 14];
+    'seq B->A',    13,   41,   [1 2 7 9 11];
+    'seq B->A',    14,   43,   [1 14];
+    'seq B->A',    15,   45,   [1 2];
     };
 
 mode      = 'replace';     % 'replace' | 'new'

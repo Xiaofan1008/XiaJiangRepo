@@ -46,9 +46,9 @@
 clear; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_5_100Hz_30uA';
 rec_tag     = '';          % '' = *.sp_xia_TrainRecovery.mat (unthinned); 'RandomEvent' etc. = the tagged file
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_2_100Hz_30uA/Xia_Train_15Pulses_2_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % full path (overrides rec_tag)
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_5_100Hz_30uA/Xia_Train_15Pulses_5_100Hz_30uA.sp_xia_TrainRecovery_RandomEvent.mat';          % full path (overrides rec_tag)
 FS          = 30000;       % used only if the recovery file has no FS
 
 patternConds = [];         % FINAL condition number(s) of the patterns; [] = all sim / AB / BA patterns found
@@ -76,7 +76,7 @@ meta_note   = '';          % anything else
 
 % ---- output ----
 out_folder = '/Volumes/MACData/Data/Data_Xia/Analyzed_Results/Marmo_Train/FR_RandomEvent_Analysis';           % folder for the result file (created if missing); '' = the data folder. The file name is made automatically.
-out_name  = 'CJ287_15Pulses_2';            % file name WITHOUT .mat, e.g. 'CJ287_Train_Freq1'; '' = <dataset>.FR_CountVsPulses. The tag _<rec_tag> is added when rec_tag is set.
+out_name  = 'CJ287_15Pulses_5';            % file name WITHOUT .mat, e.g. 'CJ287_Train_Freq1'; '' = <dataset>.FR_CountVsPulses. The tag _<rec_tag> is added when rec_tag is set.
 out_file  = '';            % full path WITH file name; overrides out_folder and out_name (nothing is added).
 overwrite = false;         % true = replace an existing file (a dated backup of the old one is made first)
 do_save   = true;          % false = only analyse and print

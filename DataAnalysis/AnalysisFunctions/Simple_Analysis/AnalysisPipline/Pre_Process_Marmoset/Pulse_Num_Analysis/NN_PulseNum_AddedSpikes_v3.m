@@ -43,12 +43,12 @@
 clear all; clc;
 
 %% ================= USER SETTINGS =================
-data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA';
-rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_3_100Hz_30uA/Xia_Train_15Pulses_3_100Hz_30uA.sp_xia_TrainRecovery.mat';
+data_folder = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA';
+rec_file    = '/Volumes/MACData/Data/Data_Xia/CJ287/Xia_Train_15Pulses_6_200Hz_30uA/Xia_Train_15Pulses_6_200Hz_30uA.sp_xia_TrainRecovery.mat';
 
 finalConds = [15 45];       % FINAL condition number(s) of the pattern(s) to analyse ([] = print the list and stop)
-chRange    = [2,5,14,15,22,31,32];     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
-plotModes  = {'average'};  % any of:
+chRange    = [1:32];     % channels to analyse: a range like 1:32 or 5:12, or a list like [3 7 9]
+plotModes  = {'perChannel'};  % any of:
                        %   'perChannel' : one figure for each channel in chRange
                        %   'grid'       : all channels of chRange in ONE figure (one small panel each)
                        %   'average'    : one figure with the average over the channels of chRange
